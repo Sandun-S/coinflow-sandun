@@ -35,9 +35,20 @@ const MobileNav = () => {
                         }`
                     }
                 >
-                    {/* Temporary Icon until features are added */}
                     <Wallet size={20} />
                     <span className="text-[10px] font-medium">Budgets</span>
+                </NavLink>
+
+                <NavLink
+                    to="/subscriptions"
+                    className={({ isActive }) =>
+                        `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+                        }`
+                    }
+                >
+                    {/* Using Settings icon temporarily if needed, or PieChart, but simpler is better */}
+                    <Wallet size={20} />
+                    <span className="text-[10px] font-medium">Subs</span>
                 </NavLink>
 
                 <NavLink
