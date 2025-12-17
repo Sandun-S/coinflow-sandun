@@ -22,6 +22,17 @@ import { useState } from 'react';
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
+  const handleEdit = (transaction) => {
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setEditingTransaction(null);
+  };
 
   return (
     <MainLayout>
@@ -44,16 +55,16 @@ function Dashboard() {
           <ExpenseChart />
         </div>
         <div className="lg:col-span-1">
-          <TransactionList />
+          <TransactionList onEdit={handleEdit} />
         </div>
       </div>
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Add New Transaction"
+        onClose={handleClose}
+        title={editingTransaction ? "Edit Transaction" : "Add New Transaction"}
       >
-        <AddTransactionForm onSuccess={() => setIsModalOpen(false)} />
+        <AddTransactionForm onSuccess={handleClose} initialData={editingTransaction} />
       </Modal>
     </MainLayout>
   );

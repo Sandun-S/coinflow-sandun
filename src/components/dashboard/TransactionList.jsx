@@ -4,9 +4,9 @@ import { useTransactions } from '../../hooks/useTransactions';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { useCurrencyFormatter } from '../../utils';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
-const TransactionList = () => {
+const TransactionList = ({ onEdit }) => {
     const { transactions, deleteTransaction } = useTransactions();
     const formatMoney = useCurrencyFormatter();
 
@@ -21,24 +21,34 @@ const TransactionList = () => {
                         {transactions.map((transaction) => (
                             <li
                                 key={transaction.id}
-                                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
+                                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600 group"
                             >
-                                <div className="flex flex-col">
-                                    <span className="font-medium text-slate-800 dark:text-white">{transaction.text}</span>
+                                <div className="flex flex-col min-w-0 flex-1 mr-4">
+                                    <span className="font-medium text-slate-800 dark:text-white truncate">{transaction.text}</span>
                                     <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(transaction.date).toLocaleDateString()} • {transaction.category}</span>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 shrink-0">
                                     <span
                                         className={`font-bold ${parseFloat(transaction.amount) < 0 ? 'text-red-500' : 'text-green-500'}`}
                                     >
                                         {parseFloat(transaction.amount) < 0 ? '-' : '+'}{formatMoney(Math.abs(transaction.amount))}
                                     </span>
-                                    <button
-                                        onClick={() => deleteTransaction(transaction.id)}
-                                        className="text-slate-400 hover:text-red-500 transition-colors p-1"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => onEdit && onEdit(transaction)}
+                                            className="text-slate-400 hover:text-indigo-500 transition-colors p-1"
+                                            title="Edit"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => deleteTransaction(transaction.id)}
+                                            className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             </li>
                         ))}

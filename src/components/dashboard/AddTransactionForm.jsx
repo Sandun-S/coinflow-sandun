@@ -5,12 +5,27 @@ import Button from '../common/Button';
 import { useTransactions } from '../../hooks/useTransactions';
 import { PlusCircle } from 'lucide-react';
 
-const AddTransactionForm = ({ onSuccess }) => {
-    const { addTransaction } = useTransactions();
+const AddTransactionForm = ({ onSuccess, initialData = null }) => {
+    const { addTransaction, updateTransaction } = useTransactions();
     const [text, setText] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('General');
     const [type, setType] = useState('expense'); // 'income' or 'expense'
+
+    // Load initial data if editing
+    React.useEffect(() => {
+        if (initialData) {
+            setText(initialData.text);
+            setAmount(Math.abs(initialData.amount).toString());
+            setCategory(initialData.category);
+            setType(initialData.amount < 0 ? 'expense' : 'income');
+        } else {
+            setText('');
+            setAmount('');
+            setCategory('General');
+            setType('expense');
+        }
+    }, [initialData]);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -22,15 +37,19 @@ const AddTransactionForm = ({ onSuccess }) => {
 
         const finalAmount = type === 'expense' ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
 
-        const newTransaction = {
-            id: Math.floor(Math.random() * 100000000),
+        const transactionData = {
             text,
             amount: finalAmount,
             category,
-            date: new Date().toISOString()
+            date: initialData ? initialData.date : new Date().toISOString() // Keep original date if editing
         };
 
-        addTransaction(newTransaction);
+        if (initialData) {
+            updateTransaction(initialData.id, transactionData);
+        } else {
+            addTransaction(transactionData);
+        }
+
         setText('');
         setAmount('');
         setCategory('General');
@@ -97,7 +116,7 @@ const AddTransactionForm = ({ onSuccess }) => {
                 </select>
             </div>
             <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5">
-                <PlusCircle size={18} /> {type === 'expense' ? 'Add Expense' : 'Add Income'}
+                <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' ? 'Add Expense' : 'Add Income')}
             </Button>
         </form>
     );

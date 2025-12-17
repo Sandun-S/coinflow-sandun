@@ -6,7 +6,7 @@ const SettingsContext = createContext();
 export const SettingsProvider = ({ children }) => {
     const { user } = useAuth();
     const [theme, setTheme] = useState('light');
-    const [currency, setCurrency] = useState('USD');
+    const [currency, setCurrency] = useState('LKR');
     const [isLoaded, setIsLoaded] = useState(false);
 
 
@@ -17,7 +17,7 @@ export const SettingsProvider = ({ children }) => {
             if (storedSettings) {
                 const parsed = JSON.parse(storedSettings);
                 setTheme(parsed.theme || 'light');
-                setCurrency(parsed.currency || 'USD');
+                setCurrency(parsed.currency || 'LKR');
             }
             setIsLoaded(true);
         }
