@@ -13,10 +13,10 @@ const SignupPage = () => {
     const { signup } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const res = signup(name, email, password);
+        const res = await signup(name, email, password);
         if (res.success) {
             navigate('/');
         } else {
