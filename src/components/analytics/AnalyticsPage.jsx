@@ -97,16 +97,18 @@ const AnalyticsPage = () => {
                 </div>
 
                 {/* Time Filter */}
-                <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                {/* Time Filter */}
+                <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm relative z-20">
                     <Calendar size={18} className="ml-2 text-slate-400" />
                     <select
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value)}
-                        className="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none p-2 rounded-md"
+                        className="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none p-2 rounded-md appearance-none pr-8 cursor-pointer"
+                        style={{ backgroundColor: 'transparent' }} // Ensure transparency
                     >
-                        <option value="30days">Last 30 Days</option>
-                        <option value="thisMonth">This Month</option>
-                        <option value="year">Year to Date</option>
+                        <option value="30days" className="text-slate-700 bg-white dark:bg-slate-800 dark:text-white">Last 30 Days</option>
+                        <option value="thisMonth" className="text-slate-700 bg-white dark:bg-slate-800 dark:text-white">This Month</option>
+                        <option value="year" className="text-slate-700 bg-white dark:bg-slate-800 dark:text-white">Year to Date</option>
                     </select>
                 </div>
             </div>
@@ -115,8 +117,8 @@ const AnalyticsPage = () => {
             <Card className="h-80 mb-8 flex flex-col">
                 <h3 className="text-lg font-semibold text-slate-700 dark:text-gray-200 mb-6">Spending Trend</h3>
                 {trendData.length > 0 ? (
-                    <div className="w-full flex-1 min-h-0 pb-4">
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div className="w-full flex-1 min-h-0 pb-4 relative">
+                        <ResponsiveContainer width="99%" height="100%">
                             <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
                                 <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9CA3AF' }} />

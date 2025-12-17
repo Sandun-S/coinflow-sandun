@@ -28,8 +28,8 @@ const SignupPage = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
             <Card className="w-full max-w-md">
                 <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-                    <p className="text-gray-500">Join CoinFlow today</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create Account</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Join CoinFlow today</p>
                 </div>
 
                 {error && (
