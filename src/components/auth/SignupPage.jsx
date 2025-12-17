@@ -66,22 +66,7 @@ const SignupPage = () => {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="profileImage" className="text-sm font-medium text-slate-700 dark:text-slate-300">Profile Picture (Optional)</label>
-                        <input
-                            type="file"
-                            id="profileImage"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="block w-full text-sm text-slate-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-indigo-50 file:text-indigo-700
-                                hover:file:bg-indigo-100
-                            "
-                        />
-                    </div>
+
                     <Input
                         label="Email"
                         id="email"
