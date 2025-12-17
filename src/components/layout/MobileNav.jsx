@@ -28,9 +28,8 @@ const MobileNav = () => {
                     <span className="text-[10px] font-medium">Analytics</span>
                 </NavLink>
 
-                {/* Future: Budgets */}
                 <NavLink
-                    to="/contacts"
+                    to="/budgets"
                     className={({ isActive }) =>
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`

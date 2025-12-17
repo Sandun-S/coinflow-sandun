@@ -33,7 +33,7 @@ const TransactionList = ({ onEdit }) => {
                                     >
                                         {parseFloat(transaction.amount) < 0 ? '-' : '+'}{formatMoney(Math.abs(transaction.amount))}
                                     </span>
-                                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => onEdit && onEdit(transaction)}
                                             className="text-slate-400 hover:text-indigo-500 transition-colors p-1"
