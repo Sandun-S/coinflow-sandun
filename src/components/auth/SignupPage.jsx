@@ -10,7 +10,6 @@ const SignupPage = () => {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [image, setImage] = useState(null);
     const [error, setError] = useState('');
     const { signup } = useAuth();
     const navigate = useNavigate();
@@ -18,7 +17,7 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const res = await signup(firstName, lastName, email, password, image);
+        const res = await signup(firstName, lastName, email, password);
         if (res.success) {
             navigate('/');
         } else {
@@ -27,11 +26,7 @@ const SignupPage = () => {
         }
     };
 
-    const handleImageChange = (e) => {
-        if (e.target.files[0]) {
-            setImage(e.target.files[0]);
-        }
-    };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

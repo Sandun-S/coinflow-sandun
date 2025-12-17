@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, googleProvider, storage } from '../lib/firebase';
+import { auth, googleProvider } from '../lib/firebase';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
@@ -8,7 +7,6 @@ import {
     signInWithPopup,
     updateProfile
 } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AuthContext = createContext(null);
 
