@@ -29,12 +29,6 @@ const Sidebar = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link to="/profile" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <User size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Profile</span>
-                        </Link>
-                    </li>
-                    <li>
                         <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
                             <Settings size={20} className="group-hover:text-indigo-400 transition-colors" />
                             <span className="font-medium">Settings</span>
@@ -44,16 +38,24 @@ const Sidebar = () => {
             </nav>
             <div className="p-4 border-t border-slate-800">
                 <div className="flex items-center gap-3 justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-800">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
-                            {user?.name?.charAt(0).toUpperCase() || 'U'}
-                        </div>
+                    <Link to="/profile" className="flex items-center gap-3 overflow-hidden flex-1 group">
+                        {user?.photoURL ? (
+                            <img
+                                src={user.photoURL}
+                                alt={user.name}
+                                className="w-8 h-8 rounded-full object-cover border border-slate-600 group-hover:border-indigo-500 transition-colors"
+                            />
+                        ) : (
+                            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 border border-transparent group-hover:border-indigo-400 transition-colors">
+                                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                        )}
                         <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-medium truncate text-white">{user?.name || 'User'}</span>
-                            <span className="text-xs text-slate-500 truncate">Free Plan</span>
+                            <span className="text-sm font-medium truncate text-white group-hover:text-indigo-300 transition-colors">{user?.name || 'User'}</span>
+                            <span className="text-xs text-slate-500 truncate">View Profile</span>
                         </div>
-                    </div>
-                    <button onClick={logout} className="text-slate-400 hover:text-white transition-colors" title="Log out">
+                    </Link>
+                    <button onClick={logout} className="text-slate-400 hover:text-red-400 transition-colors p-1" title="Log out">
                         <LogOut size={18} />
                     </button>
                 </div>
