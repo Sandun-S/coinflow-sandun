@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, googleProvider } from '../lib/firebase';
 import {
     signInWithEmailAndPassword,
@@ -57,34 +58,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signup = async (firstName, lastName, email, password, profileImage) => {
+    const signup = async (firstName, lastName, email, password) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            let photoURL = null;
 
-            // Upload Profile Image if provided
-            if (profileImage) {
-                try {
-                    const storageRef = ref(storage, `profile_images/${user.uid}`);
-                    const snapshot = await uploadBytes(storageRef, profileImage);
-                    photoURL = await getDownloadURL(snapshot.ref);
-                } catch (uploadError) {
-                    console.error("Image upload failed:", uploadError);
-                    // Continue without image
-                }
-            }
-
-            // Update profile with name and photo
+            // Update profile with name
             await updateProfile(user, {
-                displayName: `${firstName} ${lastName}`,
-                photoURL: photoURL
+                displayName: `${firstName} ${lastName}`
             });
 
             return { success: true };
         } catch (error) {
             console.error("Signup Error:", error.code, error.message);
-            return { success: false, error: error.message };
+            let msg = "Failed to create account.";
+            if (error.code === 'auth/email-already-in-use') msg = "Email is already in use.";
+            if (error.code === 'auth/weak-password') msg = "Password should be at least 6 characters.";
+            if (error.code === 'auth/invalid-email') msg = "Invalid email address.";
+            return { success: false, error: msg };
         }
     };
 
