@@ -14,6 +14,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AnalyticsPage from './components/analytics/AnalyticsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
+import ContactPage from './components/pages/ContactPage';
 
 import Modal from './components/common/Modal';
 import Button from './components/common/Button';
@@ -86,6 +87,7 @@ function App() {
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/contact" element={<ContactPage />} />
               </Route>
 
               {/* Fallback */}

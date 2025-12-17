@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PieChart, Settings, User, LogOut } from 'lucide-react';
+import { Home, PieChart, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -32,6 +32,12 @@ const Sidebar = () => {
                         <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
                             <Settings size={20} className="group-hover:text-indigo-400 transition-colors" />
                             <span className="font-medium">Settings</span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link to="/contact" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
+                            <MessageCircle size={20} className="group-hover:text-indigo-400 transition-colors" />
+                            <span className="font-medium">Contact & Support</span>
                         </Link>
                     </li>
                 </ul>
