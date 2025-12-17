@@ -6,7 +6,8 @@ import Input from '../common/Input';
 import Modal from '../common/Modal';
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
-import { Plus, Trash2, Calendar, RefreshCw } from 'lucide-react';
+import { useTransactions } from '../../context/TransactionContext'; // Import this
+import { Plus, Trash2, Calendar, RefreshCw, Check } from 'lucide-react'; // Import Check
 
 const SubscriptionsPage = () => {
     const { subscriptions, addSubscription, deleteSubscription, loading } = useSubscriptions();

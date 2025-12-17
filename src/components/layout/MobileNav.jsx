@@ -46,8 +46,7 @@ const MobileNav = () => {
                         }`
                     }
                 >
-                    {/* Using Settings icon temporarily if needed, or PieChart, but simpler is better */}
-                    <Wallet size={20} />
+                    <Calendar size={20} />
                     <span className="text-[10px] font-medium">Subs</span>
                 </NavLink>
 
@@ -60,17 +59,6 @@ const MobileNav = () => {
                 >
                     <Settings size={20} />
                     <span className="text-[10px] font-medium">Settings</span>
-                </NavLink>
-
-                <NavLink
-                    to="/profile"
-                    className={({ isActive }) =>
-                        `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
-                        }`
-                    }
-                >
-                    <User size={20} />
-                    <span className="text-[10px] font-medium">Profile</span>
                 </NavLink>
             </nav>
         </div>
