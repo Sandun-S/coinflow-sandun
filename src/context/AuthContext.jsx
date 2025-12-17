@@ -40,7 +40,13 @@ export const AuthProvider = ({ children }) => {
             await signInWithEmailAndPassword(auth, email, password);
             return { success: true };
         } catch (error) {
-            return { success: false, error: error.message };
+            let msg = "Failed to login.";
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                msg = "Invalid email or password.";
+            } else if (error.code === 'auth/too-many-requests') {
+                msg = "Too many failed attempts. Please try again later.";
+            }
+            return { success: false, error: msg };
         }
     };
 

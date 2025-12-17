@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar, MessageCircle } from 'lucide-react';
+import { User, Trash2, Mail, Calendar, MessageCircle, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
@@ -64,6 +64,17 @@ const ProfilePage = () => {
                             </div>
                         </div>
                     </div>
+                </Card>
+
+                {/* Logout Action */}
+                <Card className="mb-6 border-slate-200 dark:border-slate-700">
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 font-bold py-2 transition-colors"
+                    >
+                        <LogOut size={20} />
+                        Sign Out
+                    </button>
                 </Card>
 
                 {/* Mobile Only: Contact Support */}
