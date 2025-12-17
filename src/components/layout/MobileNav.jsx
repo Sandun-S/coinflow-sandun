@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PieChart, Wallet, Settings, User } from 'lucide-react';
+import { Home, PieChart, Wallet, Settings, User, Calendar } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const MobileNav = () => {
