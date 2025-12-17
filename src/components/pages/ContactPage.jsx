@@ -3,24 +3,9 @@ import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { Mail, MapPin, MessageCircle, Send } from 'lucide-react';
+import { Mail, MapPin, MessageCircle } from 'lucide-react';
 
 const ContactPage = () => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
-    const [sent, setSent] = useState(false);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Simulate sending
-        console.log('Support Request:', { name, email, message });
-        setSent(true);
-        setTimeout(() => setSent(false), 3000);
-        setName('');
-        setEmail('');
-        setMessage('');
-    };
 
     return (
         <MainLayout>
@@ -62,7 +47,7 @@ const ContactPage = () => {
 
                         <div className="mt-8 pt-8 border-t border-white/20">
                             <a
-                                href="https://wa.me/"
+                                href="https://wa.me/94772410298?text=Hello%20Sandun,%20I'd%20like%20to%20contact%20support%20regarding%20CoinFlow."
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg"
@@ -78,18 +63,15 @@ const ContactPage = () => {
                 <Card>
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Send us a Message</h3>
 
-                    {sent ? (
-                        <div className="bg-green-100 text-green-700 p-4 rounded-lg flex items-center gap-2 mb-4">
-                            <Send size={18} /> Message Sent Successfully!
-                        </div>
-                    ) : null}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form
+                        className="space-y-4"
+                        action="https://formspree.io/f/mnnglvld"
+                        method="POST"
+                    >
                         <Input
                             label="Your Name"
                             id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            name="name"
                             placeholder="John Doe"
                             required
                         />
@@ -97,9 +79,16 @@ const ContactPage = () => {
                             label="Email Address"
                             id="email"
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            name="_replyto"
                             placeholder="john@example.com"
+                            required
+                        />
+                        <Input
+                            label="Subject"
+                            id="subject"
+                            type="text"
+                            name="subject"
+                            placeholder="Inquiry about CoinFlow"
                             required
                         />
                         <div className="flex flex-col gap-1.5">
@@ -108,11 +97,10 @@ const ContactPage = () => {
                             </label>
                             <textarea
                                 id="message"
+                                name="message"
                                 rows="4"
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-white placeholder-slate-400 resize-none"
                                 placeholder="How can we help you?"
-                                value={message}
-                                onChange={(e) => setMessage(e.target.value)}
                                 required
                             />
                         </div>

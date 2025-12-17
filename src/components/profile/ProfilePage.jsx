@@ -4,7 +4,8 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar } from 'lucide-react';
+import { User, Trash2, Mail, Calendar, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
     const { user, logout } = useAuth();
@@ -64,6 +65,19 @@ const ProfilePage = () => {
                         </div>
                     </div>
                 </Card>
+
+                {/* Mobile Only: Contact Support */}
+                <div className="md:hidden mb-6">
+                    <Link to="/contact" className="flex items-center gap-4 p-4 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 transition-colors">
+                        <div className="p-2 bg-white/20 rounded-lg">
+                            <MessageCircle size={20} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold">Contact Support</p>
+                            <p className="text-xs text-indigo-100">Need help? Chat with us.</p>
+                        </div>
+                    </Link>
+                </div>
 
                 <Card className="border-red-100 dark:border-red-900/30">
                     <h3 className="text-red-600 font-bold mb-2 flex items-center gap-2">
