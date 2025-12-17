@@ -35,15 +35,15 @@ const Sidebar = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <Settings size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Settings</span>
-                        </Link>
-                    </li>
-                    <li>
                         <Link to="/subscriptions" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
                             <Wallet size={20} className="group-hover:text-indigo-400 transition-colors" />
                             <span className="font-medium">Subscriptions</span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
+                            <Settings size={20} className="group-hover:text-indigo-400 transition-colors" />
+                            <span className="font-medium">Settings</span>
                         </Link>
                     </li>
                     <li>
