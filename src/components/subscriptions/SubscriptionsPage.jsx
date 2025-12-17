@@ -6,12 +6,13 @@ import Input from '../common/Input';
 import Modal from '../common/Modal';
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
-import { useTransactions } from '../../context/TransactionContext'; // Import this
-import { Plus, Trash2, Calendar, RefreshCw, Check } from 'lucide-react'; // Import Check
+import { useTransactions } from '../../context/TransactionContext';
+import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react'; // Added Pencil
 
 const SubscriptionsPage = () => {
-    const { subscriptions, addSubscription, deleteSubscription, loading } = useSubscriptions();
+    const { subscriptions, addSubscription, deleteSubscription, updateSubscription, loading } = useSubscriptions();
     const { currency } = useSettings();
+    const { addTransaction } = useTransactions();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
@@ -19,15 +20,38 @@ const SubscriptionsPage = () => {
     const [amount, setAmount] = useState('');
     const [billingCycle, setBillingCycle] = useState('Monthly');
     const [nextBillingDate, setNextBillingDate] = useState('');
+    const [editingId, setEditingId] = useState(null); // ID of sub being edited
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await addSubscription({
+        const subData = {
             name,
             amount: parseFloat(amount),
             billingCycle,
             nextBillingDate: new Date(nextBillingDate).toISOString()
-        });
+        };
+
+        if (editingId) {
+            await updateSubscription(editingId, subData);
+        } else {
+            await addSubscription(subData);
+        }
+
+        handleClose();
+    };
+
+    const handleEdit = (sub) => {
+        setName(sub.name);
+        setAmount(sub.amount.toString());
+        setBillingCycle(sub.billingCycle);
+        // Format date for input field (YYYY-MM-DD)
+        const date = new Date(sub.nextBillingDate);
+        setNextBillingDate(date.toISOString().split('T')[0]);
+        setEditingId(sub.id);
+        setIsModalOpen(true);
+    };
+
+    const handleClose = () => {
         setIsModalOpen(false);
         resetForm();
     };
@@ -37,6 +61,39 @@ const SubscriptionsPage = () => {
         setAmount('');
         setBillingCycle('Monthly');
         setNextBillingDate('');
+        setEditingId(null);
+    };
+
+    const handlePayment = async (sub) => {
+        if (!window.confirm(`Mark ${sub.name} as paid? This will add a transaction and update the due date.`)) return;
+
+        // 1. Add Transaction
+        const transactionResult = await addTransaction({
+            type: 'expense',
+            amount: parseFloat(sub.amount),
+            category: 'Bills & Utilities',
+            description: `Subscription: ${sub.name}`,
+            date: new Date().toISOString()
+        });
+
+        if (transactionResult.success) {
+            // 2. Calculate New Next Date
+            const currentNextDate = new Date(sub.nextBillingDate);
+            let newNextDate = new Date(currentNextDate);
+
+            if (sub.billingCycle === 'Monthly') {
+                newNextDate.setMonth(newNextDate.getMonth() + 1);
+            } else {
+                newNextDate.setFullYear(newNextDate.getFullYear() + 1);
+            }
+
+            // 3. Update Subscription
+            await updateSubscription(sub.id, {
+                nextBillingDate: newNextDate.toISOString()
+            });
+            // Optional: Toast or simple alert
+            console.log("Payment recorded successfully");
+        }
     };
 
     const formatCurrency = (value) => {
@@ -57,7 +114,10 @@ const SubscriptionsPage = () => {
 
     const getDaysUntilDue = (dateString) => {
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today
         const due = new Date(dateString);
+        due.setHours(0, 0, 0, 0); // Normalize due date
+
         const diffTime = due - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays;
@@ -102,12 +162,35 @@ const SubscriptionsPage = () => {
                                         <p className="text-sm text-slate-500 dark:text-slate-400">{sub.billingCycle}</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => deleteSubscription(sub.id)}
-                                    className="text-slate-400 hover:text-red-500 transition-colors"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                <div className="flex gap-2">
+                                    {daysLeft > 20 ? (
+                                        <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold uppercase tracking-wider">
+                                            <Check size={14} /> Paid
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handlePayment(sub)}
+                                            className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all"
+                                            title="Mark as Paid (Creates Transaction)"
+                                        >
+                                            <Check size={18} />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleEdit(sub)}
+                                        className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
+                                        title="Edit Subscription"
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteSubscription(sub.id)}
+                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                        title="Delete Subscription"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex justify-between items-end">
@@ -120,7 +203,11 @@ const SubscriptionsPage = () => {
                                     <p className={`font-medium ${isDueSoon ? 'text-orange-600 dark:text-orange-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                         {new Date(sub.nextBillingDate).toLocaleDateString()}
                                     </p>
-                                    {isDueSoon && <span className="text-xs font-bold text-orange-500">Due in {daysLeft} days!</span>}
+                                    {isDueSoon && (
+                                        <span className="text-xs font-bold text-orange-500">
+                                            {daysLeft === 0 ? "Due Today!" : `Due in ${daysLeft} days!`}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </Card>
@@ -135,8 +222,8 @@ const SubscriptionsPage = () => {
                 </div>
             )}
 
-            {/* Add Modal */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Subscription">
+            {/* Add/Edit Modal */}
+            <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? "Edit Subscription" : "Add Subscription"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
                         label="Name"
@@ -172,7 +259,7 @@ const SubscriptionsPage = () => {
                         required
                     />
                     <Button type="submit" variant="primary" className="w-full">
-                        Add Subscription
+                        {editingId ? "Update Subscription" : "Add Subscription"}
                     </Button>
                 </form>
             </Modal>

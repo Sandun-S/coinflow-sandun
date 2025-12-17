@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 
 // Initial state
 const initialState = {
@@ -74,20 +74,27 @@ export const TransactionProvider = ({ children }) => {
     // Add Transaction
     async function addTransaction(transaction) {
         try {
-            // Remove local ID generation, let Firestore handle it or keep it if needed for local opt logic, 
-            // but for now we trust the snapshot.
-            // But wait, the form generates an ID. We should probably remove that ID or ignore it 
-            // and let Firestore generate the doc ID. 
-            // However, to match the UI immediately, we could keep optimistic UI? 
-            // For this phase, let's rely on the real-time listener for simplicity.
-
             const { id, ...data } = transaction; // Exclude local ID if present
             await addDoc(collection(db, 'transactions'), {
                 ...data,
                 userId: user.id
             });
+            return { success: true };
         } catch (error) {
             console.error("Error adding transaction:", error);
+            return { success: false, error };
+        }
+    }
+
+    // Update Transaction (needed for Edit feature)
+    async function updateTransaction(id, updatedTransaction) {
+        try {
+            const transactionRef = doc(db, 'transactions', id);
+            await updateDoc(transactionRef, updatedTransaction);
+            return { success: true };
+        } catch (error) {
+            console.error("Error updating transaction:", error);
+            return { success: false, error };
         }
     }
 
@@ -95,9 +102,14 @@ export const TransactionProvider = ({ children }) => {
         <TransactionContext.Provider value={{
             transactions: state.transactions,
             deleteTransaction,
-            addTransaction
+            addTransaction,
+            updateTransaction
         }}>
             {children}
         </TransactionContext.Provider>
     );
 }
+
+export const useTransactions = () => {
+    return React.useContext(TransactionContext);
+};
