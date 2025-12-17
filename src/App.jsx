@@ -13,6 +13,7 @@ import SignupPage from './components/auth/SignupPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AnalyticsPage from './components/analytics/AnalyticsPage';
 import BudgetsPage from './components/budget/BudgetsPage';
+import SubscriptionsPage from './components/subscriptions/SubscriptionsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
 import ContactPage from './components/pages/ContactPage';
@@ -73,6 +74,7 @@ function Dashboard() {
 }
 
 import { BudgetProvider } from './context/BudgetContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
 
 // ...
 
@@ -83,23 +85,26 @@ function App() {
         <SettingsProvider>
           <TransactionProvider>
             <BudgetProvider>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
+              <SubscriptionProvider>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/budgets" element={<BudgetsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                </Route>
+                  {/* Protected Routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/budgets" element={<BudgetsPage />} />
+                    {/* Route for subscriptions will be added later */}
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                  </Route>
 
-                {/* Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+                  {/* Fallback */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </SubscriptionProvider>
             </BudgetProvider>
           </TransactionProvider>
         </SettingsProvider>
