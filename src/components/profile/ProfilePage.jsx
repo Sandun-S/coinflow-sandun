@@ -30,28 +30,36 @@ const ProfilePage = () => {
             <div className="max-w-2xl">
                 <Card className="mb-6">
                     <div className="flex items-center gap-6 mb-8">
-                        <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl font-bold">
-                            {user?.name?.charAt(0).toUpperCase()}
-                        </div>
+                        {user?.photoURL ? (
+                            <img
+                                src={user.photoURL}
+                                alt={user.name}
+                                className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 shadow-md"
+                            />
+                        ) : (
+                            <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-4xl font-bold border-4 border-slate-100 dark:border-slate-700 shadow-md">
+                                {user?.name?.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{user?.name}</h3>
-                            <p className="text-gray-500 dark:text-gray-400">Free Member</p>
+                            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{user?.name}</h3>
+                            <p className="text-slate-500 dark:text-slate-400">Free Member</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <Mail className="text-gray-400" />
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <Mail className="text-slate-400" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase font-semibold">Email Address</p>
-                                <p className="text-gray-800 dark:text-gray-200 font-medium">{user?.email}</p>
+                                <p className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Email Address</p>
+                                <p className="text-slate-800 dark:text-slate-200 font-medium">{user?.email}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <Calendar className="text-gray-400" />
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <Calendar className="text-slate-400" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase font-semibold">Member Since</p>
-                                <p className="text-gray-800 dark:text-gray-200 font-medium">{new Date().getFullYear()}</p>
+                                <p className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Member Since</p>
+                                <p className="text-slate-800 dark:text-slate-200 font-medium">{new Date().getFullYear()}</p>
                             </div>
                         </div>
                     </div>
