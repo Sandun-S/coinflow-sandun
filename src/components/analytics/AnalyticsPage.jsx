@@ -112,10 +112,10 @@ const AnalyticsPage = () => {
             </div>
 
             {/* Trend Chart (Line) */}
-            <Card className="h-80 mb-8">
+            <Card className="h-80 mb-8 flex flex-col">
                 <h3 className="text-lg font-semibold text-slate-700 dark:text-gray-200 mb-6">Spending Trend</h3>
                 {trendData.length > 0 ? (
-                    <div className="w-full h-full pb-8">
+                    <div className="w-full flex-1 min-h-0 pb-4">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
@@ -130,7 +130,7 @@ const AnalyticsPage = () => {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-slate-400">
+                    <div className="flex items-center justify-center flex-1 text-slate-400">
                         No spending data for this period.
                     </div>
                 )}
@@ -139,11 +139,11 @@ const AnalyticsPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Bar Chart */}
-                <Card className="h-96">
+                <Card className="h-96 flex flex-col">
                     <h3 className="text-lg font-semibold text-slate-700 dark:text-gray-200 mb-6">Spending per Category</h3>
                     {barData.length > 0 ? (
-                        <div className="w-full h-full pb-8">
-                            <ResponsiveContainer width="100%" height="90%">
+                        <div className="w-full flex-1 min-h-0 pb-4">
+                            <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.1} />
                                     <XAxis type="number" hide />
