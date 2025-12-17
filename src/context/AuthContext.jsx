@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }) => {
             // Force update local state immediately or wait for onAuthStateChanged
             return { success: true };
         } catch (error) {
+            console.error("Signup Error:", error.code, error.message);
             return { success: false, error: error.message };
         }
     };

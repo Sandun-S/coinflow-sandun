@@ -20,6 +20,7 @@ const SignupPage = () => {
         if (res.success) {
             navigate('/');
         } else {
+            console.error("Signup failed:", res.error);
             setError(res.error);
         }
     };
