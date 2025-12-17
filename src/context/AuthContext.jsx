@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, googleProvider } from '../lib/firebase';
+import { auth, googleProvider, storage } from '../lib/firebase';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
@@ -8,6 +8,7 @@ import {
     signInWithPopup,
     updateProfile
 } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AuthContext = createContext(null);
 
@@ -52,14 +53,30 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signup = async (name, email, password) => {
+    const signup = async (firstName, lastName, email, password, profileImage) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            // Update profile with name
-            await updateProfile(userCredential.user, {
-                displayName: name
+            const user = userCredential.user;
+            let photoURL = null;
+
+            // Upload Profile Image if provided
+            if (profileImage) {
+                try {
+                    const storageRef = ref(storage, `profile_images/${user.uid}`);
+                    const snapshot = await uploadBytes(storageRef, profileImage);
+                    photoURL = await getDownloadURL(snapshot.ref);
+                } catch (uploadError) {
+                    console.error("Image upload failed:", uploadError);
+                    // Continue without image
+                }
+            }
+
+            // Update profile with name and photo
+            await updateProfile(user, {
+                displayName: `${firstName} ${lastName}`,
+                photoURL: photoURL
             });
-            // Force update local state immediately or wait for onAuthStateChanged
+
             return { success: true };
         } catch (error) {
             console.error("Signup Error:", error.code, error.message);
