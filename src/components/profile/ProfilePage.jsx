@@ -48,75 +48,74 @@ const ProfilePage = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                            <Mail className="text-slate-400" />
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Email Address</p>
-                                <p className="text-slate-800 dark:text-slate-200 font-medium">{user?.email}</p>
+                    {/* Unified Action Menu */}
+                    <Card className="mb-6 overflow-hidden !p-0">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {/* Email Info (Read Only) */}
+                            <div className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
+                                    <Mail size={20} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-slate-800 dark:text-white">Email</p>
+                                    <p className="text-xs text-slate-500">{user?.email}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                            <Calendar className="text-slate-400" />
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Member Since</p>
-                                <p className="text-slate-800 dark:text-slate-200 font-medium">{new Date().getFullYear()}</p>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
 
-                {/* Settings & Preferences */}
-                <div className="mb-6">
-                    <Link to="/settings" className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group">
-                        <div className="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            <Settings size={22} />
-                        </div>
-                        <div className="flex-1">
-                            <p className="font-bold text-slate-800 dark:text-white">Settings & Preferences</p>
-                            <p className="text-xs text-slate-500">Theme, Currency, Export</p>
-                        </div>
-                        <div className="text-slate-300">
-                            &rarr;
-                        </div>
-                    </Link>
-                </div>
+                            {/* Settings */}
+                            <Link to="/settings" className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 transition-colors">
+                                    <Settings size={20} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-slate-800 dark:text-white">Settings & Preferences</p>
+                                    <p className="text-xs text-slate-500">Theme, Currency, Export</p>
+                                </div>
+                                <div className="text-slate-300 group-hover:text-indigo-400 transition-colors">
+                                    &rarr;
+                                </div>
+                            </Link>
 
-                {/* Logout Action */}
-                <Card className="mb-6 border-slate-200 dark:border-slate-700">
-                    <button
-                        onClick={logout}
-                        className="w-full flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 font-bold py-2 transition-colors"
-                    >
-                        <LogOut size={20} />
-                        Sign Out
-                    </button>
-                </Card>
+                            {/* Contact Support */}
+                            <Link to="/contact" className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 transition-colors">
+                                    <MessageCircle size={20} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-slate-800 dark:text-white">Contact Support</p>
+                                    <p className="text-xs text-slate-500">Get help with CoinFlow</p>
+                                </div>
+                                <div className="text-slate-300 group-hover:text-indigo-400 transition-colors">
+                                    &rarr;
+                                </div>
+                            </Link>
 
-                {/* Mobile Only: Contact Support */}
-                <div className="md:hidden mb-6">
-                    <Link to="/contact" className="flex items-center gap-4 p-4 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 transition-colors">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <MessageCircle size={20} />
+                            {/* Sign Out */}
+                            <button
+                                onClick={logout}
+                                className="w-full p-4 flex items-center gap-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group text-left"
+                            >
+                                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 group-hover:text-red-500 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors">
+                                    <LogOut size={20} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400">Sign Out</p>
+                                </div>
+                            </button>
                         </div>
-                        <div className="flex-1">
-                            <p className="font-bold">Contact Support</p>
-                            <p className="text-xs text-indigo-100">Need help? Chat with us.</p>
-                        </div>
-                    </Link>
-                </div>
+                    </Card>
 
-                <Card className="border-red-100 dark:border-red-900/30">
-                    <h3 className="text-red-600 font-bold mb-2 flex items-center gap-2">
-                        <Trash2 size={20} /> Danger Zone
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Once you delete your data, there is no going back. Please be certain.
-                    </p>
-                    <Button variant="danger" onClick={handleDeleteData}>
-                        Delete All My Data
-                    </Button>
-                </Card>
+                    <Card className="border-red-100 dark:border-red-900/30">
+                        <h3 className="text-red-600 font-bold mb-2 flex items-center gap-2">
+                            <Trash2 size={20} /> Danger Zone
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Once you delete your data, there is no going back. Please be certain.
+                        </p>
+                        <Button variant="danger" onClick={handleDeleteData}>
+                            Delete All My Data
+                        </Button>
+                    </Card>
             </div>
         </MainLayout>
     );
