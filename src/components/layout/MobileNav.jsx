@@ -51,14 +51,14 @@ const MobileNav = () => {
                 </NavLink>
 
                 <NavLink
-                    to="/settings"
+                    to="/profile"
                     className={({ isActive }) =>
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
                 >
-                    <Settings size={20} />
-                    <span className="text-[10px] font-medium">Settings</span>
+                    <User size={20} />
+                    <span className="text-[10px] font-medium">Profile</span>
                 </NavLink>
             </nav>
         </div>

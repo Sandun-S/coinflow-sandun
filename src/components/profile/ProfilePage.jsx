@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar, MessageCircle, LogOut } from 'lucide-react';
+import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
@@ -65,6 +65,22 @@ const ProfilePage = () => {
                         </div>
                     </div>
                 </Card>
+
+                {/* Settings & Preferences */}
+                <div className="mb-6">
+                    <Link to="/settings" className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group">
+                        <div className="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <Settings size={22} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold text-slate-800 dark:text-white">Settings & Preferences</p>
+                            <p className="text-xs text-slate-500">Theme, Currency, Export</p>
+                        </div>
+                        <div className="text-slate-300">
+                            &rarr;
+                        </div>
+                    </Link>
+                </div>
 
                 {/* Logout Action */}
                 <Card className="mb-6 border-slate-200 dark:border-slate-700">
