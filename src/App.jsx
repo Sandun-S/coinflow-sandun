@@ -18,6 +18,7 @@ import TransactionsPage from './components/transactions/TransactionsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
 import ContactPage from './components/pages/ContactPage';
+import MyWallets from './components/accounts/MyWallets';
 
 import Modal from './components/common/Modal';
 import Button from './components/common/Button';
