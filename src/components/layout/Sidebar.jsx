@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PieChart, Settings, User, LogOut, MessageCircle, Wallet, History } from 'lucide-react';
+import { Home, PieChart, Settings, User, LogOut, MessageCircle, Wallet, History, CreditCard, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { NavLink, Link } from 'react-router-dom';
 
@@ -60,6 +60,19 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <NavLink
+                            to="/wallets"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <CreditCard size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">My Wallets</span>
+                                </>
+                            )}
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink
                             to="/budgets"
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
                         >
@@ -78,7 +91,7 @@ const Sidebar = () => {
                         >
                             {({ isActive }) => (
                                 <>
-                                    <Wallet size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <Calendar size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
                                     <span className="font-medium">Subscriptions</span>
                                 </>
                             )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PieChart, Wallet, Settings, User, Calendar } from 'lucide-react';
+import { Home, PieChart, Wallet, Settings, User, Calendar, CreditCard } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const MobileNav = () => {
@@ -15,6 +15,17 @@ const MobileNav = () => {
                 >
                     <Home size={20} />
                     <span className="text-[10px] font-medium">Home</span>
+                </NavLink>
+
+                <NavLink
+                    to="/wallets"
+                    className={({ isActive }) =>
+                        `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+                        }`
+                    }
+                >
+                    <CreditCard size={20} />
+                    <span className="text-[10px] font-medium">Wallets</span>
                 </NavLink>
 
                 <NavLink
