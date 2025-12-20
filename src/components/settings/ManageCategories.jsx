@@ -140,7 +140,7 @@ const ManageCategories = () => {
                             {/* Color Picker */}
                             <div>
                                 <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Color</label>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2 items-center">
                                     {COLORS.map((color) => (
                                         <button
                                             key={color}
@@ -151,6 +151,25 @@ const ManageCategories = () => {
                                             {newCatColor === color && <Check size={14} />}
                                         </button>
                                     ))}
+                                    {/* Custom Color Input */}
+                                    <div className="relative group">
+                                        <input
+                                            type="color"
+                                            className="w-8 h-8 opacity-0 absolute inset-0 cursor-pointer"
+                                            onChange={(e) => setNewCatColor(e.target.value)}
+                                            value={newCatColor.startsWith('#') ? newCatColor : '#6366f1'}
+                                        />
+                                        <div
+                                            className={`w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 transition-transform hover:scale-110 ${newCatColor.startsWith('#') ? 'ring-2 ring-offset-2 ring-indigo-500 dark:ring-offset-slate-800' : ''}`}
+                                            title="Custom Color"
+                                            style={newCatColor.startsWith('#') ? { backgroundColor: newCatColor } : {}}
+                                        >
+                                            <div className="bg-clip-text text-transparent bg-gradient-to-tr from-indigo-500 to-pink-500 font-bold text-xs">
+                                                {newCatColor.startsWith('#') && <Check size={14} className="text-white mix-blend-difference" />}
+                                                {!newCatColor.startsWith('#') && "+"}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -180,70 +199,76 @@ const ManageCategories = () => {
 
                     {/* Category List */}
                     <div className="space-y-3">
-                        {categories.map(cat => (
-                            <div key={cat.id} className="border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden">
-                                <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                    <div
-                                        className="flex items-center gap-3 flex-1 cursor-pointer"
-                                        onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
-                                    >
-                                        <div className={`p-2 rounded-lg ${cat.color}`}>
-                                            {getIcon(cat.icon)}
-                                        </div>
-                                        <span className="font-medium text-slate-700 dark:text-slate-200">{cat.name}</span>
-                                        <span className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 uppercase tracking-wider text-[10px]">{cat.type}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => deleteCategory(cat.id)}
-                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            title="Delete Category"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
-                                            className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
-                                        >
-                                            {expandedCategory === cat.id ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
+                        {categories.map(cat => {
+                            const isHex = cat.color.startsWith('#');
+                            const iconStyle = isHex ? { backgroundColor: cat.color + '25', color: cat.color } : {};
+                            const iconClass = isHex ? `p-2 rounded-lg` : `p-2 rounded-lg ${cat.color}`;
 
-                                {/* Subcategories */}
-                                {expandedCategory === cat.id && (
-                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-3">
-                                        <div className="flex flex-wrap gap-2">
-                                            {cat.subcategories && cat.subcategories.map(sub => (
-                                                <span key={sub} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300">
-                                                    {sub}
-                                                    <button onClick={() => handleDeleteSubcategory(cat.id, sub)} className="hover:text-red-500 ml-1 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"><Trash2 size={12} /></button>
-                                                </span>
-                                            ))}
-                                            {(!cat.subcategories || cat.subcategories.length === 0) && (
-                                                <span className="text-sm text-slate-400 italic">No subcategories</span>
-                                            )}
+                            return (
+                                <div key={cat.id} className="border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                                    <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <div
+                                            className="flex items-center gap-3 flex-1 cursor-pointer"
+                                            onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
+                                        >
+                                            <div className={iconClass} style={iconStyle}>
+                                                {getIcon(cat.icon)}
+                                            </div>
+                                            <span className="font-medium text-slate-700 dark:text-slate-200">{cat.name}</span>
+                                            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 uppercase tracking-wider text-[10px]">{cat.type}</span>
                                         </div>
-                                        <div className="flex gap-2 mt-2">
-                                            <Input
-                                                placeholder="Add Subcategory..."
-                                                value={newSubcatName}
-                                                onChange={(e) => setNewSubcatName(e.target.value)}
-                                                className="flex-1 py-1.5 text-sm bg-white dark:bg-slate-700"
-                                            />
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleAddSubcategory(cat.id)}
-                                                disabled={!newSubcatName}
-                                                variant="secondary"
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => deleteCategory(cat.id)}
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                title="Delete Category"
                                             >
-                                                Add Sub
-                                            </Button>
+                                                <Trash2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
+                                                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                                            >
+                                                {expandedCategory === cat.id ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                            </button>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        ))}
+
+                                    {/* Subcategories */}
+                                    {expandedCategory === cat.id && (
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                {cat.subcategories && cat.subcategories.map(sub => (
+                                                    <span key={sub} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300">
+                                                        {sub}
+                                                        <button onClick={() => handleDeleteSubcategory(cat.id, sub)} className="hover:text-red-500 ml-1 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"><Trash2 size={12} /></button>
+                                                    </span>
+                                                ))}
+                                                {(!cat.subcategories || cat.subcategories.length === 0) && (
+                                                    <span className="text-sm text-slate-400 italic">No subcategories</span>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 mt-2">
+                                                <Input
+                                                    placeholder="Add Subcategory..."
+                                                    value={newSubcatName}
+                                                    onChange={(e) => setNewSubcatName(e.target.value)}
+                                                    className="flex-1 py-1.5 text-sm bg-white dark:bg-slate-700"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleAddSubcategory(cat.id)}
+                                                    disabled={!newSubcatName}
+                                                    variant="secondary"
+                                                >
+                                                    Add Sub
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             )}

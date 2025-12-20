@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, PieChart, Settings, User, LogOut, MessageCircle, Wallet, History } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
@@ -19,46 +19,96 @@ const Sidebar = () => {
             <nav className="flex-1 p-4 overflow-y-auto">
                 <ul className="space-y-1">
                     <li>
-                        <Link to="/" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all duration-200 group">
-                            <Home size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Dashboard</span>
-                        </Link>
+                        <NavLink
+                            to="/"
+                            end
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <Home size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Dashboard</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/transactions" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <History size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Transactions</span>
-                        </Link>
+                        <NavLink
+                            to="/transactions"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <History size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Transactions</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/analytics" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <PieChart size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Analytics</span>
-                        </Link>
+                        <NavLink
+                            to="/analytics"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <PieChart size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Analytics</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/budgets" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <Wallet size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Budgets</span>
-                        </Link>
+                        <NavLink
+                            to="/budgets"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <Wallet size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Budgets</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/subscriptions" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <Wallet size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Subscriptions</span>
-                        </Link>
+                        <NavLink
+                            to="/subscriptions"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <Wallet size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Subscriptions</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <Settings size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Settings</span>
-                        </Link>
+                        <NavLink
+                            to="/settings"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <Settings size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Settings</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                     <li>
-                        <Link to="/contact" className="flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 group">
-                            <MessageCircle size={20} className="group-hover:text-indigo-400 transition-colors" />
-                            <span className="font-medium">Contact & Support</span>
-                        </Link>
+                        <NavLink
+                            to="/contact"
+                            className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <MessageCircle size={20} className={isActive ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'} />
+                                    <span className="font-medium">Contact & Support</span>
+                                </>
+                            )}
+                        </NavLink>
                     </li>
                 </ul>
             </nav>

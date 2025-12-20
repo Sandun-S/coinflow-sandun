@@ -65,7 +65,10 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                         }}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${cat.color || 'bg-slate-100 text-slate-600'}`}>
+                                            <div
+                                                className={cat.color?.startsWith('#') ? 'p-2 rounded-lg' : `p-2 rounded-lg ${cat.color || 'bg-slate-100 text-slate-600'}`}
+                                                style={cat.color?.startsWith('#') ? { backgroundColor: cat.color + '25', color: cat.color } : {}}
+                                            >
                                                 {getIcon(cat.icon)}
                                             </div>
                                             <span className="font-medium text-slate-700 dark:text-slate-200">{cat.name}</span>

@@ -102,6 +102,7 @@ function App() {
                         <Route path="/analytics" element={<AnalyticsPage />} />
                         <Route path="/budgets" element={<BudgetsPage />} />
                         <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                        <Route path="/wallets" element={<MyWallets />} /> {/* Added Route */}
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/contact" element={<ContactPage />} />
