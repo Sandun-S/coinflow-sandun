@@ -14,6 +14,8 @@ const MyWallets = () => {
     const [isAdding, setIsAdding] = useState(false);
     const [isTransferring, setIsTransferring] = useState(false);
 
+    const [editingId, setEditingId] = useState(null);
+
     // Form State
     const [name, setName] = useState('');
     const [type, setType] = useState('Bank');
@@ -26,12 +28,7 @@ const MyWallets = () => {
 
     // Totals
     const totalCash = cashAndBank.reduce((sum, a) => sum + a.balance, 0);
-    const totalDebt = creditCards.reduce((sum, a) => sum + (a.creditLimit - a.balance), 0); // Used amount = Limit - Available
-    // Wait, balance in our logic is "Available Balance" for CC?
-    // User logic: "my credit card 150000 lkr... if i used 40 000 lkr... i have 110k lkr"
-    // So `balance` = 110k (Available).
-    // `used` = Limit - Balance. (150 - 110 = 40).
-    // Debt = Used.
+    const totalDebt = creditCards.reduce((sum, a) => sum + (a.creditLimit - a.balance), 0);
     const netWorth = totalCash - totalDebt;
 
     const handleSubmit = async (e) => {
@@ -52,14 +49,15 @@ const MyWallets = () => {
 
         if (type === 'Credit Card') {
             accountData.creditLimit = limit;
-            if (!balance && limit) {
-                // If user enters limit but no balance, assume full limit available (0 debt)
-                // Or user must enter current available balance
-                accountData.balance = limit;
-            }
+            // For updates, we blindly accept the new balance if provided.
         }
 
-        await addAccount(accountData);
+        if (editingId) {
+            await updateAccount(editingId, accountData);
+        } else {
+            await addAccount(accountData);
+        }
+
         setIsAdding(false);
         resetForm();
     };
@@ -69,6 +67,18 @@ const MyWallets = () => {
         setType('Bank');
         setBalance('');
         setCreditLimit('');
+        setEditingId(null);
+    };
+
+    const handleEdit = (acc) => {
+        setEditingId(acc.id);
+        setName(acc.name);
+        setType(acc.type);
+        setBalance(acc.balance);
+        if (acc.type === 'Credit Card') {
+            setCreditLimit(acc.creditLimit);
+        }
+        setIsAdding(true);
     };
 
     const handleDelete = async (id) => {
@@ -98,12 +108,22 @@ const MyWallets = () => {
                         <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
                     </div>
                 </div>
-                <button
-                    onClick={() => handleDelete(acc.id)}
-                    className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                    <Trash2 size={18} />
-                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={() => handleEdit(acc)}
+                        className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
+                        title="Edit Wallet"
+                    >
+                        <Edit2 size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleDelete(acc.id)}
+                        className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                        title="Delete Wallet"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                </div>
             </div>
 
             <div className="mt-2">
@@ -203,8 +223,8 @@ const MyWallets = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                         <Card className="w-full max-w-md animate-in fade-in zoom-in duration-200">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add New Wallet</h3>
-                                <button onClick={() => setIsAdding(false)}><X size={20} className="text-slate-400" /></button>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">{editingId ? 'Edit Wallet' : 'Add New Wallet'}</h3>
+                                <button onClick={() => { setIsAdding(false); resetForm(); }}><X size={20} className="text-slate-400" /></button>
                             </div>
 
                             <form onSubmit={handleSubmit} className="space-y-4">
@@ -252,7 +272,7 @@ const MyWallets = () => {
                                 </div>
 
                                 <Button type="submit" className="w-full mt-2">
-                                    Create Wallet
+                                    {editingId ? 'Save Changes' : 'Create Wallet'}
                                 </Button>
                             </form>
                         </Card>
