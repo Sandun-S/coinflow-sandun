@@ -7,7 +7,7 @@ import Modal from '../common/Modal';
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
-import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react'; // Added Pencil
+import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
 
 const SubscriptionsPage = () => {
     const { subscriptions, addSubscription, deleteSubscription, updateSubscription, loading } = useSubscriptions();
@@ -20,6 +20,8 @@ const SubscriptionsPage = () => {
     const [amount, setAmount] = useState('');
     const [billingCycle, setBillingCycle] = useState('Monthly');
     const [nextBillingDate, setNextBillingDate] = useState('');
+    const [category, setCategory] = useState('Bills & Utilities'); // Default category
+    const [type, setType] = useState('expense'); // Default type
     const [editingId, setEditingId] = useState(null); // ID of sub being edited
 
     const handleSubmit = async (e) => {
@@ -28,7 +30,9 @@ const SubscriptionsPage = () => {
             name,
             amount: parseFloat(amount),
             billingCycle,
-            nextBillingDate: new Date(nextBillingDate).toISOString()
+            nextBillingDate: new Date(nextBillingDate).toISOString(),
+            category,
+            type
         };
 
         if (editingId) {
@@ -47,6 +51,8 @@ const SubscriptionsPage = () => {
         // Format date for input field (YYYY-MM-DD)
         const date = new Date(sub.nextBillingDate);
         setNextBillingDate(date.toISOString().split('T')[0]);
+        setCategory(sub.category || 'Bills & Utilities');
+        setType(sub.type || 'expense');
         setEditingId(sub.id);
         setIsModalOpen(true);
     };
@@ -61,6 +67,8 @@ const SubscriptionsPage = () => {
         setAmount('');
         setBillingCycle('Monthly');
         setNextBillingDate('');
+        setCategory('Bills & Utilities');
+        setType('expense');
         setEditingId(null);
     };
 
@@ -69,10 +77,10 @@ const SubscriptionsPage = () => {
 
         // 1. Add Transaction
         const transactionResult = await addTransaction({
-            type: 'expense',
-            amount: parseFloat(sub.amount),
-            category: 'Bills & Utilities',
-            description: `Subscription: ${sub.name}`,
+            type: sub.type || 'expense',
+            amount: (sub.type === 'income' ? 1 : -1) * Math.abs(parseFloat(sub.amount)),
+            category: sub.category || 'Bills & Utilities',
+            text: sub.name, // Fixed: Using text instead of description
             date: new Date().toISOString()
         });
 
@@ -159,7 +167,12 @@ const SubscriptionsPage = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white">{sub.name}</h3>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{sub.billingCycle}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{sub.billingCycle}</p>
+                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                                {sub.category || 'General'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -196,7 +209,9 @@ const SubscriptionsPage = () => {
                             <div className="flex justify-between items-end">
                                 <div>
                                     <p className="text-xs text-slate-500 uppercase font-semibold">Amount</p>
-                                    <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{formatCurrency(sub.amount)}</p>
+                                    <p className={`text-xl font-bold ${sub.type === 'income' ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                        {formatCurrency(sub.amount)}
+                                    </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs text-slate-500 uppercase font-semibold">Next Bill</p>
@@ -225,13 +240,52 @@ const SubscriptionsPage = () => {
             {/* Add/Edit Modal */}
             <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? "Edit Subscription" : "Add Subscription"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Type Selector */}
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl mb-2">
+                        <button
+                            type="button"
+                            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${type === 'expense' ? 'bg-white dark:bg-slate-600 text-red-500 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                            onClick={() => setType('expense')}
+                        >
+                            Expense
+                        </button>
+                        <button
+                            type="button"
+                            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${type === 'income' ? 'bg-white dark:bg-slate-600 text-green-500 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                            onClick={() => setType('income')}
+                        >
+                            Income
+                        </button>
+                    </div>
+
                     <Input
                         label="Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Netflix, Rent, etc."
+                        placeholder="Netflix, Salary, etc."
                         required
                     />
+                    
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                        <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                        >
+                            <option value="General">General</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Bills & Utilities">Bills & Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Health">Health</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Education">Education</option>
+                            <option value="Investment">Investment</option>
+                        </select>
+                    </div>
+
                     <Input
                         label="Amount"
                         type="number"
@@ -239,7 +293,9 @@ const SubscriptionsPage = () => {
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
                         required
+                        step="0.01"
                     />
+                    
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Billing Cycle</label>
                         <select
@@ -251,6 +307,7 @@ const SubscriptionsPage = () => {
                             <option value="Yearly">Yearly</option>
                         </select>
                     </div>
+
                     <Input
                         label="Next Billing Date"
                         type="date"
@@ -258,6 +315,7 @@ const SubscriptionsPage = () => {
                         onChange={(e) => setNextBillingDate(e.target.value)}
                         required
                     />
+                    
                     <Button type="submit" variant="primary" className="w-full">
                         {editingId ? "Update Subscription" : "Add Subscription"}
                     </Button>

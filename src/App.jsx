@@ -14,6 +14,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AnalyticsPage from './components/analytics/AnalyticsPage';
 import BudgetsPage from './components/budget/BudgetsPage';
 import SubscriptionsPage from './components/subscriptions/SubscriptionsPage';
+import TransactionsPage from './components/transactions/TransactionsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
 import ContactPage from './components/pages/ContactPage';
@@ -96,6 +97,7 @@ function App() {
                     <Route path="/analytics" element={<AnalyticsPage />} />
                     <Route path="/budgets" element={<BudgetsPage />} />
                     <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                    <Route path="/transactions" element={<TransactionsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/contact" element={<ContactPage />} />
