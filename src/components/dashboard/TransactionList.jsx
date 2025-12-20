@@ -1,18 +1,27 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../../hooks/useTransactions';
 import Card from '../common/Card';
-import Button from '../common/Button';
 import { useCurrencyFormatter } from '../../utils';
 import { Trash2, Pencil } from 'lucide-react';
 
 const TransactionList = ({ onEdit }) => {
     const { transactions, deleteTransaction } = useTransactions();
     const formatMoney = useCurrencyFormatter();
+    const navigate = useNavigate();
 
     return (
         <Card className="h-96 overflow-hidden flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Recent Transactions</h3>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Recent Transactions</h3>
+                <button
+                    onClick={() => navigate('/transactions')}
+                    className="text-sm text-indigo-500 hover:text-indigo-600 font-medium hover:underline"
+                >
+                    View All
+                </button>
+            </div>
+
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {transactions.length === 0 ? (
                     <p className="text-slate-400 text-center mt-10">No transactions recorded.</p>

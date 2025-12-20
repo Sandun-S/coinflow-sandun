@@ -77,6 +77,7 @@ function Dashboard() {
 import { BudgetProvider } from './context/BudgetContext';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 import { CategoryProvider } from './context/CategoryContext';
+import { AccountProvider } from './context/AccountContext';
 
 // ...
 
@@ -85,33 +86,35 @@ function App() {
     <Router>
       <AuthProvider>
         <SettingsProvider>
-          <CategoryProvider>
-            <TransactionProvider>
-              <BudgetProvider>
-                <SubscriptionProvider>
-                  <Routes>
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
+          <AccountProvider>
+            <CategoryProvider>
+              <TransactionProvider>
+                <BudgetProvider>
+                  <SubscriptionProvider>
+                    <Routes>
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
 
-                    {/* Protected Routes */}
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/transactions" element={<TransactionsPage />} />
-                      <Route path="/analytics" element={<AnalyticsPage />} />
-                      <Route path="/budgets" element={<BudgetsPage />} />
-                      <Route path="/subscriptions" element={<SubscriptionsPage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
-                      <Route path="/settings" element={<SettingsPage />} />
-                      <Route path="/contact" element={<ContactPage />} />
-                    </Route>
+                      {/* Protected Routes */}
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/transactions" element={<TransactionsPage />} />
+                        <Route path="/analytics" element={<AnalyticsPage />} />
+                        <Route path="/budgets" element={<BudgetsPage />} />
+                        <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+                      </Route>
 
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </SubscriptionProvider>
-              </BudgetProvider>
-            </TransactionProvider>
-          </CategoryProvider>
+                      {/* Fallback */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </SubscriptionProvider>
+                </BudgetProvider>
+              </TransactionProvider>
+            </CategoryProvider>
+          </AccountProvider>
         </SettingsProvider>
       </AuthProvider>
     </Router>

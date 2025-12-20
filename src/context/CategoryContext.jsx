@@ -137,17 +137,60 @@ export const CategoryProvider = ({ children }) => {
                 ...doc.data()
             }));
 
-            // If no categories exist, seed defaults
-            if (cats.length === 0 && !snapshot.metadata.fromCache) {
+            // Smart Seeding: Check for missing default categories or subcategories
+            if (!snapshot.metadata.fromCache && cats.length > 0) {
+                checkAndUpgradeDefaults(user.id, cats);
+            } else if (cats.length === 0 && !snapshot.metadata.fromCache) {
                 seedDefaults(user.id);
-            } else {
-                setCategories(cats);
-                setLoading(false);
             }
+
+            setCategories(cats);
+            setLoading(false);
         });
 
         return () => unsubscribe();
     }, [user]);
+
+    const checkAndUpgradeDefaults = async (userId, currentCats) => {
+        const batch = writeBatch(db);
+        let hasUpdates = false;
+
+        DEFAULT_CATEGORIES.forEach(defaultCat => {
+            const existingCat = currentCats.find(c => c.name === defaultCat.name);
+
+            if (!existingCat) {
+                // Category missing entirely - Add it
+                const newDocRef = doc(collection(db, 'categories'));
+                batch.set(newDocRef, {
+                    ...defaultCat,
+                    userId,
+                    createdAt: new Date().toISOString()
+                });
+                hasUpdates = true;
+            } else {
+                // Category exists - check for missing subcategories
+                const existingSubs = existingCat.subcategories || [];
+                const missingSubs = defaultCat.subcategories.filter(sub => !existingSubs.includes(sub));
+
+                if (missingSubs.length > 0) {
+                    const docRef = doc(db, 'categories', existingCat.id);
+                    batch.update(docRef, {
+                        subcategories: [...existingSubs, ...missingSubs]
+                    });
+                    hasUpdates = true;
+                }
+            }
+        });
+
+        if (hasUpdates) {
+            try {
+                await batch.commit();
+                console.log("Upgraded default categories");
+            } catch (error) {
+                console.error("Error upgrading categories:", error);
+            }
+        }
+    };
 
     const seedDefaults = async (userId) => {
         const batch = writeBatch(db);

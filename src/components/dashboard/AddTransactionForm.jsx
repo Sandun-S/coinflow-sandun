@@ -3,14 +3,18 @@ import Card from '../common/Card';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useAccounts } from '../../context/AccountContext'; // Import useAccounts
 import CategoryPicker from '../categories/CategoryPicker';
+import AccountPicker from '../accounts/AccountPicker'; // Import AccountPicker
 import { PlusCircle } from 'lucide-react';
 
 const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     const { addTransaction, updateTransaction } = useTransactions();
+    const { accounts, updateBalance } = useAccounts(); // Get updateBalance
     const [text, setText] = useState('');
     const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState('General');
+    const [category, setCategory] = useState('');
+    const [accountId, setAccountId] = useState(''); // New State
     const [type, setType] = useState('expense'); // 'income' or 'expense'
 
     // Load initial data if editing
@@ -20,19 +24,24 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
             setAmount(Math.abs(initialData.amount).toString());
             setCategory(initialData.category);
             setType(initialData.amount < 0 ? 'expense' : 'income');
+            setAccountId(initialData.accountId || ''); // Load account if exists
         } else {
             setText('');
             setAmount('');
-            setCategory('General');
+            setCategory('');
             setType('expense');
+            // Auto-select first account if available and no initial data
+            if (accounts && accounts.length > 0 && !accountId) {
+                setAccountId(accounts[0].id);
+            }
         }
-    }, [initialData]);
+    }, [initialData, accounts]); // Added accounts dependency
 
-    const onSubmit = (e) => {
+    const onSubmit = async (e) => { // Async for balance update
         e.preventDefault();
 
-        if (!text || !amount) {
-            alert("Please fill in all fields");
+        if (!text || !amount || !accountId) { // Validate Account
+            alert("Please fill in all fields (including Wallet)");
             return;
         }
 
@@ -42,18 +51,24 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
             text,
             amount: finalAmount,
             category,
-            date: initialData ? initialData.date : new Date().toISOString() // Keep original date if editing
+            accountId, // Save Account ID
+            date: initialData ? initialData.date : new Date().toISOString()
         };
 
         if (initialData) {
+            // Edit Mode:
+            // For Phase 2, we just update the transaction record. Balance correction is advanced.
             updateTransaction(initialData.id, transactionData);
         } else {
-            addTransaction(transactionData);
+            // Add Mode:
+            await addTransaction(transactionData);
+            // Update Wallet Balance
+            await updateBalance(accountId, finalAmount);
         }
 
         setText('');
         setAmount('');
-        setCategory('General');
+        setCategory('');
 
         if (onSuccess) {
             onSuccess();
@@ -78,6 +93,14 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 >
                     Income
                 </button>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+                <AccountPicker
+                    selectedAccountId={accountId}
+                    onSelect={setAccountId}
+                    label="Wallet / Account"
+                />
             </div>
 
             <Input
