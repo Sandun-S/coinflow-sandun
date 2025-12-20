@@ -19,6 +19,20 @@ const MyWallets = () => {
     const [balance, setBalance] = useState('');
     const [creditLimit, setCreditLimit] = useState(''); // Only for Credit Card
 
+    // Separation
+    const creditCards = accounts.filter(a => a.type === 'Credit Card');
+    const cashAndBank = accounts.filter(a => a.type !== 'Credit Card');
+
+    // Totals
+    const totalCash = cashAndBank.reduce((sum, a) => sum + a.balance, 0);
+    const totalDebt = creditCards.reduce((sum, a) => sum + (a.creditLimit - a.balance), 0); // Used amount = Limit - Available
+    // Wait, balance in our logic is "Available Balance" for CC?
+    // User logic: "my credit card 150000 lkr... if i used 40 000 lkr... i have 110k lkr"
+    // So `balance` = 110k (Available).
+    // `used` = Limit - Balance. (150 - 110 = 40).
+    // Debt = Used.
+    const netWorth = totalCash - totalDebt;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!name) return;
@@ -38,6 +52,8 @@ const MyWallets = () => {
         if (type === 'Credit Card') {
             accountData.creditLimit = limit;
             if (!balance && limit) {
+                // If user enters limit but no balance, assume full limit available (0 debt)
+                // Or user must enter current available balance
                 accountData.balance = limit;
             }
         }
@@ -68,8 +84,53 @@ const MyWallets = () => {
         }
     };
 
+    const AccountCard = ({ acc }) => (
+        <Card key={acc.id} className="relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl ${acc.color || 'bg-slate-100 text-slate-600'}`}>
+                        {getIcon(acc.type)}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{acc.name}</h3>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
+                    </div>
+                </div>
+                <button
+                    onClick={() => handleDelete(acc.id)}
+                    className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                    <Trash2 size={18} />
+                </button>
+            </div>
+
+            <div className="mt-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                    {acc.type === 'Credit Card' ? 'Available Credit' : 'Balance'}
+                </span>
+                <div className="text-2xl font-bold text-slate-800 dark:text-white mt-1">
+                    {formatMoney(acc.balance)}
+                </div>
+                {acc.type === 'Credit Card' && acc.creditLimit && (
+                    <>
+                        <div className="mt-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div
+                                className="bg-purple-500 h-full rounded-full"
+                                style={{ width: `${(acc.balance / acc.creditLimit) * 100}%` }}
+                            />
+                        </div>
+                        <div className="flex justify-between mt-1 text-xs text-slate-400">
+                            <span>Used: {formatMoney(acc.creditLimit - acc.balance)}</span>
+                            <span>Limit: {formatMoney(acc.creditLimit)}</span>
+                        </div>
+                    </>
+                )}
+            </div>
+        </Card>
+    );
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 dark:text-white">My Wallets</h1>
@@ -85,49 +146,47 @@ const MyWallets = () => {
                 </div>
             </div>
 
-            {/* Wallets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {accounts.map(acc => (
-                    <Card key={acc.id} className="relative overflow-hidden group">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-2xl ${acc.color || 'bg-slate-100 text-slate-600'}`}>
-                                    {getIcon(acc.type)}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">{acc.name}</h3>
-                                    <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => handleDelete(acc.id)}
-                                className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
+            {/* Net Worth Summary */}
+            <div className="grid grid-cols-3 gap-4">
+                <Card className="bg-slate-900 text-white border-none">
+                    <div className="text-slate-400 text-sm mb-1">Total Net Worth</div>
+                    <div className="text-2xl font-bold">{formatMoney(netWorth)}</div>
+                </Card>
+                <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800">
+                    <div className="text-emerald-600 dark:text-emerald-400 text-sm mb-1">Total Assets</div>
+                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(totalCash)}</div>
+                </Card>
+                <Card className="bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800">
+                    <div className="text-red-600 dark:text-red-400 text-sm mb-1">Total Debt (Used Credit)</div>
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatMoney(totalDebt)}</div>
+                </Card>
+            </div>
 
-                        <div className="mt-2">
-                            <span className="text-sm text-slate-500 dark:text-slate-400">Available Balance</span>
-                            <div className="text-2xl font-bold text-slate-800 dark:text-white mt-1">
-                                {formatMoney(acc.balance)}
-                            </div>
-                            {acc.type === 'Credit Card' && acc.creditLimit && (
-                                <div className="mt-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                        className="bg-purple-500 h-full rounded-full"
-                                        style={{ width: `${(acc.balance / acc.creditLimit) * 100}%` }}
-                                    />
-                                </div>
-                            )}
-                            {acc.type === 'Credit Card' && acc.creditLimit && (
-                                <p className="text-xs text-slate-400 mt-1 text-right">
-                                    Limit: {formatMoney(acc.creditLimit)}
-                                </p>
-                            )}
+            {/* Credit Cards Section */}
+            {creditCards.length > 0 && (
+                <div>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                        <CreditCard size={20} className="text-purple-500" /> Credit Cards
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {creditCards.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+                    </div>
+                </div>
+            )}
+
+            {/* Accounts Section */}
+            <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                    <Banknote size={20} className="text-emerald-500" /> Appeals & Cash
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {cashAndBank.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+                    {cashAndBank.length === 0 && (
+                        <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-xl border-dashed border">
+                            No cash or bank accounts found.
                         </div>
-                    </Card>
-                ))}
+                    )}
+                </div>
             </div>
 
             {/* Transfer Modal */}
@@ -172,7 +231,7 @@ const MyWallets = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 {type === 'Credit Card' && (
                                     <Input
-                                        label="Credit Limit"
+                                        label="Total Credit Limit"
                                         type="number"
                                         placeholder="0.00"
                                         value={creditLimit}
@@ -180,11 +239,12 @@ const MyWallets = () => {
                                     />
                                 )}
                                 <Input
-                                    label={type === 'Credit Card' ? "Current Available Balance" : "Current Balance"}
+                                    label={type === 'Credit Card' ? "Current Available Balance (Remaining)" : "Current Balance"}
                                     type="number"
                                     placeholder="0.00"
                                     value={balance}
                                     onChange={(e) => setBalance(e.target.value)}
+                                    helperText={type === 'Credit Card' ? "How much you can currently spend." : ""}
                                 />
                             </div>
 

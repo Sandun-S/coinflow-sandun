@@ -92,6 +92,37 @@ const BudgetsPage = () => {
                 </Button>
             </div>
 
+            {/* Total Budget Summary */}
+            {budgets.length > 0 && (() => {
+                const totalBudget = budgets.reduce((sum, b) => sum + parseFloat(b.limit), 0);
+                const totalSpent = budgets.reduce((sum, b) => sum + (categorySpending[b.category] || 0), 0);
+                const totalPercentage = Math.min((totalSpent / totalBudget) * 100, 100);
+                const isTotalOver = totalSpent > totalBudget;
+
+                return (
+                    <Card className="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 text-white border-none">
+                        <div className="flex items-start justify-between mb-2">
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-200">Total Monthly Budget</h3>
+                                <div className="text-3xl font-bold mt-1">{formatMoney(totalSpent)} <span className="text-slate-400 text-xl font-normal">/ {formatMoney(totalBudget)}</span></div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${isTotalOver ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
+                                {totalPercentage.toFixed(1)}% Used
+                            </div>
+                        </div>
+                        <div className="w-full bg-slate-700/50 rounded-full h-4 overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-700 ${isTotalOver ? 'bg-red-500' : 'bg-indigo-500'}`}
+                                style={{ width: `${totalPercentage}%` }}
+                            />
+                        </div>
+                        <p className="mt-2 text-sm text-slate-400 text-right">
+                            {isTotalOver ? 'You are over your total budget!' : `You have ${formatMoney(totalBudget - totalSpent)} remaining this month.`}
+                        </p>
+                    </Card>
+                );
+            })()}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {budgets.map(budget => {
                     const spent = categorySpending[budget.category] || 0;
