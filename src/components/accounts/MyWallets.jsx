@@ -6,6 +6,7 @@ import { useAccounts } from '../../context/AccountContext';
 import { useCurrencyFormatter } from '../../utils';
 import { Wallet, Banknote, CreditCard, Plus, Trash2, Edit2, X, ArrowRightLeft } from 'lucide-react';
 import TransferModal from './TransferModal';
+import MainLayout from '../layout/MainLayout';
 
 const MyWallets = () => {
     const { accounts, addAccount, updateAccount, deleteAccount, updateBalance } = useAccounts();
@@ -86,6 +87,7 @@ const MyWallets = () => {
 
     const AccountCard = ({ acc }) => (
         <Card key={acc.id} className="relative overflow-hidden group hover:shadow-md transition-shadow">
+            {/* ... card content ... */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-2xl ${acc.color || 'bg-slate-100 text-slate-600'}`}>
@@ -130,132 +132,134 @@ const MyWallets = () => {
     );
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">My Wallets</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Manage your accounts and balances.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
-                        <ArrowRightLeft size={20} /> Transfer
-                    </Button>
-                    <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
-                        <Plus size={20} /> Add Wallet
-                    </Button>
-                </div>
-            </div>
-
-            {/* Net Worth Summary */}
-            <div className="grid grid-cols-3 gap-4">
-                <Card className="bg-slate-900 text-white border-none">
-                    <div className="text-slate-400 text-sm mb-1">Total Net Worth</div>
-                    <div className="text-2xl font-bold">{formatMoney(netWorth)}</div>
-                </Card>
-                <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800">
-                    <div className="text-emerald-600 dark:text-emerald-400 text-sm mb-1">Total Assets</div>
-                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(totalCash)}</div>
-                </Card>
-                <Card className="bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800">
-                    <div className="text-red-600 dark:text-red-400 text-sm mb-1">Total Debt (Used Credit)</div>
-                    <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatMoney(totalDebt)}</div>
-                </Card>
-            </div>
-
-            {/* Credit Cards Section */}
-            {creditCards.length > 0 && (
-                <div>
-                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                        <CreditCard size={20} className="text-purple-500" /> Credit Cards
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {creditCards.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+        <MainLayout>
+            <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">My Wallets</h1>
+                        <p className="text-slate-500 dark:text-slate-400">Manage your accounts and balances.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
+                            <ArrowRightLeft size={20} /> Transfer
+                        </Button>
+                        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
+                            <Plus size={20} /> Add Wallet
+                        </Button>
                     </div>
                 </div>
-            )}
 
-            {/* Accounts Section */}
-            <div>
-                <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                    <Banknote size={20} className="text-emerald-500" /> Appeals & Cash
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {cashAndBank.map(acc => <AccountCard key={acc.id} acc={acc} />)}
-                    {cashAndBank.length === 0 && (
-                        <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-xl border-dashed border">
-                            No cash or bank accounts found.
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Transfer Modal */}
-            <TransferModal
-                isOpen={isTransferring}
-                onClose={() => setIsTransferring(false)}
-            />
-
-            {/* Add Wallet Modal */}
-            {isAdding && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <Card className="w-full max-w-md animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add New Wallet</h3>
-                            <button onClick={() => setIsAdding(false)}><X size={20} className="text-slate-400" /></button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Account Type</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['Cash', 'Bank', 'Credit Card'].map(t => (
-                                        <button
-                                            key={t}
-                                            type="button"
-                                            onClick={() => setType(t)}
-                                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors border ${type === t ? 'bg-indigo-50 border-indigo-500 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'}`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <Input
-                                label="Account Name"
-                                placeholder="e.g. Seylan Bank, My Wallet"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-
-                            <div className="grid grid-cols-1 gap-4">
-                                {type === 'Credit Card' && (
-                                    <Input
-                                        label="Total Credit Limit"
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={creditLimit}
-                                        onChange={(e) => setCreditLimit(e.target.value)}
-                                    />
-                                )}
-                                <Input
-                                    label={type === 'Credit Card' ? "Current Available Balance (Remaining)" : "Current Balance"}
-                                    type="number"
-                                    placeholder="0.00"
-                                    value={balance}
-                                    onChange={(e) => setBalance(e.target.value)}
-                                    helperText={type === 'Credit Card' ? "How much you can currently spend." : ""}
-                                />
-                            </div>
-
-                            <Button type="submit" className="w-full mt-2">
-                                Create Wallet
-                            </Button>
-                        </form>
+                {/* Net Worth Summary */}
+                <div className="grid grid-cols-3 gap-4">
+                    <Card className="bg-slate-900 text-white border-none">
+                        <div className="text-slate-400 text-sm mb-1">Total Net Worth</div>
+                        <div className="text-2xl font-bold">{formatMoney(netWorth)}</div>
+                    </Card>
+                    <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800">
+                        <div className="text-emerald-600 dark:text-emerald-400 text-sm mb-1">Total Assets</div>
+                        <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(totalCash)}</div>
+                    </Card>
+                    <Card className="bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800">
+                        <div className="text-red-600 dark:text-red-400 text-sm mb-1">Total Debt (Used Credit)</div>
+                        <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatMoney(totalDebt)}</div>
                     </Card>
                 </div>
-            )}
-        </div>
+
+                {/* Credit Cards Section */}
+                {creditCards.length > 0 && (
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                            <CreditCard size={20} className="text-purple-500" /> Credit Cards
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {creditCards.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+                        </div>
+                    </div>
+                )}
+
+                {/* Accounts Section */}
+                <div>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                        <Banknote size={20} className="text-emerald-500" /> Appeals & Cash
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {cashAndBank.map(acc => <AccountCard key={acc.id} acc={acc} />)}
+                        {cashAndBank.length === 0 && (
+                            <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-xl border-dashed border">
+                                No cash or bank accounts found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Transfer Modal */}
+                <TransferModal
+                    isOpen={isTransferring}
+                    onClose={() => setIsTransferring(false)}
+                />
+
+                {/* Add Wallet Modal */}
+                {isAdding && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <Card className="w-full max-w-md animate-in fade-in zoom-in duration-200">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add New Wallet</h3>
+                                <button onClick={() => setIsAdding(false)}><X size={20} className="text-slate-400" /></button>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Account Type</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['Cash', 'Bank', 'Credit Card'].map(t => (
+                                            <button
+                                                key={t}
+                                                type="button"
+                                                onClick={() => setType(t)}
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors border ${type === t ? 'bg-indigo-50 border-indigo-500 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'}`}
+                                            >
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <Input
+                                    label="Account Name"
+                                    placeholder="e.g. Seylan Bank, My Wallet"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    {type === 'Credit Card' && (
+                                        <Input
+                                            label="Total Credit Limit"
+                                            type="number"
+                                            placeholder="0.00"
+                                            value={creditLimit}
+                                            onChange={(e) => setCreditLimit(e.target.value)}
+                                        />
+                                    )}
+                                    <Input
+                                        label={type === 'Credit Card' ? "Current Available Balance (Remaining)" : "Current Balance"}
+                                        type="number"
+                                        placeholder="0.00"
+                                        value={balance}
+                                        onChange={(e) => setBalance(e.target.value)}
+                                        helperText={type === 'Credit Card' ? "How much you can currently spend." : ""}
+                                    />
+                                </div>
+
+                                <Button type="submit" className="w-full mt-2">
+                                    Create Wallet
+                                </Button>
+                            </form>
+                        </Card>
+                    </div>
+                )}
+            </div>
+        </MainLayout>
     );
 };
 
