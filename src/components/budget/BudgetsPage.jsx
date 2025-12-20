@@ -4,6 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { useBudgets } from '../../context/BudgetContext';
+import { useCategories } from '../../context/CategoryContext'; // Import categories
 import { useTransactions } from '../../hooks/useTransactions';
 import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
@@ -12,15 +13,37 @@ import Modal from '../common/Modal';
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
+    const { categories } = useCategories(); // Get categories
     const formatMoney = useCurrencyFormatter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState('Food');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [limit, setLimit] = useState('');
 
-    const CATEGORIES = ["Food", "Transport", "Utilities", "Entertainment", "Health", "Shopping", "General"];
+    // Pre-select first expense category if available
+    React.useEffect(() => {
+        if (!selectedCategory && categories.length > 0) {
+            const firstExpense = categories.find(c => c.type === 'expense');
+            if (firstExpense) setSelectedCategory(firstExpense.name);
+        }
+    }, [categories, selectedCategory]);
 
-    // Calculate spending per category (Monthly)
+    // Helper: Find Parent Name for a given category name (Sub or Parent)
+    // Returns the Parent Name if it's a sub, or the name itself if it's a parent.
+    // If not found, returns the name itself (fallback).
+    const getParentCategoryName = (catName) => {
+        // Check if it's a parent
+        const parent = categories.find(c => c.name === catName);
+        if (parent) return parent.name;
+
+        // Check if it's a sub
+        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
+        if (parentOfSub) return parentOfSub.name;
+
+        return catName;
+    };
+
+    // Calculate spending per PARENT category (Monthly)
     const categorySpending = useMemo(() => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -32,19 +55,20 @@ const BudgetsPage = () => {
 
         const spending = {};
         monthlyExpenses.forEach(t => {
-            const cat = t.category || 'General';
-            spending[cat] = (spending[cat] || 0) + Math.abs(parseFloat(t.amount));
+            const rawCat = t.category || 'General';
+            // Aggregating to Parent Level
+            const parentCat = getParentCategoryName(rawCat);
+            spending[parentCat] = (spending[parentCat] || 0) + Math.abs(parseFloat(t.amount));
         });
         return spending;
-    }, [transactions]);
+    }, [transactions, categories]);
 
     const handleSaveBudget = async (e) => {
         e.preventDefault();
-        if (!limit) return;
+        if (!limit || !selectedCategory) return;
         await setBudget(selectedCategory, limit);
         setIsModalOpen(false);
         setLimit('');
-        setSelectedCategory('Food'); // Reset
     };
 
     const handleEdit = (budget) => {
@@ -53,12 +77,15 @@ const BudgetsPage = () => {
         setIsModalOpen(true);
     };
 
+    // Filter to only show Parent Categories for budgeting
+    const expenseCategories = categories.filter(c => c.type === 'expense');
+
     return (
         <MainLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Set monthly limits and track your goals.</p>
+                    <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
                 <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
                     <Plus size={20} /> Set Budget
@@ -144,18 +171,14 @@ const BudgetsPage = () => {
             >
                 <form onSubmit={handleSaveBudget} className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category (Parent Only)</label>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            disabled={budgets.some(b => b.category === selectedCategory && limit === b.limit)} // Not quite right.
-                            // Simply, let them set budgets freely. "Edit" just pre-fills.
-                            // If they change category, it's setting a budget for a DIFFERENT category.
-                            // That's acceptable for a simple app.
-                            className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                            {CATEGORIES.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                            {expenseCategories.map(cat => (
+                                <option key={cat.id} value={cat.name}>{cat.name}</option>
                             ))}
                         </select>
                     </div>

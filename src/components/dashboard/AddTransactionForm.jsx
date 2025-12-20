@@ -3,6 +3,7 @@ import Card from '../common/Card';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import { useTransactions } from '../../hooks/useTransactions';
+import CategoryPicker from '../categories/CategoryPicker';
 import { PlusCircle } from 'lucide-react';
 
 const AddTransactionForm = ({ onSuccess, initialData = null }) => {
@@ -98,22 +99,12 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 step="0.01"
             />
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="category" className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
-                <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white transition-all duration-200"
-                >
-                    <option value="General">General</option>
-                    <option value="Food">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Utilities">Utilities</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Salary">Salary</option>
-                    <option value="Health">Health</option>
-                    <option value="Shopping">Shopping</option>
-                </select>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                <CategoryPicker
+                    selectedCategory={category}
+                    onSelect={setCategory}
+                    type={type}
+                />
             </div>
             <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5">
                 <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' ? 'Add Expense' : 'Add Income')}

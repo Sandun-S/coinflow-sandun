@@ -7,6 +7,7 @@ import Modal from '../common/Modal';
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
+import CategoryPicker from '../categories/CategoryPicker';
 import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
 
 const SubscriptionsPage = () => {
@@ -265,25 +266,14 @@ const SubscriptionsPage = () => {
                         placeholder="Netflix, Salary, etc."
                         required
                     />
-                    
+
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
-                        <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                        >
-                            <option value="General">General</option>
-                            <option value="Food">Food</option>
-                            <option value="Transport">Transport</option>
-                            <option value="Bills & Utilities">Bills & Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Salary">Salary</option>
-                            <option value="Health">Health</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Education">Education</option>
-                            <option value="Investment">Investment</option>
-                        </select>
+                        <CategoryPicker
+                            selectedCategory={category}
+                            onSelect={setCategory}
+                            type={type}
+                        />
                     </div>
 
                     <Input
@@ -295,7 +285,7 @@ const SubscriptionsPage = () => {
                         required
                         step="0.01"
                     />
-                    
+
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Billing Cycle</label>
                         <select
@@ -315,7 +305,7 @@ const SubscriptionsPage = () => {
                         onChange={(e) => setNextBillingDate(e.target.value)}
                         required
                     />
-                    
+
                     <Button type="submit" variant="primary" className="w-full">
                         {editingId ? "Update Subscription" : "Add Subscription"}
                     </Button>

@@ -5,6 +5,7 @@ import Card from '../common/Card';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Import transactions
 import { Moon, Sun, DollarSign, Globe, Download, Database } from 'lucide-react'; // Import Download, Database
+import ManageCategories from './ManageCategories';
 
 const SettingsPage = () => {
     const { theme, setTheme, currency, setCurrency } = useSettings();
@@ -54,6 +55,9 @@ const SettingsPage = () => {
             </div>
 
             <div className="max-w-2xl space-y-6">
+
+                {/* Categories Management */}
+                <ManageCategories />
 
                 {/* Appearance */}
                 <Card>
