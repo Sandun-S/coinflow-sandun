@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
-import { Lightbulb, Wifi, Tv, Smartphone, Gamepad, Home, Coffee, Gift, Activity, Shield, TrendingUp, ShoppingBag, Truck, GraduationCap, DollarSign } from 'lucide-react';
+import { Lightbulb, Wifi, Tv, Smartphone, Gamepad, Home, Coffee, Gift, Activity, Shield, TrendingUp, ShoppingBag, Truck, GraduationCap, DollarSign, Briefcase } from 'lucide-react';
 
 const CategoryContext = createContext();
 
@@ -89,7 +89,28 @@ export const DEFAULT_CATEGORIES = [
         type: 'income',
         icon: 'DollarSign',
         color: 'bg-emerald-100 text-emerald-600',
-        subcategories: ['Full-time', 'Freelance']
+        subcategories: ['Full-time', 'Part-time', 'Bonus']
+    },
+    {
+        name: 'Business',
+        type: 'income',
+        icon: 'Briefcase',
+        color: 'bg-blue-100 text-blue-600',
+        subcategories: ['Freelance', 'Sales', 'Profit']
+    },
+    {
+        name: 'Passive Income',
+        type: 'income',
+        icon: 'TrendingUp',
+        color: 'bg-indigo-100 text-indigo-600',
+        subcategories: ['Interest', 'Dividends', 'Rental', 'Capital Gains']
+    },
+    {
+        name: 'Gifts & Refunds',
+        type: 'income',
+        icon: 'Gift',
+        color: 'bg-pink-100 text-pink-600',
+        subcategories: ['Cash Gift', 'Tax Refund']
     }
 ];
 
