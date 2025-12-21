@@ -192,7 +192,7 @@ const MyWallets = () => {
                 <span className="text-sm text-slate-500 dark:text-slate-400">
                     {acc.type === 'Credit Card' ? 'Available Credit' : 'Current Balance'}
                 </span>
-                <div className="text-2xl font-bold text-slate-800 dark:text-white mt-1">
+                <div className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mt-1 break-words">
                     {formatMoney(acc.balance)}
                 </div>
 
@@ -253,19 +253,19 @@ const MyWallets = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="bg-slate-900 text-white border-none col-span-2 md:col-span-1">
                         <div className="text-slate-400 text-sm mb-1">Total Net Worth</div>
-                        <div className="text-2xl font-bold">{formatMoney(netWorth)}</div>
+                        <div className="text-xl md:text-2xl font-bold">{formatMoney(netWorth)}</div>
                     </Card>
                     <Card className="bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800">
                         <div className="text-amber-600 dark:text-amber-400 text-sm mb-1">Investments</div>
-                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{formatMoney(totalInvestments)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-amber-700 dark:text-amber-300">{formatMoney(totalInvestments)}</div>
                     </Card>
                     <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800">
                         <div className="text-emerald-600 dark:text-emerald-400 text-sm mb-1">Cash & Bank</div>
-                        <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(totalCash)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(totalCash)}</div>
                     </Card>
                     <Card className="bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800">
                         <div className="text-red-600 dark:text-red-400 text-sm mb-1">Debt</div>
-                        <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatMoney(totalDebt)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-red-700 dark:text-red-300">{formatMoney(totalDebt)}</div>
                     </Card>
                 </div>
 

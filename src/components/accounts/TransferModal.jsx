@@ -8,8 +8,9 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { ArrowRight, X } from 'lucide-react';
 
 const TransferModal = ({ isOpen, onClose }) => {
-    const { updateBalance } = useAccounts();
+    const { updateBalance, accounts } = useAccounts();
     const { addTransaction } = useTransactions();
+    const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'LKR' }).format(val);
 
     const [fromAccount, setFromAccount] = useState('');
     const [toAccount, setToAccount] = useState('');
@@ -18,6 +19,22 @@ const TransferModal = ({ isOpen, onClose }) => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
     if (!isOpen) return null;
+
+    // Helper to get account objects
+    const sourceAcc = accounts.find(a => a.id === fromAccount);
+    const destAcc = accounts.find(a => a.id === toAccount);
+
+    // Auto-fill Logic for Credit Cards
+    React.useEffect(() => {
+        if (destAcc && destAcc.type === 'Credit Card') {
+            const debt = destAcc.creditLimit - destAcc.balance;
+            // Only auto-fill if debt > 0
+            if (debt > 0) {
+                setAmount(debt.toString());
+                setDescription(`Payment for ${destAcc.name}`);
+            }
+        }
+    }, [toAccount]); // Depend on Selected ID changes
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -33,6 +50,23 @@ const TransferModal = ({ isOpen, onClose }) => {
             return;
         }
 
+        // VALIDATION 1: Insufficient Funds (Source)
+        if (sourceAcc && sourceAcc.type !== 'Credit Card') { // Credit cards can go negative technically, but usually source is Bank/Cash
+            if (sourceAcc.balance < transferAmount) {
+                alert(`Insufficient funds in ${sourceAcc.name}. Available: ${formatMoney(sourceAcc.balance)}`);
+                return;
+            }
+        }
+
+        // VALIDATION 2: Overpaying Credit Card (Destination)
+        if (destAcc && destAcc.type === 'Credit Card') {
+            const currentDebt = destAcc.creditLimit - destAcc.balance;
+            if (transferAmount > currentDebt) {
+                alert(`You are trying to pay ${formatMoney(transferAmount)} but the used amount is only ${formatMoney(currentDebt)}. You cannot overpay.`);
+                return;
+            }
+        }
+
         try {
             // 1. Deduct from Source
             await updateBalance(fromAccount, -transferAmount);
@@ -40,25 +74,19 @@ const TransferModal = ({ isOpen, onClose }) => {
             // 2. Add to Destination
             await updateBalance(toAccount, transferAmount);
 
-            // 3. Record Transactions (Optional: One 'Transfer' record or two?)
-            // For simplicity and history tracking, let's record one 'Transfer' transaction 
-            // but usually transfers shouldn't affect "Income/Expense" totals if it's internal.
-            // However, currently our Transaction model is simple. 
-            // We'll mark it as a type 'transfer' if possible, or just 'expense' for now but category 'Transfer'.
-            // Better strategy: Create a record so user sees it in history.
-
+            // 3. Record Transactions
             await addTransaction({
-                text: `${description} (to Destination)`,
-                amount: -transferAmount, // Shows as outflow
+                text: `${description} (to ${destAcc?.name || 'Destination'})`,
+                amount: -transferAmount,
                 category: 'Transfer',
-                type: 'expense', // Or 'transfer' if supported
+                type: 'expense',
                 accountId: fromAccount,
                 date: new Date(date).toISOString()
             });
 
             await addTransaction({
-                text: `${description} (from Source)`,
-                amount: transferAmount, // Shows as inflow
+                text: `${description} (from ${sourceAcc?.name || 'Source'})`,
+                amount: transferAmount,
                 category: 'Transfer',
                 type: 'income',
                 accountId: toAccount,
@@ -96,6 +124,11 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 selectedAccountId={fromAccount}
                                 onSelect={setFromAccount}
                             />
+                            {sourceAcc && (
+                                <div className="text-xs text-slate-400 mt-1">
+                                    Bal: {formatMoney(sourceAcc.balance)}
+                                </div>
+                            )}
                         </div>
                         <div className="pt-6 text-slate-400">
                             <ArrowRight size={20} />
@@ -106,6 +139,11 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 selectedAccountId={toAccount}
                                 onSelect={setToAccount}
                             />
+                            {destAcc && destAcc.type === 'Credit Card' && (
+                                <div className="text-xs text-red-400 mt-1">
+                                    Due: {formatMoney(destAcc.creditLimit - destAcc.balance)}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -117,6 +155,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                         onChange={(e) => setAmount(e.target.value)}
                         min="0"
                         step="0.01"
+                        helperText={destAcc?.type === 'Credit Card' ? "Auto-filled with total due amount" : ""}
                     />
 
                     <Input
