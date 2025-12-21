@@ -55,7 +55,7 @@ const ExpenseChart = () => {
         <Card className="h-96 flex flex-col">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Expenses by Category</h3>
             <div className="flex-1 w-full relative min-h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                         <Pie
                             data={data}

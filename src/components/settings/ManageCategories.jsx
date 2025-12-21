@@ -129,12 +129,14 @@ const ManageCategories = () => {
                                     <option value="expense">Expense</option>
                                     <option value="income">Income</option>
                                 </select>
-                                <Input
-                                    placeholder="Category Name"
-                                    value={newCatName}
-                                    onChange={(e) => setNewCatName(e.target.value)}
-                                    className="flex-1"
-                                />
+                                <div className="flex-1 min-w-0">
+                                    <Input
+                                        placeholder="Category Name"
+                                        value={newCatName}
+                                        onChange={(e) => setNewCatName(e.target.value)}
+                                        className="w-full"
+                                    />
+                                </div>
                             </div>
 
                             {/* Color Picker */}

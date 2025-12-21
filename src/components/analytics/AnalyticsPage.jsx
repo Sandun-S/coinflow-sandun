@@ -154,7 +154,7 @@ const AnalyticsPage = () => {
                 <Card className="h-96 flex flex-col">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income vs Expense</h3>
                     <div className="w-full flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={incomeExpenseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
                                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
