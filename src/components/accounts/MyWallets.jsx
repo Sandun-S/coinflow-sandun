@@ -19,6 +19,7 @@ const MyWallets = () => {
     const [isTransferring, setIsTransferring] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [adjustingAccount, setAdjustingAccount] = useState(null); // For Balance Adjustment
+    const [isFabOpen, setIsFabOpen] = useState(false);
 
     // Form State (Add/Edit)
     const [name, setName] = useState('');
@@ -440,13 +441,46 @@ const MyWallets = () => {
                     </div>
                 )}
                 {/* Mobile Floating Action Button - Transfer */}
-                <button
-                    onClick={() => setIsTransferring(true)}
-                    className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
-                    aria-label="Transfer Funds"
-                >
-                    <ArrowRightLeft size={24} />
-                </button>
+                {/* Mobile Speed Dial FAB */}
+                <div className="fixed bottom-24 right-6 z-40 md:hidden flex flex-col items-end gap-3">
+                    {/* Menu Items */}
+                    {isFabOpen && (
+                        <>
+                            <div className="flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-in duration-200">
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
+                                    Add Wallet
+                                </span>
+                                <button
+                                    onClick={() => { setIsAdding(true); setIsFabOpen(false); }}
+                                    className="p-3 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 transition-all"
+                                >
+                                    <Plus size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
+                                    Transfer
+                                </span>
+                                <button
+                                    onClick={() => { setIsTransferring(true); setIsFabOpen(false); }}
+                                    className="p-3 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 transition-all"
+                                >
+                                    <ArrowRightLeft size={20} />
+                                </button>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Main Toggle Button */}
+                    <button
+                        onClick={() => setIsFabOpen(!isFabOpen)}
+                        className={`p-4 rounded-full shadow-lg shadow-indigo-500/40 text-white transition-all duration-300 ${isFabOpen ? 'bg-slate-800 rotate-45' : 'bg-indigo-600 hover:scale-105 active:scale-95'}`}
+                        aria-label="Actions"
+                    >
+                        <Plus size={24} />
+                    </button>
+                </div>
             </div>
         </MainLayout>
     );

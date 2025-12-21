@@ -65,12 +65,18 @@ function Dashboard() {
 
       <SummaryCards />
 
+      <div className="lg:hidden">
+        <UpcomingSubscriptions />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <ExpenseChart />
         </div>
         <div className="lg:col-span-1 space-y-8">
-          <UpcomingSubscriptions />
+          <div className="hidden lg:block">
+            <UpcomingSubscriptions />
+          </div>
           <TransactionList onEdit={handleEdit} />
         </div>
       </div>
