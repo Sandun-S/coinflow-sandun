@@ -18,8 +18,6 @@ const TransferModal = ({ isOpen, onClose }) => {
     const [description, setDescription] = useState('Transfer');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-    if (!isOpen) return null;
-
     // Helper to get account objects
     const sourceAcc = accounts.find(a => a.id === fromAccount);
     const destAcc = accounts.find(a => a.id === toAccount);
@@ -34,7 +32,9 @@ const TransferModal = ({ isOpen, onClose }) => {
                 setDescription(`Payment for ${destAcc.name}`);
             }
         }
-    }, [toAccount]); // Depend on Selected ID changes
+    }, [toAccount, destAcc]); // Depend on Selected ID changes
+
+    if (!isOpen) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -53,6 +53,15 @@ function Dashboard() {
         </Button>
       </div>
 
+      {/* Mobile Floating Action Button */}
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="md:hidden fixed bottom-20 right-4 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/30 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
+        aria-label="Add Transaction"
+      >
+        <Plus size={24} />
+      </button>
+
       <SummaryCards />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
