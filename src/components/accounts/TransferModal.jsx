@@ -66,8 +66,22 @@ const TransferModal = ({ isOpen, onClose }) => {
                 return;
             }
         }
+        // VALIDATION 3: Restrict Credit Card Usage (Can't transfer FROM Credit Card to others)
+        if (sourceAcc && sourceAcc.type === 'Credit Card' && destAcc.type !== 'Credit Card') {
+            alert("Transfers from Credit Cards to Bank/Cash/Investment are not allowed.");
+            return;
+        }
 
         try {
+            // Determine Categories
+            let sourceCategory = 'Transfer';
+            let destCategory = 'Transfer';
+
+            // Special Case: Investment -> Bank/Cash (Count as Income/Realized Gain)
+            if (sourceAcc.type === 'Investment' && (destAcc.type === 'Bank' || destAcc.type === 'Cash')) {
+                destCategory = 'Investment Return';
+            }
+
             // 1. Deduct from Source
             await updateBalance(fromAccount, -transferAmount);
 
@@ -78,7 +92,7 @@ const TransferModal = ({ isOpen, onClose }) => {
             await addTransaction({
                 text: `${description} (to ${destAcc?.name || 'Destination'})`,
                 amount: -transferAmount,
-                category: 'Transfer',
+                category: sourceCategory,
                 type: 'expense',
                 accountId: fromAccount,
                 date: new Date(date).toISOString()
@@ -87,7 +101,7 @@ const TransferModal = ({ isOpen, onClose }) => {
             await addTransaction({
                 text: `${description} (from ${sourceAcc?.name || 'Source'})`,
                 amount: transferAmount,
-                category: 'Transfer',
+                category: destCategory,
                 type: 'income',
                 accountId: toAccount,
                 date: new Date(date).toISOString()

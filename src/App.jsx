@@ -8,6 +8,7 @@ import SummaryCards from './components/dashboard/SummaryCards';
 import ExpenseChart from './components/dashboard/ExpenseChart';
 import TransactionList from './components/dashboard/TransactionList';
 import AddTransactionForm from './components/dashboard/AddTransactionForm';
+import UpcomingSubscriptions from './components/dashboard/UpcomingSubscriptions';
 import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -47,7 +48,7 @@ function Dashboard() {
           <p className="text-slate-500 dark:text-slate-400">Overview of your personal finances.</p>
         </header>
 
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none">
+        <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none">
           <Plus size={20} />
           New Transaction
         </Button>
@@ -68,7 +69,8 @@ function Dashboard() {
         <div className="lg:col-span-2 space-y-8">
           <ExpenseChart />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-8">
+          <UpcomingSubscriptions />
           <TransactionList onEdit={handleEdit} />
         </div>
       </div>

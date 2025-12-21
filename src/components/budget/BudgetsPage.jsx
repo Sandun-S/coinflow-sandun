@@ -87,7 +87,7 @@ const BudgetsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
                     <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+                <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2">
                     <Plus size={20} /> Set Budget
                 </Button>
             </div>
@@ -227,6 +227,14 @@ const BudgetsPage = () => {
                     </Button>
                 </form>
             </Modal>
+            {/* Mobile Floating Action Button */}
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
+                aria-label="Set Budget"
+            >
+                <Plus size={24} />
+            </button>
         </MainLayout>
     );
 };

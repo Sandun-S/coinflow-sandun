@@ -239,7 +239,7 @@ const MyWallets = () => {
                         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">My Wallets</h1>
                         <p className="text-slate-500 dark:text-slate-400">Manage your accounts and investments.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 hidden md:flex">
                         <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
                             <ArrowRightLeft size={20} /> Transfer
                         </Button>
