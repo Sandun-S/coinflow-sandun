@@ -53,6 +53,7 @@ const AnalyticsPage = () => {
             if (!dataMap[key]) dataMap[key] = { name: key, income: 0, expense: 0, savings: 0 };
 
             if (t.amount > 0) {
+                if (t.category === 'Transfer') return;
                 dataMap[key].income += parseFloat(t.amount);
             } else {
                 dataMap[key].expense += Math.abs(parseFloat(t.amount));
@@ -83,7 +84,7 @@ const AnalyticsPage = () => {
 
     // 3. Totals for Cards
     const totals = useMemo(() => {
-        const income = filteredTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const income = filteredTransactions.filter(t => t.amount > 0 && t.category !== 'Transfer').reduce((sum, t) => sum + parseFloat(t.amount), 0);
         const expense = filteredTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount)), 0);
         return { income, expense, savings: income - expense };
     }, [filteredTransactions]);
