@@ -2,12 +2,14 @@ import React, { useState, useMemo } from 'react';
 import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import Input from '../common/Input';
+import Modal from '../common/Modal'; // Import Modal
+import AddTransactionForm from '../dashboard/AddTransactionForm'; // Import Form
 import { useTransactions } from '../../context/TransactionContext';
 import { useSettings } from '../../context/SettingsContext';
-import { Search, Filter, Calendar, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Search, Filter, Calendar, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Pencil, Trash2 } from 'lucide-react'; // Added Icons
 
 const TransactionsPage = () => {
-    const { transactions } = useTransactions();
+    const { transactions, deleteTransaction } = useTransactions(); // Get deleteTransaction
     const { currency } = useSettings();
 
     // State for filters
@@ -15,6 +17,27 @@ const TransactionsPage = () => {
     const [selectedType, setSelectedType] = useState('all'); // all, income, expense
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [selectedMonth, setSelectedMonth] = useState('all'); // all, 0-11
+
+    // State for Editing
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState(null);
+
+    // Handlers
+    const handleEdit = (transaction) => {
+        setEditingTransaction(transaction);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) {
+            await deleteTransaction(id);
+        }
+    };
+
+    const handleClose = () => {
+        setIsModalOpen(false);
+        setEditingTransaction(null);
+    };
 
     // Generate Year Options (from transaction data + current year)
     const yearOptions = useMemo(() => {
@@ -199,10 +222,28 @@ const TransactionsPage = () => {
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">{t.category} • {new Date(t.date).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className={`font-bold ${t.amount < 0 ? 'text-slate-800 dark:text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`font-bold ${t.amount < 0 ? 'text-slate-800 dark:text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                                         {t.amount < 0 ? '-' : '+'}{formatCurrency(t.amount)}
-                                                    </p>
+                                                    </span>
+
+                                                    {/* Edit/Delete Actions */}
+                                                    <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleEdit(t)}
+                                                            className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
+                                                            title="Edit"
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(t.id)}
+                                                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -212,6 +253,15 @@ const TransactionsPage = () => {
                         ))
                     )}
                 </div>
+
+                {/* Edit Modal */}
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={handleClose}
+                    title="Edit Transaction"
+                >
+                    <AddTransactionForm onSuccess={handleClose} initialData={editingTransaction} />
+                </Modal>
             </div>
         </MainLayout>
     );
