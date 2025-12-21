@@ -14,9 +14,9 @@ const UpcomingSubscriptions = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Look ahead 14 days
+        // Look ahead 7 days
         const limitDate = new Date(today);
-        limitDate.setDate(today.getDate() + 14);
+        limitDate.setDate(today.getDate() + 7);
 
         return subscriptions
             .filter(sub => {

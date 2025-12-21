@@ -10,6 +10,9 @@ const TransactionList = ({ onEdit }) => {
     const formatMoney = useCurrencyFormatter();
     const navigate = useNavigate();
 
+    // Ensure Newest First (Descending Order)
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
     return (
         <Card className="h-96 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -23,11 +26,11 @@ const TransactionList = ({ onEdit }) => {
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                {transactions.length === 0 ? (
+                {sortedTransactions.length === 0 ? (
                     <p className="text-slate-400 text-center mt-10">No transactions recorded.</p>
                 ) : (
                     <ul className="space-y-3">
-                        {transactions.map((transaction) => (
+                        {sortedTransactions.map((transaction) => (
                             <li
                                 key={transaction.id}
                                 className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600 group"
