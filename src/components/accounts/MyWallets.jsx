@@ -170,7 +170,7 @@ const MyWallets = () => {
                         <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={() => handleEdit(acc)}
                         className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
