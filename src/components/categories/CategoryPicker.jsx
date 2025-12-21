@@ -1,6 +1,8 @@
+```javascript
 import React, { useState } from 'react';
 import { useCategories } from '../../context/CategoryContext';
-import { ChevronRight, ChevronDown, Check, X } from 'lucide-react';
+import { ChevronRight, ChevronDown, Check, X, Settings } from 'lucide-react'; // Added Settings
+import { Link } from 'react-router-dom'; // Added Link
 import * as Icons from 'lucide-react';
 
 const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
@@ -40,7 +42,12 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Select Category</h3>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Select Category</h3>
+                                <Link to="/settings" className="text-xs text-indigo-500 hover:text-indigo-600 flex items-center gap-1 mt-1" onClick={() => setIsOpen(false)}>
+                                    <Settings size={12}/> Manage Categories
+                                </Link>
+                            </div>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -55,7 +62,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                 <div key={cat.id} className="border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden">
                                     {/* Parent Category Item */}
                                     <div
-                                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${selectedCategory === cat.name ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`flex items - center justify - between p - 3 cursor - pointer hover: bg - slate - 50 dark: hover: bg - slate - 700 / 50 transition - colors ${ selectedCategory === cat.name ? 'bg-indigo-50 dark:bg-indigo-900/20' : '' } `}
                                         onClick={() => {
                                             if (cat.subcategories && cat.subcategories.length > 0) {
                                                 setExpandedCategory(expandedCategory === cat.id ? null : cat.id);
@@ -66,7 +73,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                     >
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className={cat.color?.startsWith('#') ? 'p-2 rounded-lg' : `p-2 rounded-lg ${cat.color || 'bg-slate-100 text-slate-600'}`}
+                                                className={cat.color?.startsWith('#') ? 'p-2 rounded-lg' : `p - 2 rounded - lg ${ cat.color || 'bg-slate-100 text-slate-600' } `}
                                                 style={cat.color?.startsWith('#') ? { backgroundColor: cat.color + '25', color: cat.color } : {}}
                                             >
                                                 {getIcon(cat.icon)}
@@ -79,7 +86,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                             {cat.subcategories && cat.subcategories.length > 0 && (
                                                 <ChevronRight
                                                     size={16}
-                                                    className={`text-slate-400 transition-transform ${expandedCategory === cat.id ? 'rotate-90' : ''}`}
+                                                    className={`text - slate - 400 transition - transform ${ expandedCategory === cat.id ? 'rotate-90' : '' } `}
                                                 />
                                             )}
                                         </div>
@@ -93,7 +100,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                                     key={sub}
                                                     type="button"
                                                     onClick={() => handleSelect(sub)}
-                                                    className={`w-full flex items-center justify-between px-4 py-3 pl-14 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left ${selectedCategory === sub ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/10' : 'text-slate-600 dark:text-slate-400'}`}
+                                                    className={`w - full flex items - center justify - between px - 4 py - 3 pl - 14 text - sm hover: bg - slate - 100 dark: hover: bg - slate - 700 transition - colors text - left ${ selectedCategory === sub ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/10' : 'text-slate-600 dark:text-slate-400' } `}
                                                 >
                                                     {sub}
                                                     {selectedCategory === sub && <Check size={14} className="text-indigo-500" />}
