@@ -56,7 +56,7 @@ function Dashboard() {
       {/* Mobile Floating Action Button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/30 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
+        className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
         aria-label="Add Transaction"
       >
         <Plus size={24} />

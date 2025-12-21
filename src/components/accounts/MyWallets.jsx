@@ -439,6 +439,14 @@ const MyWallets = () => {
                         </Card>
                     </div>
                 )}
+                {/* Mobile Floating Action Button - Transfer */}
+                <button
+                    onClick={() => setIsTransferring(true)}
+                    className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
+                    aria-label="Transfer Funds"
+                >
+                    <ArrowRightLeft size={24} />
+                </button>
             </div>
         </MainLayout>
     );
