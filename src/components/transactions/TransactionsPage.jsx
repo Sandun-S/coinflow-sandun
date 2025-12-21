@@ -78,7 +78,12 @@ const TransactionsPage = () => {
             if (selectedMonth !== 'all' && date.getMonth().toString() !== selectedMonth) return false;
 
             return true;
-        }).sort((a, b) => new Date(b.date) - new Date(a.date));
+            return true;
+        }).sort((a, b) => {
+            const dateComparison = new Date(b.date) - new Date(a.date);
+            if (dateComparison !== 0) return dateComparison;
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        });
     }, [transactions, searchTerm, selectedType, selectedYear, selectedMonth]);
 
     // Grouping by Month (for display)

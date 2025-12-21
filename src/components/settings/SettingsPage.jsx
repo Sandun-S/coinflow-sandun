@@ -3,49 +3,12 @@ import React from 'react';
 import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import { useSettings } from '../../context/SettingsContext';
-import { useTransactions } from '../../hooks/useTransactions'; // Import transactions
-import { Moon, Sun, DollarSign, Globe, Download, Database } from 'lucide-react'; // Import Download, Database
+import { Moon, Sun, Globe, Download, Database } from 'lucide-react'; // Import Download, Database
 import ManageCategories from './ManageCategories';
-
+import DataBackupModal from './DataBackupModal';
 const SettingsPage = () => {
     const { theme, setTheme, currency, setCurrency } = useSettings();
-    const { transactions } = useTransactions(); // Get transactions
-
-    const handleExport = () => {
-        if (!transactions || transactions.length === 0) {
-            alert("No data to export.");
-            return;
-        }
-
-        // define columns
-        const headers = ["ID", "Date", "Description", "Category", "Amount", "Type"];
-
-        // map data
-        const rows = transactions.map(t => [
-            t.id,
-            new Date(t.date).toLocaleDateString(),
-            `"${t.text}"`, // escape commas
-            t.category,
-            Math.abs(t.amount), // absolute amount
-            t.amount < 0 ? "Expense" : "Income"
-        ]);
-
-        // combine
-        const csvContent = [
-            headers.join(","),
-            ...rows.map(r => r.join(","))
-        ].join("\n");
-
-        // create blob
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `coinflow_export_${new Date().toISOString().slice(0, 10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    const [isBackupOpen, setIsBackupOpen] = React.useState(false);
 
     return (
         <MainLayout>
@@ -121,26 +84,28 @@ const SettingsPage = () => {
                         </div>
                         <div>
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Data Management</h3>
-                            <p className="text-sm text-slate-500">Manage and export your data.</p>
+                            <p className="text-sm text-slate-500">Backup, restore, or export your financial data.</p>
                         </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                         <div className="flex flex-col">
-                            <span className="font-medium text-slate-700 dark:text-slate-300">Export Transactions</span>
-                            <span className="text-xs text-slate-500">Download all your records as a CSV file.</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300">Backup & Restore</span>
+                            <span className="text-xs text-slate-500">Save your data locally or restore from a backup.</span>
                         </div>
                         <button
-                            onClick={handleExport}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors font-medium text-sm"
+                            onClick={() => setIsBackupOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors font-medium text-sm border border-indigo-100 dark:border-indigo-800"
                         >
                             <Download size={16} />
-                            Download CSV
+                            Manage Data
                         </button>
                     </div>
                 </Card>
 
             </div>
+
+            <DataBackupModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
         </MainLayout>
     );
 };

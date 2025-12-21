@@ -11,7 +11,12 @@ const TransactionList = ({ onEdit }) => {
     const navigate = useNavigate();
 
     // Ensure Newest First (Descending Order)
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedTransactions = [...transactions].sort((a, b) => {
+        const dateComparison = new Date(b.date) - new Date(a.date);
+        if (dateComparison !== 0) return dateComparison;
+        // Tie-breaker: creation time (if available)
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
 
     return (
         <Card className="h-96 overflow-hidden flex flex-col">

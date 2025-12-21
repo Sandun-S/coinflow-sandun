@@ -77,7 +77,8 @@ export const TransactionProvider = ({ children }) => {
             const { id, ...data } = transaction; // Exclude local ID if present
             await addDoc(collection(db, 'transactions'), {
                 ...data,
-                userId: user.id
+                userId: user.id,
+                createdAt: new Date().toISOString()
             });
             return { success: true };
         } catch (error) {
