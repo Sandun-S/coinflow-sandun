@@ -94,6 +94,16 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                                     {/* Subcategories */}
                                     {expandedCategory === cat.id && cat.subcategories && (
                                         <div className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                                            {/* Allow selecting the Parent itself */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelect(cat.name)}
+                                                className={`w-full flex items-center justify-between px-4 py-3 pl-14 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left border-b border-slate-100 dark:border-slate-700/50 ${selectedCategory === cat.name ? 'text-indigo-600 font-bold bg-indigo-50 dark:bg-indigo-900/10' : 'text-slate-500 font-semibold'}`}
+                                            >
+                                                <span>Select {cat.name} (Entire Category)</span>
+                                                {selectedCategory === cat.name && <Check size={14} className="text-indigo-500" />}
+                                            </button>
+
                                             {cat.subcategories.map(sub => (
                                                 <button
                                                     key={sub}

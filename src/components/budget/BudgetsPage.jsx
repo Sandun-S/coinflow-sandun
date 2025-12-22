@@ -100,7 +100,50 @@ const BudgetsPage = () => {
         setIsModalOpen(true);
     };
 
-    // Filter to only show Parent Categories for budgeting
+    // Group budgets by Parent Category
+    const groupedBudgets = useMemo(() => {
+        const groups = {}; // { ParentName: { main: BudgetDoc, subs: [BudgetDocs] } }
+
+        budgets.forEach(b => {
+            const parent = getParentCategoryName(b.category);
+            if (!groups[parent]) groups[parent] = { main: null, subs: [] };
+
+            if (b.category === parent) {
+                groups[parent].main = b;
+            } else {
+                groups[parent].subs.push(b);
+            }
+        });
+
+        // Convert to array for rendering
+        return Object.entries(groups).map(([parentName, data]) => {
+            let totalLimit = 0;
+            // Strategy: If Main exists, use its limit? Or if Subs exist, sum them?
+            // User requirement: "if i create all subcategories under one main category, show all inside one card"
+            // If main budget exists, that is the Ceiling.
+            // If only sub budgets exist, the Ceiling is the sum of them.
+            // Wait, if Main exists (Limit 50k), and Sub exists (Limit 20k), total budget is 50k? Or 50k + 20k?
+            // Usually Main Budget covers everything. Sub Budget is a "Soft Limit" inside it.
+            // Let's assume:
+            // Top Level Limit = main.limit IF main exists.
+            // ELSE Top Level Limit = Sum(subs.limit).
+
+            if (data.main) {
+                totalLimit = parseFloat(data.main.limit);
+            } else {
+                totalLimit = data.subs.reduce((sum, s) => sum + parseFloat(s.limit), 0);
+            }
+
+            return {
+                parentName,
+                mainBudget: data.main,
+                subBudgets: data.subs,
+                limit: totalLimit
+            };
+        });
+    }, [budgets, categories]);
+
+    // Filter to only show Parent Categories for budgeting (for the form)
     const expenseCategories = categories.filter(c => c.type === 'expense');
 
     return (
@@ -150,53 +193,84 @@ const BudgetsPage = () => {
             })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {budgets.map(budget => {
-                    const budgetData = categorySpending[budget.category] || { total: 0, subs: {} };
-                    const spent = budgetData.total;
-                    const percentage = Math.min((spent / budget.limit) * 100, 100);
-                    const isOver = spent > budget.limit;
+                {groupedBudgets.map(group => {
+                    const { parentName, mainBudget, subBudgets, limit } = group;
 
-                    // Sorted subs logic
-                    const subEntries = Object.entries(budgetData.subs)
-                        .filter(([name]) => name !== '_main') // Optional: hide main if you want only subs, or show all
-                        .sort(([, a], [, b]) => b - a);
+                    // Get aggregations from categorySpending (already sums up parents + subs)
+                    const spentData = categorySpending[parentName] || { total: 0, subs: {} };
+                    const totalSpent = spentData.total;
 
-                    // If we have mixed spending (main + subs), _main represents direct parent category assignment
-                    // Just show all keys from subs? User said: "inside it have sub categories and show them like this too"
-                    // I will filter out _main for visual clarity if it's small, or maybe rename it to 'General'.
-                    // Actually, if a user adds to 'Utilities' directly, it should probably show as 'Utilities (General)' or just be part of total.
-                    // Let's list Subcategories specifically.
+                    // Progress
+                    const percentage = Math.min((totalSpent / limit) * 100, 100);
+                    const isOver = totalSpent > limit;
+
+                    // Determine what to show in Breakdown
+                    // We want to show:
+                    // 1. Explicit Sub-Budgets (Limit vs Spent)
+                    // 2. Spent on categories that have NO budget? (Maybe just catch-all or standard list)
+                    // User said: "show them like this too". The previous version showed all spending contributors.
+                    // Let's merge "Spending Contributors" with "Budget Targets".
+
+                    // We need a list of ALL subcategories that have either Spending OR a Budget.
+                    const relevantSubs = new Set([
+                        ...Object.keys(spentData.subs).filter(k => k !== '_main'),
+                        ...subBudgets.map(b => b.category)
+                    ]);
+
+                    const breakdown = Array.from(relevantSubs).map(subName => {
+                        const subSpent = spentData.subs[subName] || 0;
+                        const subBudgetDoc = subBudgets.find(b => b.category === subName);
+                        // If separate sub budget exists, use it. Else... it contributes to main.
+                        const subLimit = subBudgetDoc ? parseFloat(subBudgetDoc.limit) : 0;
+
+                        return {
+                            name: subName,
+                            spent: subSpent,
+                            limit: subLimit,
+                            hasBudget: !!subBudgetDoc
+                        };
+                    }).sort((a, b) => b.spent - a.spent); // Sort by spending
 
                     return (
-                        <Card key={budget.id} className="relative overflow-hidden">
+                        <Card key={parentName} className="relative overflow-hidden">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{budget.category}</h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">Monthly Limit</p>
+                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{parentName}</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        {mainBudget ? 'Total Limit' : 'Combined Limit'}
+                                    </p>
                                 </div>
                                 <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                                    <button
-                                        onClick={() => handleEdit(budget)}
-                                        className="text-slate-400 hover:text-indigo-500 transition-colors p-1.5"
-                                        title="Edit Budget"
-                                    >
-                                        <Pencil size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => deleteBudget(budget.id)}
-                                        className="text-slate-400 hover:text-red-500 transition-colors p-1.5"
-                                        title="Delete Budget"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    {/* Action buttons - tricky. If we have multiple budgets, which one to edit?
+                                        Maybe separate Edit buttons for Main vs Sub?
+                                        For now, if Main exists, Edit Main. If not... maybe prompt to add Main?
+                                    */}
+                                    {mainBudget && (
+                                        <>
+                                            <button
+                                                onClick={() => handleEdit(mainBudget)}
+                                                className="text-slate-400 hover:text-indigo-500 transition-colors p-1.5"
+                                                title="Edit Main Budget"
+                                            >
+                                                <Pencil size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => deleteBudget(mainBudget.id)}
+                                                className="text-slate-400 hover:text-red-500 transition-colors p-1.5"
+                                                title="Delete Main Budget"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="mb-2 flex items-baseline gap-1">
                                 <span className={`text-2xl font-bold ${isOver ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
-                                    {formatMoney(spent)}
+                                    {formatMoney(totalSpent)}
                                 </span>
-                                <span className="text-slate-400">/ {formatMoney(budget.limit)}</span>
+                                <span className="text-slate-400">/ {formatMoney(limit)}</span>
                             </div>
 
                             {/* Main Progress Bar */}
@@ -208,23 +282,73 @@ const BudgetsPage = () => {
                             </div>
 
                             {/* Subcategory Breakdown */}
-                            {subEntries.length > 0 && (
+                            {breakdown.length > 0 && (
                                 <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
-                                    {subEntries.map(([subName, subAmount]) => (
-                                        <div key={subName} className="text-sm">
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-slate-600 dark:text-slate-300">{subName}</span>
-                                                <span className="text-slate-800 dark:text-slate-200 font-medium">{formatMoney(subAmount)}</span>
+                                    {breakdown.map((item) => {
+                                        // Calculate sub-bar width.
+                                        // If it has its own limit, % of that limit.
+                                        // If NO limit, % of Main Limit? Or just visual of Contribution?
+                                        // User: "show them like this too". Let's show specific sub-budget progress if defined.
+
+                                        const itemLimit = item.limit > 0 ? item.limit : limit; // Fallback to main limit for relative visual
+                                        const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
+                                        const isSubOver = item.limit > 0 && item.spent > item.limit;
+
+                                        return (
+                                            <div key={item.name} className="text-sm">
+                                                <div className="flex justify-between mb-1 items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
+                                                        {item.hasBudget && (
+                                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 border border-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300">
+                                                                {formatMoney(item.limit)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`font-medium ${isSubOver ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                            {formatMoney(item.spent)}
+                                                        </span>
+
+                                                        {/* Sub Actions - Edit/Delete specific sub budgets */}
+                                                        {item.hasBudget && (
+                                                            <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        // Find the budget doc again? Or cleaner way?
+                                                                        const b = subBudgets.find(sb => sb.category === item.name);
+                                                                        if (b) handleEdit(b);
+                                                                    }}
+                                                                    className="p-1 text-slate-300 hover:text-indigo-500"
+                                                                >
+                                                                    <Pencil size={12} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const b = subBudgets.find(sb => sb.category === item.name);
+                                                                        if (b) deleteBudget(b.id);
+                                                                    }}
+                                                                    className="p-1 text-slate-300 hover:text-red-500"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Sub Progress Bar */}
+                                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full ${isSubOver ? 'bg-red-400' : 'bg-indigo-400/70'}`}
+                                                        style={{ width: `${itemPercent}%` }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                                <div
-                                                    className="h-full bg-indigo-400/70 rounded-full"
-                                                    style={{ width: `${Math.min((subAmount / budget.limit) * 100, 100)}%` }} // % of Main Budget
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
