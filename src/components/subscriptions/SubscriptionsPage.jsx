@@ -164,33 +164,34 @@ const SubscriptionsPage = () => {
                     return (
                         <Card key={sub.id} className={`relative ${isDueSoon ? 'border-orange-300 dark:border-orange-500/50' : ''}`}>
                             <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                                         <RefreshCw size={24} />
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{sub.name}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">{sub.billingCycle}</p>
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                    <div className="min-w-0 flex-1 pr-2">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white truncate" title={sub.name}>{sub.name}</h3>
+                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 truncate">
+                                            <p className="flex-shrink-0">{sub.billingCycle}</p>
+                                            <span className="flex-shrink-0 hidden xs:inline">•</span>
+                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
                                                 {(() => {
                                                     const hierarchy = getCategoryHierarchy ? getCategoryHierarchy(sub.category || 'General') : { type: 'unknown', sub: sub.category };
                                                     if (hierarchy.type === 'sub') {
                                                         return (
-                                                            <>
+                                                            <span className="truncate">
                                                                 <span className="opacity-75">{hierarchy.parent?.name}</span>
-                                                                <span>&rsaquo;</span>
+                                                                <span className="mx-1">&rsaquo;</span>
                                                                 <span>{hierarchy.sub}</span>
-                                                            </>
+                                                            </span>
                                                         );
                                                     }
-                                                    return hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General');
+                                                    return <span className="truncate">{hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General')}</span>;
                                                 })()}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 flex-shrink-0 ml-1">
                                     {daysLeft > 20 ? (
                                         <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold uppercase tracking-wider">
                                             <Check size={14} /> Paid
