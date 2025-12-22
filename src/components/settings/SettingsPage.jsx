@@ -103,6 +103,16 @@ const SettingsPage = () => {
                     </div>
                 </Card>
 
+                {/* App Version Info */}
+                <div className="text-center pt-8 pb-4">
+                    <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+                        CoinFlow v1.0.0
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">
+                        Offline Ready • PWA
+                    </p>
+                </div>
+
             </div>
 
             <DataBackupModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
