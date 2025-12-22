@@ -95,7 +95,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 };
 
                 await addTransaction(transactionData);
-                await updateBalance(accountId, finalAmount);
+                updateBalance(accountId, finalAmount);
             }
 
         } else {
@@ -119,7 +119,8 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 updateTransaction(initialData.id, transactionData);
             } else {
                 await addTransaction(transactionData);
-                await updateBalance(accountId, finalAmount);
+                // Don't await balance update - let it happen in background to keep UI snappy
+                updateBalance(accountId, finalAmount);
             }
         }
 
