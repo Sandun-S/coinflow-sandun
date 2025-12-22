@@ -74,12 +74,12 @@ export const AccountProvider = ({ children }) => {
     const addAccount = async (accountData) => {
         if (!user) return;
         try {
-            await addDoc(collection(db, 'accounts'), {
+            const docRef = await addDoc(collection(db, 'accounts'), {
                 ...accountData,
                 userId: user.id,
                 createdAt: new Date().toISOString()
             });
-            return { success: true };
+            return { success: true, id: docRef.id };
         } catch (error) {
             console.error("Error adding account:", error);
             return { success: false, error };
