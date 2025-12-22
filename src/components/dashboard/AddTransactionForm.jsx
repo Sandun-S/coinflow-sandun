@@ -6,69 +6,129 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../context/AccountContext'; // Import useAccounts
 import CategoryPicker from '../categories/CategoryPicker';
 import AccountPicker from '../accounts/AccountPicker'; // Import AccountPicker
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Split, Trash2, Plus } from 'lucide-react'; // Added icons
 
 const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     const { addTransaction, updateTransaction } = useTransactions();
-    const { accounts, updateBalance } = useAccounts(); // Get updateBalance
+    const { accounts, updateBalance } = useAccounts();
     const [text, setText] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
-    const [accountId, setAccountId] = useState(''); // New State
-    const [type, setType] = useState('expense'); // 'income' or 'expense'
+    const [accountId, setAccountId] = useState('');
+    const [type, setType] = useState('expense');
 
-    // Load initial data if editing
+    // Split Mode State
+    const [isSplit, setIsSplit] = useState(false);
+    const [splits, setSplits] = useState([{ category: '', amount: '' }, { category: '', amount: '' }]);
+
+    // Load initial data
     React.useEffect(() => {
         if (initialData) {
             setText(initialData.text);
             setAmount(Math.abs(initialData.amount).toString());
             setCategory(initialData.category);
             setType(initialData.amount < 0 ? 'expense' : 'income');
-            setAccountId(initialData.accountId || ''); // Load account if exists
+            setAccountId(initialData.accountId || '');
+            setIsSplit(false); // Edit mode doesn't support converting back to split easily yet
         } else {
             setText('');
             setAmount('');
             setCategory('');
             setType('expense');
-            // Auto-select first account if available and no initial data
+            setIsSplit(false);
+            setSplits([{ category: '', amount: '' }, { category: '', amount: '' }]);
             if (accounts && accounts.length > 0 && !accountId) {
                 setAccountId(accounts[0].id);
             }
         }
-    }, [initialData, accounts]); // Added accounts dependency
+    }, [initialData, accounts]);
 
-    const onSubmit = async (e) => { // Async for balance update
+    const handleAddSplit = () => {
+        setSplits([...splits, { category: '', amount: '' }]);
+    };
+
+    const handleRemoveSplit = (index) => {
+        if (splits.length > 1) {
+            setSplits(splits.filter((_, i) => i !== index));
+        }
+    };
+
+    const handleSplitChange = (index, field, value) => {
+        const newSplits = [...splits];
+        newSplits[index][field] = value;
+        setSplits(newSplits);
+    };
+
+    // Auto-calculate total amount from splits if in split mode
+    const totalSplitAmount = splits.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+
+    const onSubmit = async (e) => {
         e.preventDefault();
 
-        if (!text || !amount || !accountId) { // Validate Account
-            alert("Please fill in all fields (including Wallet)");
+        if (!accountId) {
+            alert("Please select a Wallet");
             return;
         }
 
-        const finalAmount = type === 'expense' ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
+        if (isSplit) {
+            // Validate Splits
+            if (splits.some(s => !s.category || !s.amount)) {
+                alert("Please fill in all split categories and amounts.");
+                return;
+            }
+            if (text === '') {
+                alert("Please enter a main title for these transactions.");
+                return;
+            }
 
-        const transactionData = {
-            text,
-            amount: finalAmount,
-            category,
-            accountId, // Save Account ID
-            date: initialData ? initialData.date : new Date().toISOString()
-        };
+            // Create Multiple Transactions
+            for (const split of splits) {
+                const splitAmount = parseFloat(split.amount);
+                const finalAmount = type === 'expense' ? -Math.abs(splitAmount) : Math.abs(splitAmount);
 
-        if (initialData) {
-            // Edit Mode:
-            // For Phase 2, we just update the transaction record. Balance correction is advanced.
-            updateTransaction(initialData.id, transactionData);
+                const transactionData = {
+                    text: `${text} (${split.category})`, // Unique title per split
+                    amount: finalAmount,
+                    category: split.category,
+                    accountId,
+                    date: new Date().toISOString()
+                };
+
+                await addTransaction(transactionData);
+                await updateBalance(accountId, finalAmount);
+            }
+
         } else {
-            // Add Mode:
-            await addTransaction(transactionData);
-            // Update Wallet Balance
-            await updateBalance(accountId, finalAmount);
+            // Standard Single Transaction
+            if (!text || !amount || !category) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            const finalAmount = type === 'expense' ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
+
+            const transactionData = {
+                text,
+                amount: finalAmount,
+                category,
+                accountId,
+                date: initialData ? initialData.date : new Date().toISOString()
+            };
+
+            if (initialData) {
+                updateTransaction(initialData.id, transactionData);
+            } else {
+                await addTransaction(transactionData);
+                await updateBalance(accountId, finalAmount);
+            }
         }
 
+        // Reset Form
         setText('');
         setAmount('');
         setCategory('');
+        setIsSplit(false);
+        setSplits([{ category: '', amount: '' }, { category: '', amount: '' }]);
 
         if (onSuccess) {
             onSuccess();
@@ -104,33 +164,104 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
             </div>
 
             <Input
-                label="Title"
+                label="Title (Description)"
                 id="text"
                 type="text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="e.g. Grocery, Salary"
+                placeholder="e.g. Grocery Trip"
             />
-            <Input
-                label="Amount"
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-            />
-            <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
-                <CategoryPicker
-                    selectedCategory={category}
-                    onSelect={setCategory}
-                    type={type}
-                />
-            </div>
+
+            {!isSplit ? (
+                <>
+                    <Input
+                        label="Amount"
+                        id="amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                    />
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                            <button
+                                type="button"
+                                onClick={() => setIsSplit(true)}
+                                className="text-xs flex items-center gap-1 text-indigo-500 hover:text-indigo-600"
+                            >
+                                <Split size={12} /> Split Category
+                            </button>
+                        </div>
+                        <CategoryPicker
+                            selectedCategory={category}
+                            onSelect={setCategory}
+                            type={type}
+                        />
+                    </div>
+                </>
+            ) : (
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <Split size={14} className="text-indigo-500" /> Split Transaction
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setIsSplit(false)}
+                            className="text-xs text-slate-500 hover:text-slate-700 underline"
+                        >
+                            Switch to Single
+                        </button>
+                    </div>
+
+                    {splits.map((split, index) => (
+                        <div key={index} className="flex gap-2 items-start">
+                            <div className="flex-1 min-w-0">
+                                <CategoryPicker
+                                    selectedCategory={split.category}
+                                    onSelect={(cat) => handleSplitChange(index, 'category', cat)}
+                                    type={type}
+                                />
+                            </div>
+                            <div className="w-24">
+                                <input
+                                    type="number"
+                                    value={split.amount}
+                                    onChange={(e) => handleSplitChange(index, 'amount', e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => handleRemoveSplit(index)}
+                                className="p-2 text-slate-400 hover:text-red-500"
+                                disabled={splits.length <= 1}
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    ))}
+
+                    <button
+                        type="button"
+                        onClick={handleAddSplit}
+                        className="text-sm text-indigo-500 hover:text-indigo-600 flex items-center gap-1 font-medium mt-2"
+                    >
+                        <Plus size={14} /> Add another split
+                    </button>
+
+                    <div className="text-right text-sm font-bold text-slate-700 dark:text-white mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        Total: {totalSplitAmount.toFixed(2)}
+                    </div>
+                </div>
+            )}
+
             <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5">
-                <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' ? 'Add Expense' : 'Add Income')}
+                <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' || isSplit ? 'Add Transaction(s)' : 'Add Income')}
             </Button>
         </form>
     );

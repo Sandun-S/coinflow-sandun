@@ -296,7 +296,7 @@ const BudgetsPage = () => {
                                         const isSubOver = item.limit > 0 && item.spent > item.limit;
 
                                         return (
-                                            <div key={item.name} className="text-sm">
+                                            <div key={item.name} className="text-sm group">
                                                 <div className="flex justify-between mb-1 items-center">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
@@ -314,7 +314,7 @@ const BudgetsPage = () => {
 
                                                         {/* Sub Actions - Edit/Delete specific sub budgets */}
                                                         {item.hasBudget && (
-                                                            <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                                 <button
                                                                     onClick={() => {
                                                                         // Find the budget doc again? Or cleaner way?
