@@ -169,23 +169,23 @@ const SubscriptionsPage = () => {
                                         <RefreshCw size={24} />
                                     </div>
                                     <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white truncate" title={sub.name}>{sub.name}</h3>
-                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 truncate">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white leading-tight break-words" title={sub.name}>{sub.name}</h3>
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-1">
                                             <p className="flex-shrink-0">{sub.billingCycle}</p>
-                                            <span className="flex-shrink-0 hidden xs:inline">•</span>
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+                                            <span className="flex-shrink-0 hidden xs:inline opacity-50">•</span>
+                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1 break-all">
                                                 {(() => {
                                                     const hierarchy = getCategoryHierarchy ? getCategoryHierarchy(sub.category || 'General') : { type: 'unknown', sub: sub.category };
                                                     if (hierarchy.type === 'sub') {
                                                         return (
-                                                            <span className="truncate">
+                                                            <span>
                                                                 <span className="opacity-75">{hierarchy.parent?.name}</span>
                                                                 <span className="mx-1">&rsaquo;</span>
                                                                 <span>{hierarchy.sub}</span>
                                                             </span>
                                                         );
                                                     }
-                                                    return <span className="truncate">{hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General')}</span>;
+                                                    return <span>{hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General')}</span>;
                                                 })()}
                                             </span>
                                         </div>
