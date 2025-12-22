@@ -72,6 +72,7 @@ const SettingsPage = () => {
                             <option value="LKR">LKR (Rs)</option>
                             <option value="GBP">GBP (£)</option>
                             <option value="JPY">JPY (¥)</option>
+                            <option value="AUD">AUD (A$)</option>
                         </select>
                     </div>
                 </Card>
