@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, writeBatch, increment } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { Wallet, CreditCard, Banknote } from 'lucide-react';
 
@@ -113,7 +113,6 @@ export const AccountProvider = ({ children }) => {
         try {
             // We need to read the current balance first to be safe, or use increment
             // Firestore increment is safer for concurrent updates
-            const { increment } = await import('firebase/firestore');
             const docRef = doc(db, 'accounts', accountId);
             await updateDoc(docRef, {
                 balance: increment(amount)
