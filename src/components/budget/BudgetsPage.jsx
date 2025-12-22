@@ -9,6 +9,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
+import CategoryPicker from '../categories/CategoryPicker';
 
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
@@ -53,26 +54,33 @@ const BudgetsPage = () => {
             return t.amount < 0 && tDate >= startOfMonth;
         });
 
-        const spending = {}; // { ParentName: { total: 0, subs: { SubName: 0 } } }
+        const spending = {}; // { CategoryName: { total: 0, subs: {} } }
 
         monthlyExpenses.forEach(t => {
             const rawCat = t.category || 'General';
-            // Aggregating to Parent Level
             const parentCat = getParentCategoryName(rawCat);
+            const amount = Math.abs(parseFloat(t.amount));
 
+            // 1. Track aggregated spending for Parent
             if (!spending[parentCat]) {
                 spending[parentCat] = { total: 0, subs: {} };
             }
-
-            const amount = Math.abs(parseFloat(t.amount));
             spending[parentCat].total += amount;
 
-            // Track subcategory spending if specifically a sub
+            // Track subcategory breakdown for the Parent
             if (rawCat !== parentCat) {
                 spending[parentCat].subs[rawCat] = (spending[parentCat].subs[rawCat] || 0) + amount;
             } else {
-                // Track explicit parent spending too if needed, or just leave as total
                 spending[parentCat].subs['_main'] = (spending[parentCat].subs['_main'] || 0) + amount;
+            }
+
+            // 2. Track individual spending for Subcategory (if budget is set specifically for it)
+            if (rawCat !== parentCat) {
+                if (!spending[rawCat]) {
+                    spending[rawCat] = { total: 0, subs: {} };
+                }
+                spending[rawCat].total += amount;
+                // No 'subs' breakdown needed for a subcategory itself
             }
         });
         return spending;
@@ -249,16 +257,12 @@ const BudgetsPage = () => {
             >
                 <form onSubmit={handleSaveBudget} className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category (Parent Only)</label>
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                        >
-                            {expenseCategories.map(cat => (
-                                <option key={cat.id} value={cat.name}>{cat.name}</option>
-                            ))}
-                        </select>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                        <CategoryPicker
+                            selectedCategory={selectedCategory}
+                            onSelect={setSelectedCategory}
+                            type="expense"
+                        />
                     </div>
                     <Input
                         label="Monthly Limit"
