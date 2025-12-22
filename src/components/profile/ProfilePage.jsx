@@ -50,6 +50,47 @@ const ProfilePage = () => {
 
                 </Card>
 
+                <div className="md:col-span-2 space-y-6 mb-6">
+                    {/* Plan Status Card */}
+                    <Card className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white border-none relative overflow-hidden">
+                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-indigo-200 font-medium mb-1 uppercase text-xs tracking-wider">Current Plan</h3>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl font-bold">
+                                        {user?.plan === 'lifetime' ? 'Lifetime Pro 💎' : (user?.plan === 'pro' ? 'Pro Trial 🚀' : 'Free Member')}
+                                    </span>
+                                </div>
+                                {user?.plan === 'pro' && user?.subscriptionExpiry && (
+                                    <p className="text-indigo-200 text-sm mt-1">
+                                        Expires on {new Date(user.subscriptionExpiry.seconds * 1000).toLocaleDateString()}
+                                    </p>
+                                )}
+                            </div>
+
+                            {user?.plan !== 'lifetime' && (
+                                <a
+                                    href="https://shop.sandunsiwantha.com/products/coinflow-pro-plan"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-6 py-3 bg-white text-indigo-900 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg active:scale-95 text-center w-full md:w-auto"
+                                >
+                                    Upgrade to Lifetime
+                                </a>
+                            )}
+                        </div>
+
+                        {/* Decorative Background */}
+                        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
+                        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+                    </Card>
+
+                    <Card>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Account Details</h3>
+                        <p className="text-slate-500 dark:text-slate-400">This section can be used for additional account details if needed.</p>
+                    </Card>
+                </div>
+
                 {/* Unified Action Menu */}
                 <Card className="mb-6 overflow-hidden !p-0">
                     <div className="divide-y divide-slate-100 dark:divide-slate-700">

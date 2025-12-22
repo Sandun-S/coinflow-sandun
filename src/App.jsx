@@ -18,7 +18,9 @@ import SubscriptionsPage from './components/subscriptions/SubscriptionsPage';
 import TransactionsPage from './components/transactions/TransactionsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
-import ContactPage from './components/pages/ContactPage';
+import ContactsPage from './components/contact/ContactsPage';
+import AdminRoute from './components/auth/AdminRoute';
+import AdminDashboard from './components/admin/AdminDashboard';
 import MyWallets from './components/accounts/MyWallets';
 
 import Modal from './components/common/Modal';
@@ -123,8 +125,14 @@ function App() {
                         <Route path="/wallets" element={<MyWallets />} /> {/* Added Route */}
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/contact" element={<ContactPage />} />
                       </Route>
+
+                      {/* Admin Route */}
+                      <Route path="/admin" element={
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      } />
 
                       {/* Fallback */}
                       <Route path="*" element={<Navigate to="/" replace />} />
