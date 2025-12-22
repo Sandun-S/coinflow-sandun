@@ -1,5 +1,6 @@
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
+import MobileHeader from './MobileHeader';
 
 const MainLayout = ({ children }) => {
     return (
@@ -9,8 +10,11 @@ const MainLayout = ({ children }) => {
                 <Sidebar />
             </aside>
 
+            {/* Mobile Header (Top) */}
+            <MobileHeader />
+
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto w-full p-4 md:p-8 md:ml-64 relative pb-20 md:pb-8">
+            <main className="flex-1 overflow-y-auto w-full p-4 md:p-8 md:ml-64 relative pb-20 pt-20 md:pt-8 md:pb-8">
                 <div className="max-w-7xl mx-auto space-y-8">
                     {children}
                 </div>
