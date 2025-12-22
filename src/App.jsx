@@ -18,7 +18,7 @@ import SubscriptionsPage from './components/subscriptions/SubscriptionsPage';
 import TransactionsPage from './components/transactions/TransactionsPage';
 import ProfilePage from './components/profile/ProfilePage';
 import SettingsPage from './components/settings/SettingsPage';
-import ContactsPage from './components/contact/ContactsPage';
+import ContactPage from './components/pages/ContactPage';
 import AdminRoute from './components/auth/AdminRoute';
 import AdminDashboard from './components/admin/AdminDashboard';
 import MyWallets from './components/accounts/MyWallets';
