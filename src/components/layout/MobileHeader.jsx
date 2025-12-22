@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Wallet } from 'lucide-react';
+import { PieChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MobileHeader = () => {
@@ -10,9 +10,9 @@ const MobileHeader = () => {
     return (
         <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors duration-200">
             {/* Logo Section */}
-            <div className="flex items-center gap-2" onClick={() => navigate('/')}>
-                <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <Wallet className="text-white" size={18} />
+            <div className="flex items-center gap-3" onClick={() => navigate('/')}>
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <PieChart className="text-white" size={20} />
                 </div>
                 <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                     CoinFlow
