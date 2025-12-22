@@ -53,12 +53,27 @@ const BudgetsPage = () => {
             return t.amount < 0 && tDate >= startOfMonth;
         });
 
-        const spending = {};
+        const spending = {}; // { ParentName: { total: 0, subs: { SubName: 0 } } }
+
         monthlyExpenses.forEach(t => {
             const rawCat = t.category || 'General';
             // Aggregating to Parent Level
             const parentCat = getParentCategoryName(rawCat);
-            spending[parentCat] = (spending[parentCat] || 0) + Math.abs(parseFloat(t.amount));
+
+            if (!spending[parentCat]) {
+                spending[parentCat] = { total: 0, subs: {} };
+            }
+
+            const amount = Math.abs(parseFloat(t.amount));
+            spending[parentCat].total += amount;
+
+            // Track subcategory spending if specifically a sub
+            if (rawCat !== parentCat) {
+                spending[parentCat].subs[rawCat] = (spending[parentCat].subs[rawCat] || 0) + amount;
+            } else {
+                // Track explicit parent spending too if needed, or just leave as total
+                spending[parentCat].subs['_main'] = (spending[parentCat].subs['_main'] || 0) + amount;
+            }
         });
         return spending;
     }, [transactions, categories]);
@@ -95,7 +110,10 @@ const BudgetsPage = () => {
             {/* Total Budget Summary */}
             {budgets.length > 0 && (() => {
                 const totalBudget = budgets.reduce((sum, b) => sum + parseFloat(b.limit), 0);
-                const totalSpent = budgets.reduce((sum, b) => sum + (categorySpending[b.category] || 0), 0);
+                const totalSpent = budgets.reduce((sum, b) => {
+                    const bData = categorySpending[b.category];
+                    return sum + (bData ? bData.total : 0);
+                }, 0);
                 const totalPercentage = Math.min((totalSpent / totalBudget) * 100, 100);
                 const isTotalOver = totalSpent > totalBudget;
 
@@ -125,9 +143,21 @@ const BudgetsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {budgets.map(budget => {
-                    const spent = categorySpending[budget.category] || 0;
+                    const budgetData = categorySpending[budget.category] || { total: 0, subs: {} };
+                    const spent = budgetData.total;
                     const percentage = Math.min((spent / budget.limit) * 100, 100);
                     const isOver = spent > budget.limit;
+
+                    // Sorted subs logic
+                    const subEntries = Object.entries(budgetData.subs)
+                        .filter(([name]) => name !== '_main') // Optional: hide main if you want only subs, or show all
+                        .sort(([, a], [, b]) => b - a);
+
+                    // If we have mixed spending (main + subs), _main represents direct parent category assignment
+                    // Just show all keys from subs? User said: "inside it have sub categories and show them like this too"
+                    // I will filter out _main for visual clarity if it's small, or maybe rename it to 'General'.
+                    // Actually, if a user adds to 'Utilities' directly, it should probably show as 'Utilities (General)' or just be part of total.
+                    // Let's list Subcategories specifically.
 
                     return (
                         <Card key={budget.id} className="relative overflow-hidden">
@@ -161,7 +191,7 @@ const BudgetsPage = () => {
                                 <span className="text-slate-400">/ {formatMoney(budget.limit)}</span>
                             </div>
 
-                            {/* Progress Bar */}
+                            {/* Main Progress Bar */}
                             <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 mb-4 overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all duration-500 ${isOver ? 'bg-red-500' : 'bg-indigo-500'}`}
@@ -169,19 +199,36 @@ const BudgetsPage = () => {
                                 />
                             </div>
 
+                            {/* Subcategory Breakdown */}
+                            {subEntries.length > 0 && (
+                                <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
+                                    {subEntries.map(([subName, subAmount]) => (
+                                        <div key={subName} className="text-sm">
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-slate-600 dark:text-slate-300">{subName}</span>
+                                                <span className="text-slate-800 dark:text-slate-200 font-medium">{formatMoney(subAmount)}</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                                <div
+                                                    className="h-full bg-indigo-400/70 rounded-full"
+                                                    style={{ width: `${Math.min((subAmount / budget.limit) * 100, 100)}%` }} // % of Main Budget
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {isOver && (
-                                <div className="flex items-center gap-2 text-red-500 text-sm font-medium animate-pulse">
+                                <div className="flex items-center gap-2 text-red-500 text-sm font-medium animate-pulse mt-4">
                                     <AlertCircle size={16} />
                                     <span>Over Budget!</span>
                                 </div>
                             )}
 
                             {!isOver && percentage > 80 && (
-                                <p className="text-amber-500 text-sm font-medium">Careful, you're close to the limit.</p>
-                            )}
-
-                            {!isOver && percentage <= 80 && (
-                                <p className="text-green-500 text-sm font-medium">On track!</p>
+                                <p className="text-amber-500 text-sm font-medium mt-4">Careful, you're close to the limit.</p>
                             )}
                         </Card>
                     );

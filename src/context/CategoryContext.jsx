@@ -257,7 +257,16 @@ export const CategoryProvider = ({ children }) => {
             loading,
             addCategory,
             updateCategory,
-            deleteCategory
+            deleteCategory,
+            getCategoryHierarchy: (catName) => {
+                const parent = categories.find(c => c.name === catName);
+                if (parent) return { type: 'parent', parent: parent, sub: null };
+
+                const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
+                if (parentOfSub) return { type: 'sub', parent: parentOfSub, sub: catName };
+
+                return { type: 'unknown', parent: null, sub: catName };
+            }
         }}>
             {children}
         </CategoryContext.Provider>

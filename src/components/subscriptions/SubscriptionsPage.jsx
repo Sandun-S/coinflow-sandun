@@ -8,12 +8,14 @@ import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
 import CategoryPicker from '../categories/CategoryPicker';
+import { useCategories } from '../../context/CategoryContext';
 import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
 
 const SubscriptionsPage = () => {
     const { subscriptions, addSubscription, deleteSubscription, updateSubscription, loading } = useSubscriptions();
     const { currency } = useSettings();
     const { addTransaction } = useTransactions();
+    const { getCategoryHierarchy } = useCategories(); // Get helper here
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
@@ -170,8 +172,20 @@ const SubscriptionsPage = () => {
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white">{sub.name}</h3>
                                         <div className="flex items-center gap-2">
                                             <p className="text-sm text-slate-500 dark:text-slate-400">{sub.billingCycle}</p>
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
-                                                {sub.category || 'General'}
+                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                                {(() => {
+                                                    const hierarchy = getCategoryHierarchy ? getCategoryHierarchy(sub.category || 'General') : { type: 'unknown', sub: sub.category };
+                                                    if (hierarchy.type === 'sub') {
+                                                        return (
+                                                            <>
+                                                                <span className="opacity-75">{hierarchy.parent?.name}</span>
+                                                                <span>&rsaquo;</span>
+                                                                <span>{hierarchy.sub}</span>
+                                                            </>
+                                                        );
+                                                    }
+                                                    return hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General');
+                                                })()}
                                             </span>
                                         </div>
                                     </div>
