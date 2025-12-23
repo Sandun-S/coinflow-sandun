@@ -12,7 +12,7 @@ const SummaryCards = () => {
 
     const cashAndBankBalance = useMemo(() => {
         return accounts
-            .filter(a => a.type !== 'Credit Card' && a.type !== 'Investment')
+            .filter(a => a.type === 'Cash' || a.type === 'Bank')
             .reduce((sum, a) => sum + parseFloat(a.balance), 0);
     }, [accounts]);
 
