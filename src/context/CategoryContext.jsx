@@ -111,6 +111,13 @@ export const DEFAULT_CATEGORIES = [
         icon: 'Gift',
         color: 'bg-pink-100 text-pink-600',
         subcategories: ['Cash Gift', 'Tax Refund']
+    },
+    {
+        name: 'Loans',
+        type: 'expense',
+        icon: 'CreditCard',
+        color: 'bg-red-100 text-red-600',
+        subcategories: ['Personal Loan', 'Vehicle Loan', 'Housing Loan', 'Land Loan', 'Education Loan', 'Business Loan', 'Finance']
     }
 ];
 

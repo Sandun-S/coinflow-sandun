@@ -5,6 +5,7 @@ import Input from '../common/Input';
 import { useAccounts } from '../../context/AccountContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Import transactions
 import { useSubscriptions } from '../../context/SubscriptionContext';
+import { useCategories } from '../../context/CategoryContext';
 import { useCurrencyFormatter } from '../../utils';
 import { Wallet, Banknote, CreditCard, Plus, Trash2, Edit2, X, ArrowRightLeft, TrendingUp, RefreshCw } from 'lucide-react';
 import TransferModal from './TransferModal';
@@ -31,12 +32,10 @@ const MyWallets = () => {
     const [interestRate, setInterestRate] = useState(''); // New for Investment
 
     // Loan Specific State
-    const [loanTotal, setLoanTotal] = useState(''); // Calculated or Override
-    const [loanDuration, setLoanDuration] = useState(''); // Months
+    const [loanTotal, setLoanTotal] = useState('');
     const [monthsPaid, setMonthsPaid] = useState('');
     const [loanPayment, setLoanPayment] = useState('');
-    const [downPayment, setDownPayment] = useState('');
-    const [loanDueDate, setLoanDueDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
+    const [loanDueDate, setLoanDueDate] = useState('5');
     const [loanCategory, setLoanCategory] = useState('Personal Loan');
 
     // Adjustment State
@@ -67,14 +66,12 @@ const MyWallets = () => {
 
         // Loan Calculation
         if (type === 'Loan') {
+            const total = parseFloat(loanTotal) || 0;
+            const paidMonths = parseFloat(monthsPaid) || 0;
             const monthly = parseFloat(loanPayment) || 0;
-            const duration = parseFloat(loanDuration) || 0;
-            const paid = parseFloat(monthsPaid) || 0;
-
-            // Total Payable = Monthly * Duration
-            // Remaining Debt = Monthly * (Duration - Paid)
-            const currentDebt = monthly * (duration - paid);
-            initialBalance = -currentDebt;
+            const alreadyPaid = paidMonths * monthly;
+            const currentDebt = total - alreadyPaid;
+            initialBalance = -currentDebt; // Loans are negative balance (debt)
         }
 
         let color = 'bg-slate-100 text-slate-600';
@@ -94,9 +91,8 @@ const MyWallets = () => {
         if (type === 'Credit Card') accountData.creditLimit = limit;
         if (type === 'Investment') accountData.interestRate = rate;
         if (type === 'Loan') {
-            accountData.loanDuration = parseFloat(loanDuration) || 0;
+            accountData.loanTotal = parseFloat(loanTotal) || 0;
             accountData.loanPayment = parseFloat(loanPayment) || 0;
-            accountData.downPayment = parseFloat(downPayment) || 0;
         }
 
         if (editingId) {
@@ -106,11 +102,18 @@ const MyWallets = () => {
 
             // Auto-Create Subscription for Loans
             if (result.success && type === 'Loan') {
+                const day = parseInt(loanDueDate);
+                const today = new Date();
+                let nextDate = new Date(today.getFullYear(), today.getMonth(), day);
+                if (nextDate < today) {
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+
                 await addSubscription({
                     name: `${name} Repayment`,
                     amount: parseFloat(loanPayment) || 0,
                     billingCycle: 'monthly',
-                    nextBillingDate: new Date(loanDueDate).toISOString(),
+                    nextBillingDate: nextDate.toISOString(),
                     category: loanCategory,
                     walletId: result.id,
                     reminderEnabled: true
@@ -144,13 +147,10 @@ const MyWallets = () => {
         setInterestRate('');
 
         // Reset Loan
-        // Reset Loan
-        setLoanTotal(''); // Unused now but kept for safety if switched back
-        setLoanDuration('');
+        setLoanTotal('');
         setMonthsPaid('');
         setLoanPayment('');
-        setDownPayment('');
-        setLoanDueDate(new Date().toISOString().split('T')[0]);
+        setLoanDueDate('5');
 
         setEditingId(null);
     };
