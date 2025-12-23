@@ -116,7 +116,7 @@ const SubscriptionsPage = () => {
 
     // Calculate Total Monthly Cost
     const totalMonthlyCost = subscriptions.reduce((total, sub) => {
-        if (sub.billingCycle === 'Monthly') {
+        if (sub.billingCycle === 'Monthly' || sub.billingCycle === 'monthly') {
             return total + sub.amount;
         } else {
             return total + (sub.amount / 12); // Amortize yearly

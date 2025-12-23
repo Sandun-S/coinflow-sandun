@@ -128,7 +128,7 @@ const MyWallets = () => {
                 await addSubscription({
                     name: `${name} Repayment`,
                     amount: parseFloat(loanPayment) || 0,
-                    billingCycle: 'monthly',
+                    billingCycle: 'Monthly',
                     nextBillingDate: loanDueDate || new Date().toISOString(),
                     category: loanCategory || 'Loans',
                     walletId: result.id,

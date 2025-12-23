@@ -270,31 +270,64 @@ const AnalyticsPage = () => {
             </div>
 
             {/* --- Section 2: Loan & Investment Deep Dive --- */}
-            {metrics.totalLoanDebt > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4">
-                    {/* Loan Progress */}
-                    <Card className="lg:col-span-2">
-                        <div className="flex items-center justify-between mb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4">
+
+                {/* Loan Breakdown (Per Loan) */}
+                {metrics.totalLoanDebt > 0 && (
+                    <Card className="lg:col-span-2 flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <Target className="text-indigo-500" size={20} /> Loan Payoff Progress
                             </h3>
-                            <span className="text-sm font-semibold text-slate-500">{metrics.loanProgress.toFixed(1)}% Paid Off</span>
+                            <span className="text-sm font-semibold text-slate-500">
+                                {metrics.loanProgress.toFixed(1)}% Total Paid
+                            </span>
                         </div>
 
-                        {/* Visual Progress Bar */}
-                        <div className="w-full h-8 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden relative mb-4">
-                            <div
-                                className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-1000 ease-out"
-                                style={{ width: `${Math.max(5, metrics.loanProgress)}%` }} // Min 5% for visibility
-                            >
-                                <div className="w-full h-full opacity-30 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')]"></div>
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-white z-10 drop-shadow-md">
-                                {formatMoney(metrics.totalLoanDebt)} Remaining
-                            </div>
-                        </div>
+                        {accounts.filter(a => a.type === 'Loan').map(loan => {
+                            const total = loan.loanTotal || 0;
+                            const paid = total - Math.abs(loan.balance); // Approximate if balance is negative debt
+                            const progress = total > 0 ? (paid / total) * 100 : 0;
+                            // Estimate Asset Value: Down Payment + Loan Principal (Account for interest if possible, but Total is usually Full Debt)
+                            const assetValue = (loan.downPayment || 0) + total;
 
-                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100 dark:divide-slate-700">
+                            return (
+                                <div key={loan.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className="font-bold text-slate-700 dark:text-slate-200">{loan.name}</h4>
+                                        <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
+                                            {progress.toFixed(1)}%
+                                        </span>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative mb-3">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
+                                            style={{ width: `${Math.max(5, progress)}%` }}
+                                        />
+                                    </div>
+
+                                    {/* Loan Details Grid */}
+                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                        <div>
+                                            <p className="text-slate-500">Remaining</p>
+                                            <p className="font-bold text-red-500">{formatMoney(Math.abs(loan.balance))}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-500">Monthly</p>
+                                            <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(loan.loanPayment || 0)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-500">Total Value</p>
+                                            <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(assetValue)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100 dark:divide-slate-700 mt-2">
                             <div>
                                 <p className="text-xs text-slate-500 uppercase tracking-wider">Total Debt</p>
                                 <p className="font-bold text-red-600 text-lg mt-1">{formatMoney(metrics.totalLoanDebt)}</p>
@@ -311,9 +344,11 @@ const AnalyticsPage = () => {
                             </div>
                         </div>
                     </Card>
+                )}
 
-                    {/* Investment Summary */}
-                    <Card className="relative overflow-hidden">
+                {/* Investment Summary & Projection */}
+                <div className={`flex flex-col gap-6 ${metrics.totalLoanDebt === 0 ? 'lg:col-span-3' : ''}`}>
+                    <Card className="relative overflow-hidden flex-1">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                             <Briefcase size={100} />
                         </div>
@@ -325,15 +360,45 @@ const AnalyticsPage = () => {
                                 <p className="text-sm text-slate-500">Total Portfolio Value</p>
                                 <h4 className="text-3xl font-bold text-emerald-600">{formatMoney(metrics.totalInvested)}</h4>
                             </div>
-                            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
-                                <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-                                    💡 Tip: A diversified portfolio helps manage risk.
-                                </p>
+
+                            {/* Smart Projection */}
+                            {metrics.totalInvested > 0 && (() => {
+                                // Calculate Weighted Average Interest Rate
+                                const investments = accounts.filter(a => a.type === 'Investment');
+                                const weightedSum = investments.reduce((sum, inv) => {
+                                    const rate = parseFloat(inv.interestRate) || 6.0; // Default 6%
+                                    return sum + (inv.balance * rate);
+                                }, 0);
+                                const avgRate = weightedSum / metrics.totalInvested;
+                                const projection = metrics.totalInvested * Math.pow(1 + (avgRate / 100), 5); // 5 Years
+
+                                return (
+                                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                                        <h5 className="font-bold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-1">
+                                            <TrendingUp size={16} /> 5-Year Projection
+                                        </h5>
+                                        <div className="flex justify-between items-end">
+                                            <div className="text-xs text-emerald-700/70 dark:text-emerald-400">
+                                                @ ~{avgRate.toFixed(1)}% Avg Return
+                                            </div>
+                                            <div className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+                                                {formatMoney(projection)}
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 text-[10px] text-emerald-600/60 text-center">
+                                            *Estimated based on account rates (Default 6%)
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500">
+                                💡 Tip: Add "Interest Rate" to accounts for accuracy.
                             </div>
                         </div>
                     </Card>
                 </div>
-            )}
+            </div>
 
             {/* --- Section 3: Detailed Charts --- */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
