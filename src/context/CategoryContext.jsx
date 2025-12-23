@@ -117,7 +117,7 @@ export const DEFAULT_CATEGORIES = [
         type: 'expense',
         icon: 'CreditCard',
         color: 'bg-red-100 text-red-600',
-        subcategories: ['Personal Loan', 'Vehicle Loan', 'Housing Loan', 'Land Loan', 'Education Loan', 'Business Loan', 'Finance']
+        subcategories: ['Personal Loan', 'Vehicle Loan', 'Housing Loan', 'Land Loan', 'Education Loan', 'Business Loan', 'Finance', 'Gold Loan', 'General Loan']
     }
 ];
 
@@ -265,6 +265,7 @@ export const CategoryProvider = ({ children }) => {
             addCategory,
             updateCategory,
             deleteCategory,
+            resetDefaults: () => checkAndUpgradeDefaults(user?.id, categories),
             getCategoryHierarchy: (catName) => {
                 const parent = categories.find(c => c.name === catName);
                 if (parent) return { type: 'parent', parent: parent, sub: null };

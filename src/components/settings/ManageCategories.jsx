@@ -38,7 +38,7 @@ const ICONS = [
 ];
 
 const ManageCategories = () => {
-    const { categories, addCategory, deleteCategory, updateCategory } = useCategories();
+    const { categories, addCategory, deleteCategory, updateCategory, resetDefaults } = useCategories();
     // Section Collapse State
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -109,8 +109,17 @@ const ManageCategories = () => {
                         <p className="text-sm text-slate-500">Add or remove custom categories.</p>
                     </div>
                 </div>
-                <div className="text-slate-400">
-                    {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); resetDefaults(); }}
+                        className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                        title="Sync Missing Default Categories"
+                    >
+                        <Icons.RefreshCw size={20} />
+                    </button>
+                    <div className="text-slate-400">
+                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                    </div>
                 </div>
             </div>
 

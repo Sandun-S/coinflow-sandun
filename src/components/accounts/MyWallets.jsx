@@ -440,18 +440,18 @@ const MyWallets = () => {
                                     <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
 
                                         {/* Toggle Between Calculator and Manual */}
-                                        <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                                             <button
                                                 type="button"
                                                 onClick={() => setCalculateMode(false)}
-                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${!calculateMode ? 'bg-white dark:bg-slate-600 text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${!calculateMode ? 'bg-white text-indigo-600 shadow-sm dark:bg-indigo-600 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                             >
                                                 Manual Entry
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setCalculateMode(true)}
-                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${calculateMode ? 'bg-white dark:bg-slate-600 text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${calculateMode ? 'bg-white text-indigo-600 shadow-sm dark:bg-indigo-600 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                             >
                                                 Loan Calculator
                                             </button>
@@ -468,23 +468,22 @@ const MyWallets = () => {
                                             />
                                         ) : (
                                             /* Calculator Mode */
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <Input
-                                                    label="Loan Term (Months)"
-                                                    type="number"
-                                                    placeholder="24"
-                                                    value={loanTerm}
-                                                    onChange={(e) => setLoanTerm(e.target.value)}
-                                                />
-                                                <Input
-                                                    label="Down Payment (Optional)"
-                                                    type="number"
-                                                    placeholder="100000"
-                                                    value={downPayment}
-                                                    onChange={(e) => setDownPayment(e.target.value)}
-                                                />
-                                            </div>
+                                            <Input
+                                                label="Loan Term (Months)"
+                                                type="number"
+                                                placeholder="24"
+                                                value={loanTerm}
+                                                onChange={(e) => setLoanTerm(e.target.value)}
+                                            />
                                         )}
+
+                                        <Input
+                                            label="Down Payment (Optional)"
+                                            type="number"
+                                            placeholder="100000"
+                                            value={downPayment}
+                                            onChange={(e) => setDownPayment(e.target.value)}
+                                        />
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <Input
@@ -529,7 +528,9 @@ const MyWallets = () => {
                                                             <option value="Personal Loan">Personal Loan</option>
                                                             <option value="Vehicle Loan">Vehicle Loan</option>
                                                             <option value="Housing Loan">Housing Loan</option>
+                                                            <option value="Gold Loan">Gold Loan</option>
                                                             <option value="Finance">Finance</option>
+                                                            <option value="General Loan">General Loan</option>
                                                         </>
                                                     )}
                                                 </select>
