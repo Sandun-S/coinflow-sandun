@@ -3,11 +3,14 @@ import React from 'react';
 import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import { useSettings } from '../../context/SettingsContext';
-import { Moon, Sun, Globe, Download, Database } from 'lucide-react'; // Import Download, Database
+import { Moon, Sun, Globe, Download, Database, Zap } from 'lucide-react'; // Import Zap
 import ManageCategories from './ManageCategories';
 import DataBackupModal from './DataBackupModal';
+import { useTour } from '../../context/TourContext';
+
 const SettingsPage = () => {
     const { theme, setTheme, currency, setCurrency } = useSettings();
+    const { startTour } = useTour();
     const [isBackupOpen, setIsBackupOpen] = React.useState(false);
 
     return (
@@ -113,6 +116,33 @@ const SettingsPage = () => {
                         Offline Ready • PWA
                     </p>
                 </div>
+
+                {/* App Tour */}
+                <Card>
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                            <Zap size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">App Tour</h3>
+                            <p className="text-sm text-slate-500">Revisit the feature guide.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="font-medium text-slate-700 dark:text-slate-300">Restart Tour</span>
+                            <span className="text-xs text-slate-500">Show the welcome guide again.</span>
+                        </div>
+                        <button
+                            onClick={startTour}
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg transition-colors font-medium text-sm border border-amber-100 dark:border-amber-800"
+                        >
+                            <Zap size={16} />
+                            Start Tour
+                        </button>
+                    </div>
+                </Card>
 
             </div>
 

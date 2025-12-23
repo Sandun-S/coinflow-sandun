@@ -61,6 +61,7 @@ function Dashboard() {
         onClick={() => setIsModalOpen(true)}
         className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
         aria-label="Add Transaction"
+        data-tour="add-transaction-fab"
       >
         <Plus size={24} />
       </button>
@@ -98,6 +99,9 @@ import { BudgetProvider } from './context/BudgetContext';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { AccountProvider } from './context/AccountContext';
+import { TourProvider } from './context/TourContext';
+import AppTour from './components/onboarding/AppTour';
+import CommandPalette from './components/common/CommandPalette';
 
 // ...
 
@@ -111,32 +115,36 @@ function App() {
               <TransactionProvider>
                 <BudgetProvider>
                   <SubscriptionProvider>
-                    <Routes>
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/signup" element={<SignupPage />} />
+                    <TourProvider>
+                      <AppTour />
+                      <CommandPalette />
+                      <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/signup" element={<SignupPage />} />
 
-                      {/* Protected Routes */}
-                      <Route element={<ProtectedRoute />}>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/transactions" element={<TransactionsPage />} />
-                        <Route path="/analytics" element={<AnalyticsPage />} />
-                        <Route path="/budgets" element={<BudgetsPage />} />
-                        <Route path="/subscriptions" element={<SubscriptionsPage />} />
-                        <Route path="/wallets" element={<MyWallets />} /> {/* Added Route */}
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                      </Route>
+                        {/* Protected Routes */}
+                        <Route element={<ProtectedRoute />}>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/transactions" element={<TransactionsPage />} />
+                          <Route path="/analytics" element={<AnalyticsPage />} />
+                          <Route path="/budgets" element={<BudgetsPage />} />
+                          <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                          <Route path="/wallets" element={<MyWallets />} /> {/* Added Route */}
+                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/settings" element={<SettingsPage />} />
+                        </Route>
 
-                      {/* Admin Route */}
-                      <Route path="/admin" element={
-                        <AdminRoute>
-                          <AdminDashboard />
-                        </AdminRoute>
-                      } />
+                        {/* Admin Route */}
+                        <Route path="/admin" element={
+                          <AdminRoute>
+                            <AdminDashboard />
+                          </AdminRoute>
+                        } />
 
-                      {/* Fallback */}
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </TourProvider>
                   </SubscriptionProvider>
                 </BudgetProvider>
               </TransactionProvider>

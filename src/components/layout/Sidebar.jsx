@@ -23,6 +23,7 @@ const Sidebar = () => {
                             to="/"
                             end
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                            data-tour="dashboard-nav"
                         >
                             {({ isActive }) => (
                                 <>
@@ -49,6 +50,7 @@ const Sidebar = () => {
                         <NavLink
                             to="/analytics"
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                            data-tour="analytics-nav"
                         >
                             {({ isActive }) => (
                                 <>
@@ -62,6 +64,7 @@ const Sidebar = () => {
                         <NavLink
                             to="/wallets"
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                            data-tour="wallets-nav"
                         >
                             {({ isActive }) => (
                                 <>
@@ -101,6 +104,7 @@ const Sidebar = () => {
                         <NavLink
                             to="/settings"
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                            data-tour="settings-nav"
                         >
                             {({ isActive }) => (
                                 <>
