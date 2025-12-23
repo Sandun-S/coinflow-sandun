@@ -1,16 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell } from 'recharts';
 import Card from '../common/Card';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useAccounts } from '../../context/AccountContext';
 import MainLayout from '../layout/MainLayout';
 import { useSettings } from '../../context/SettingsContext';
-import { Calendar, TrendingUp, AlertCircle, Target, Award } from 'lucide-react'; // Added Icons
+import { Calendar, TrendingUp, AlertCircle, Target, Award, Wallet, Briefcase, CreditCard, PiggyBank } from 'lucide-react';
 
 // Custom Colors
 const COLORS = ['#6366f1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
+const PIE_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
 
 const AnalyticsPage = () => {
     const { transactions } = useTransactions();
+    const { accounts } = useAccounts();
     const { currency } = useSettings();
     const [timeRange, setTimeRange] = useState('thisMonth'); // '30days', 'thisMonth', 'year'
 
@@ -22,14 +25,14 @@ const AnalyticsPage = () => {
         }).format(Math.abs(val));
     };
 
-    // --- 1. Filter Logic (Fixed) ---
+    // --- 1. Filter Logic ---
     const filteredTransactions = useMemo(() => {
         const now = new Date();
-        now.setHours(23, 59, 59, 999); // End of today
+        now.setHours(23, 59, 59, 999);
 
         return transactions.filter(t => {
             const tDate = new Date(t.date);
-            tDate.setHours(0, 0, 0, 0); // Normalize transaction date
+            tDate.setHours(0, 0, 0, 0);
 
             if (timeRange === '30days') {
                 const thirtyDaysAgo = new Date();
@@ -45,7 +48,7 @@ const AnalyticsPage = () => {
         });
     }, [transactions, timeRange]);
 
-    // --- 2. Metrics Calculation (Smart Analytics) ---
+    // --- 2. Core Metrics & Savings Logic (Fixed) ---
     const metrics = useMemo(() => {
         const income = filteredTransactions
             .filter(t => t.amount > 0 && t.category !== 'Transfer' && t.category !== 'Investment Return')
@@ -56,7 +59,16 @@ const AnalyticsPage = () => {
             .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount)), 0);
 
         const savings = income - expense;
-        const savingsRate = income > 0 ? (savings / income) * 100 : 0;
+
+        // Fixed: Cap/Handle infinite savings rate logic
+        let savingsRate = 0;
+        if (income > 0) {
+            savingsRate = (savings / income) * 100;
+        } else if (income === 0 && expense === 0) {
+            savingsRate = 0;
+        } else if (income === 0 && expense > 0) {
+            savingsRate = -100; // Total loss/spend
+        }
 
         // Predictive Logic
         const now = new Date();
@@ -71,11 +83,10 @@ const AnalyticsPage = () => {
             projectedExpense = dailyAverage * daysInMonth;
         } else if (timeRange === '30days') {
             dailyAverage = expense / 30;
-            projectedExpense = dailyAverage * 30; // Just projection of trend
+            projectedExpense = dailyAverage * 30;
         } else {
-            // Year: Monthly Average
-            const currentMonth = now.getMonth() + 1; // 1-12
-            dailyAverage = expense / (currentMonth || 1); // Actually Monthly Avg here
+            const currentMonth = now.getMonth() + 1;
+            dailyAverage = expense / (currentMonth || 1);
         }
 
         // Top Spending Category
@@ -85,6 +96,28 @@ const AnalyticsPage = () => {
         });
         const topCategory = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
 
+        // --- NEW: Loan & Investment Metrics ---
+        // Loans
+        const loans = accounts.filter(a => a.type === 'Loan');
+        const totalLoanDebt = loans.reduce((sum, a) => sum + Math.abs(a.balance), 0);
+        const totalLoanPrincipal = loans.reduce((sum, a) => sum + (a.loanTotal || 0), 0);
+        const totalLoanOrgs = totalLoanPrincipal || totalLoanDebt; // Fallback
+        const loanProgress = totalLoanOrgs > 0 ? ((totalLoanOrgs - totalLoanDebt) / totalLoanOrgs) * 100 : 0;
+        const monthlyLoanCommitments = loans.reduce((sum, a) => sum + (a.loanPayment || 0), 0);
+
+        // Debt to Income (DTI) - Using current period income as proxy for "Monthly Income"
+        // If viewing "This Month", income is accurate. If Year, we avg it.
+        let estimatedMonthlyIncome = income;
+        if (timeRange === 'year') {
+            estimatedMonthlyIncome = income / (new Date().getMonth() + 1);
+        }
+        const dtiRatio = estimatedMonthlyIncome > 0 ? (monthlyLoanCommitments / estimatedMonthlyIncome) * 100 : 0;
+
+        // Investments
+        const investments = accounts.filter(a => a.type === 'Investment');
+        const totalInvested = investments.reduce((sum, a) => sum + a.balance, 0);
+        const cash = accounts.filter(a => a.type !== 'Loan' && a.type !== 'Investment' && a.type !== 'Credit Card').reduce((sum, a) => sum + a.balance, 0);
+
         return {
             income,
             expense,
@@ -92,45 +125,37 @@ const AnalyticsPage = () => {
             savingsRate,
             dailyAverage,
             projectedExpense,
-            topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null
+            topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null,
+            // New
+            totalLoanDebt,
+            monthlyLoanCommitments,
+            loanProgress,
+            dtiRatio,
+            totalInvested,
+            cash,
+            netWorth: (cash + totalInvested) - totalLoanDebt
         };
-    }, [filteredTransactions, timeRange]);
+    }, [filteredTransactions, timeRange, accounts]);
 
-    // --- 3. Chart Data (Sorted) ---
+    // --- 3. Chart Data ---
     const chartData = useMemo(() => {
         const dataMap = {};
-
         filteredTransactions.forEach(t => {
             if (t.category === 'Transfer') return;
-
             const date = new Date(t.date);
-            // Sort Key (YYYY-MM-DD) for correct ordering
             const sortKey = timeRange === 'year'
-                ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` // YYYY-MM
-                : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; // YYYY-MM-DD
-
-            // Display Label
+                ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+                : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const label = timeRange === 'year'
                 ? date.toLocaleString('default', { month: 'short' })
                 : date.toLocaleDateString('default', { day: 'numeric', month: 'short' });
 
             if (!dataMap[sortKey]) {
-                dataMap[sortKey] = {
-                    sortKey,
-                    name: label,
-                    income: 0,
-                    expense: 0
-                };
+                dataMap[sortKey] = { sortKey, name: label, income: 0, expense: 0 };
             }
-
-            if (t.amount > 0) {
-                dataMap[sortKey].income += parseFloat(t.amount);
-            } else {
-                dataMap[sortKey].expense += Math.abs(parseFloat(t.amount));
-            }
+            if (t.amount > 0) dataMap[sortKey].income += parseFloat(t.amount);
+            else dataMap[sortKey].expense += Math.abs(parseFloat(t.amount));
         });
-
-        // Convert to array and SORT by SortKey
         return Object.values(dataMap).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     }, [filteredTransactions, timeRange]);
 
@@ -141,21 +166,24 @@ const AnalyticsPage = () => {
             const cat = t.category || 'Uncategorized';
             map[cat] = (map[cat] || 0) + Math.abs(parseFloat(t.amount));
         });
-        return Object.keys(map)
-            .map(k => ({ name: k, value: map[k] }))
-            .sort((a, b) => b.value - a.value);
+        return Object.keys(map).map(k => ({ name: k, value: map[k] })).sort((a, b) => b.value - a.value);
     }, [filteredTransactions]);
+
+    // Net Worth Distribution Data
+    const netWorthData = [
+        { name: 'Cash', value: Math.max(0, metrics.cash) },
+        { name: 'Investments', value: metrics.totalInvested },
+        { name: 'Debt', value: metrics.totalLoanDebt },
+    ].filter(i => i.value > 0);
 
     return (
         <MainLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
+                <div className="animate-in fade-in slide-in-from-left-4">
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Analytics</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Financial insights & predictions.</p>
+                    <p className="text-slate-500 dark:text-slate-400">Financial insights & health check.</p>
                 </div>
-
-                {/* Improved Time Range Selector (Segmented Control) */}
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl animate-in fade-in slide-in-from-right-4">
                     {[
                         { id: '30days', label: 'Last 30 Days' },
                         { id: 'thisMonth', label: 'This Month' },
@@ -165,8 +193,8 @@ const AnalyticsPage = () => {
                             key={option.id}
                             onClick={() => setTimeRange(option.id)}
                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${timeRange === option.id
-                                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
                         >
                             {option.label}
@@ -175,105 +203,140 @@ const AnalyticsPage = () => {
                 </div>
             </div>
 
-            {/* Smart Insights Grid */}
+            {/* --- Section 1: Overview Cards --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {/* 1. Daily Average */}
+                {/* Daily Average */}
                 <Card className="bg-indigo-50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
                     <div className="flex items-start justify-between mb-2">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-300">
                             <Calendar size={20} />
                         </div>
-                        {timeRange === 'thisMonth' && (
-                            <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">
-                                Daily Avg
-                            </span>
-                        )}
+                        {timeRange === 'thisMonth' && <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">Avg</span>}
                     </div>
                     <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                            {timeRange === 'year' ? 'Monthly Average' : 'Daily Spending'}
-                        </p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">
-                            {formatMoney(metrics.dailyAverage)}
-                        </h4>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{timeRange === 'year' ? 'Monthly Average' : 'Daily Spending'}</p>
+                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.dailyAverage)}</h4>
                     </div>
                 </Card>
 
-                {/* 2. Projected Spend (Only for Month) */}
-                <Card className="bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-amber-100 dark:bg-amber-800 rounded-lg text-amber-600 dark:text-amber-300">
-                            <Target size={20} />
-                        </div>
-                        <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
-                            Projection
-                        </span>
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                            Projected Total
-                        </p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">
-                            {timeRange === 'thisMonth' ? formatMoney(metrics.projectedExpense) : '---'}
-                        </h4>
-                        {timeRange === 'thisMonth' && (
-                            <p className="text-xs text-amber-600 mt-1">
-                                End of month estimate
-                            </p>
-                        )}
-                    </div>
-                </Card>
-
-                {/* 3. Top Category */}
+                {/* Savings Rate (Fixed) */}
                 <Card className="bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800">
                     <div className="flex items-start justify-between mb-2">
                         <div className="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-lg text-emerald-600 dark:text-emerald-300">
-                            <Award size={20} />
+                            <PiggyBank size={20} />
                         </div>
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-                            Top Category
-                        </span>
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Rate</span>
                     </div>
                     <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                            Highest Spend
-                        </p>
-                        <h4 className="text-lg font-bold text-slate-800 dark:text-white truncate">
-                            {metrics.topCategory ? metrics.topCategory.name : 'None'}
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Savings Rate</p>
+                        <h4 className={`text-2xl font-bold ${metrics.savingsRate >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {metrics.savingsRate.toFixed(1)}%
                         </h4>
-                        <p className="text-emerald-600 font-bold">
-                            {metrics.topCategory ? formatMoney(metrics.topCategory.amount) : '-'}
+                        <p className="text-xs text-slate-400 mt-1">
+                            {metrics.savings >= 0 ? 'Saved ' : 'Deficit '} {formatMoney(metrics.savings)}
                         </p>
                     </div>
                 </Card>
 
-                {/* 4. Savings Rate */}
-                <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800">
+                {/* Net Worth */}
+                <Card className="bg-violet-50 dark:bg-violet-900/10 border-violet-100 dark:border-violet-800">
                     <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg text-blue-600 dark:text-blue-300">
-                            <TrendingUp size={20} />
+                        <div className="p-2 bg-violet-100 dark:bg-violet-800 rounded-lg text-violet-600 dark:text-violet-300">
+                            <Wallet size={20} />
                         </div>
-                        <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            Savings
-                        </span>
+                        <span className="text-xs font-bold text-violet-600 bg-violet-100 px-2 py-1 rounded-full">Total</span>
                     </div>
                     <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                            Savings Rate
-                        </p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">
-                            {metrics.savingsRate.toFixed(1)}%
-                        </h4>
-                        <p className={`text-xs mt-1 ${metrics.savings > 0 ? 'text-blue-600' : 'text-red-500'}`}>
-                            {metrics.savings > 0 ? `Saved ${formatMoney(metrics.savings)}` : `Overspent ${formatMoney(Math.abs(metrics.savings))}`}
-                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Estimated Net Worth</p>
+                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.netWorth)}</h4>
+                        <p className="text-xs text-slate-400 mt-1">Cash + Invest - Debt</p>
+                    </div>
+                </Card>
+
+                {/* Monthly Obligations */}
+                <Card className="bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg text-red-600 dark:text-red-300">
+                            <CreditCard size={20} />
+                        </div>
+                        <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">Bills</span>
+                    </div>
+                    <div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Loan Commitments</p>
+                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.monthlyLoanCommitments)}</h4>
+                        <p className="text-xs text-slate-400 mt-1">/ Month</p>
                     </div>
                 </Card>
             </div>
 
-            {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* --- Section 2: Loan & Investment Deep Dive --- */}
+            {metrics.totalLoanDebt > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4">
+                    {/* Loan Progress */}
+                    <Card className="lg:col-span-2">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <Target className="text-indigo-500" size={20} /> Loan Payoff Progress
+                            </h3>
+                            <span className="text-sm font-semibold text-slate-500">{metrics.loanProgress.toFixed(1)}% Paid Off</span>
+                        </div>
 
+                        {/* Visual Progress Bar */}
+                        <div className="w-full h-8 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden relative mb-4">
+                            <div
+                                className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-1000 ease-out"
+                                style={{ width: `${Math.max(5, metrics.loanProgress)}%` }} // Min 5% for visibility
+                            >
+                                <div className="w-full h-full opacity-30 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')]"></div>
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-white z-10 drop-shadow-md">
+                                {formatMoney(metrics.totalLoanDebt)} Remaining
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100 dark:divide-slate-700">
+                            <div>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Debt</p>
+                                <p className="font-bold text-red-600 text-lg mt-1">{formatMoney(metrics.totalLoanDebt)}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Monthly Bill</p>
+                                <p className="font-bold text-slate-700 dark:text-slate-200 text-lg mt-1">{formatMoney(metrics.monthlyLoanCommitments)}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Debt/Income</p>
+                                <p className={`font-bold text-lg mt-1 ${metrics.dtiRatio > 35 ? 'text-red-500' : 'text-green-500'}`}>
+                                    {metrics.dtiRatio.toFixed(1)}%
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Investment Summary */}
+                    <Card className="relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Briefcase size={100} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                            <Briefcase className="text-emerald-500" size={20} /> Investments
+                        </h3>
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <p className="text-sm text-slate-500">Total Portfolio Value</p>
+                                <h4 className="text-3xl font-bold text-emerald-600">{formatMoney(metrics.totalInvested)}</h4>
+                            </div>
+                            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                                <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                                    💡 Tip: A diversified portfolio helps manage risk.
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* --- Section 3: Detailed Charts --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {/* Income vs Expense Chart */}
                 <Card className="h-96 flex flex-col">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income vs Expense</h3>
@@ -296,7 +359,7 @@ const AnalyticsPage = () => {
                     </div>
                 </Card>
 
-                {/* Category Breakdown */}
+                {/* Category Breakdown (Enhanced) */}
                 <Card className="h-96 flex flex-col">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Category</h3>
                     <div className="w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -313,9 +376,9 @@ const AnalyticsPage = () => {
                                         </div>
                                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                                             <div
-                                                className="h-full rounded-full transition-all duration-500"
+                                                className="h-full rounded-full transition-all duration-500 relative"
                                                 style={{ width: `${(cat.value / metrics.expense) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }}
-                                            />
+                                            ></div>
                                         </div>
                                         <div className="text-xs text-slate-400 text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             {formatMoney(cat.value)}
@@ -332,6 +395,7 @@ const AnalyticsPage = () => {
                     </div>
                 </Card>
             </div>
+
         </MainLayout>
     );
 };
