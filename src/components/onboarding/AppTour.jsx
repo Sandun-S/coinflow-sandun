@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
 import { useTour } from '../../context/TourContext';
-import { useTheme } from '../../context/ThemeContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const AppTour = () => {
     const { run, setRun, stepIndex, setStepIndex, completeTour } = useTour();
-    const { isDarkMode } = useTheme();
+    const { theme } = useSettings();
+    const isDarkMode = theme === 'dark';
 
     // Define Tour Steps
     const steps = [
