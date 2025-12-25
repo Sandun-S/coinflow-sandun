@@ -5,7 +5,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const AppTour = () => {
-    const { run, setRun, stepIndex, setStepIndex, completeTour, tourType } = useTour();
+    const { run, setRun, stepIndex, setStepIndex, completeTour, tourType, setCurrentStepTarget } = useTour();
     const { theme } = useSettings();
     const isDarkMode = theme === 'dark';
     const navigate = useNavigate();
