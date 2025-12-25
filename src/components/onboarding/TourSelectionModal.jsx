@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from '../common/Modal';
-import { Play, CreditCard, DollarSign, PieChart, TrendingUp, Wallet, LayoutDashboard } from 'lucide-react';
+import { Play, CreditCard, DollarSign, PieChart, Calendar, Wallet, LayoutDashboard } from 'lucide-react';
 import { useTour } from '../../context/TourContext';
 
 const TourSelectionModal = ({ isOpen, onClose }) => {
@@ -40,10 +40,10 @@ const TourSelectionModal = ({ isOpen, onClose }) => {
             borderColor: 'border-amber-200'
         },
         {
-            id: 'analytics',
-            title: 'Understanding Analytics',
-            desc: 'Read charts and track net worth.',
-            icon: TrendingUp,
+            id: 'subscriptions',
+            title: 'Subscriptions',
+            desc: 'Track recurring bills and payments.',
+            icon: Calendar,
             color: 'bg-purple-100 text-purple-600',
             borderColor: 'border-purple-200'
         }
