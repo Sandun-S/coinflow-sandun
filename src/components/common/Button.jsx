@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../utils';
 
-const Button = ({ children, onClick, className, type = 'button', variant = 'primary' }) => {
+const Button = ({ children, onClick, className, type = 'button', variant = 'primary', ...props }) => {
     const baseStyles = "px-4 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95";
 
     const variants = {
@@ -15,6 +15,7 @@ const Button = ({ children, onClick, className, type = 'button', variant = 'prim
             type={type}
             className={cn(baseStyles, variants[variant], className)}
             onClick={onClick}
+            {...props}
         >
             {children}
         </button>
