@@ -211,7 +211,7 @@ const AppTour = () => {
                     data: { route: '/' }
                 },
                 {
-                    target: '[data-tour="dashboard-nav"]',
+                    target: isMobile ? '[data-tour="dashboard-nav-mobile"]' : '[data-tour="dashboard-nav"]',
                     content: 'This is your Dashboard. See your cash flow at a glance.',
                     placement: navPlacement,
                     disableFlip: !isMobile,
@@ -219,8 +219,8 @@ const AppTour = () => {
                 },
                 // --- Wallets Section of Full Tour ---
                 {
-                    target: '[data-tour="wallets-nav"]',
-                    content: 'Manage your Bank Accounts, Cards, and Cash here.',
+                    target: isMobile ? '[data-tour="wallets-nav-mobile"]' : '[data-tour="wallets-nav"]',
+                    content: 'Manage your accounts here.',
                     placement: navPlacement,
                     disableFlip: !isMobile,
                     data: { route: '/wallets' }
@@ -242,7 +242,7 @@ const AppTour = () => {
 
                 // --- Budgets Section ---
                 {
-                    target: '[data-tour="budgets-nav"]',
+                    target: isMobile ? '[data-tour="budgets-nav-mobile"]' : '[data-tour="budgets-nav"]',
                     content: 'Set monthly limits to save more.',
                     placement: navPlacement,
                     disableFlip: !isMobile,
@@ -292,7 +292,7 @@ const AppTour = () => {
 
                 // --- Subscriptions Section ---
                 {
-                    target: '[data-tour="subscriptions-nav"]',
+                    target: isMobile ? '[data-tour="subscriptions-nav-mobile"]' : '[data-tour="subscriptions-nav"]',
                     content: 'Track recurring bills so you are never late.',
                     placement: navPlacement,
                     disableFlip: !isMobile,

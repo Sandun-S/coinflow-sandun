@@ -12,7 +12,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
-                    data-tour="dashboard-nav"
+                    data-tour="dashboard-nav-mobile"
                 >
                     <Home size={20} />
                     <span className="text-[10px] font-medium">Home</span>
@@ -24,7 +24,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
-                    data-tour="wallets-nav"
+                    data-tour="wallets-nav-mobile"
                 >
                     <CreditCard size={20} />
                     <span className="text-[10px] font-medium">Wallets</span>
@@ -36,7 +36,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
-                    data-tour="analytics-nav"
+                    data-tour="analytics-nav-mobile"
                 >
                     <PieChart size={20} />
                     <span className="text-[10px] font-medium">Analytics</span>
@@ -48,7 +48,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
-                    data-tour="budgets-nav"
+                    data-tour="budgets-nav-mobile"
                 >
                     <Wallet size={20} />
                     <span className="text-[10px] font-medium">Budgets</span>
@@ -60,7 +60,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
-                    data-tour="subscriptions-nav"
+                    data-tour="subscriptions-nav-mobile"
                 >
                     <Calendar size={20} />
                     <span className="text-[10px] font-medium">Subs</span>
