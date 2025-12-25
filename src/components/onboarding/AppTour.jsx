@@ -31,16 +31,7 @@ const AppTour = () => {
                 spotlightClicks: true,
                 hideFooter: true,
             },
-            {
-                target: '[data-tour="wallet-type-selector"]',
-                content: 'First, select the account type (Bank, Cash, or even a Loan).',
-                placement: 'bottom',
-                disableFlip: true,
-                spotlightClicks: true,
-                delay: 500,
-                hideFooter: true,
-                disableScrollParentFix: true,
-            },
+
             {
                 target: '[data-tour="wallet-name-input"]',
                 content: 'Give your wallet a name, like "Main Savings".',
