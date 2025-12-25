@@ -24,13 +24,31 @@ const AppTour = () => {
                 content: 'Your accounts appear here. You can see their balances.',
                 placement: 'auto',
             },
-            {
-                target: '[data-tour="add-wallet-btn"]',
-                content: 'Tap this + button to create a new wallet (e.g., "Demo Bank").',
-                placement: 'auto',
-                spotlightClicks: true,
-                hideFooter: true,
-            },
+            ...(isMobile ? [
+                {
+                    target: '[data-tour="add-wallet-mobile-fab"]',
+                    content: 'Tap the + button to see options.',
+                    placement: 'top',
+                    spotlightClicks: true,
+                    disableOverlay: true,
+                },
+                {
+                    target: '[data-tour="add-wallet-mobile-action"]',
+                    content: 'Tap the Wallet icon to add a new account.',
+                    placement: 'left',
+                    spotlightClicks: true,
+                    hideFooter: true,
+                    disableOverlay: true,
+                }
+            ] : [
+                {
+                    target: '[data-tour="add-wallet-btn"]',
+                    content: 'Tap this + button to create a new wallet (e.g., "Demo Bank").',
+                    placement: 'auto',
+                    spotlightClicks: true,
+                    hideFooter: true,
+                }
+            ]),
 
             {
                 target: '[data-tour="wallet-type-selector"]',
