@@ -4,11 +4,13 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings } from 'lucide-react';
+import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import TourSelectionModal from '../onboarding/TourSelectionModal';
 
 const ProfilePage = () => {
     const { user, logout } = useAuth();
+    const [isTourOpen, setIsTourOpen] = React.useState(false);
 
     // We access localStorage directly for the "Nuclear" option or better, expose a 'clearData' method in TransactionContext.
     // However, simplest is to clear the key.
@@ -83,6 +85,27 @@ const ProfilePage = () => {
                         {/* Decorative Background */}
                         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
                         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+                    </Card>
+
+                    {/* App Tour & Guide Trigger */}
+                    <Card
+                        className="cursor-pointer border-2 border-amber-100 dark:border-amber-900/30 hover:border-amber-200 dark:hover:border-amber-800 transition-colors group"
+                        onClick={() => setIsTourOpen(true)}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl group-hover:scale-110 transition-transform">
+                                    <Zap size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">App Demos & Guides</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Restart tours for wallets, budgets, and more.</p>
+                                </div>
+                            </div>
+                            <div className="text-amber-500 dark:text-amber-400 font-bold text-sm bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full">
+                                Start Tour &rarr;
+                            </div>
+                        </div>
                     </Card>
 
                     <Card>
@@ -160,6 +183,8 @@ const ProfilePage = () => {
                     </Button>
                 </Card>
             </div>
+
+            <TourSelectionModal isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
         </MainLayout>
     );
 };
