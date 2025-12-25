@@ -697,7 +697,7 @@ const MyWallets = () => {
 
                     {/* Main Toggle Button */}
                     <button
-                        onClick={() => setIsFabOpen(!isFabOpen)}
+                        onClick={() => { setIsFabOpen(!isFabOpen); nextStep(); }}
                         className={`p-4 rounded-full shadow-lg shadow-indigo-500/40 text-white transition-all duration-300 ${isFabOpen ? 'bg-slate-800 rotate-45' : 'bg-indigo-600 hover:scale-105 active:scale-95'}`}
                         aria-label="Actions"
                         data-tour="add-wallet-mobile-fab"
