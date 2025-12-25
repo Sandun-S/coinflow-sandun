@@ -39,6 +39,7 @@ const AppTour = () => {
                 spotlightClicks: true,
                 delay: 500,
                 hideFooter: true,
+                disableScrollParentFix: true,
             },
             {
                 target: '[data-tour="wallet-name-input"]',

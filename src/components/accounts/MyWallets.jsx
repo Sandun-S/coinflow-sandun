@@ -409,7 +409,7 @@ const MyWallets = () => {
                 {/* Add/Edit Wallet Modal */}
                 {isAdding && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <Card className="w-full max-w-md animate-in fade-in zoom-in duration-200">
+                        <Card className="w-full max-w-md">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">{editingId ? 'Edit Wallet' : 'Add New Wallet'}</h3>
                                 <button onClick={closeForm}><X size={20} className="text-slate-400" /></button>
