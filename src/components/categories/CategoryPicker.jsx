@@ -30,6 +30,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
                 type="button"
                 onClick={() => setIsOpen(true)}
                 className="w-full flex items-center justify-between px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+                data-tour="category-picker"
             >
                 <span className="truncate">{selectedCategory || "Select Category"}</span>
                 <ChevronDown size={16} className="text-slate-400" />
