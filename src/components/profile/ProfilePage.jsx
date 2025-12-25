@@ -31,25 +31,29 @@ const ProfilePage = () => {
             </div>
 
             <div className="max-w-2xl">
-                <Card className="mb-6">
-                    <div className="flex items-center gap-6 mb-8">
+                <Card className="mb-6 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-none shadow-lg relative overflow-hidden">
+                    <div className="relative z-10 flex items-center gap-6 mb-8">
                         {user?.photoURL ? (
                             <img
                                 src={user.photoURL}
                                 alt={user.name}
-                                className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 shadow-md"
+                                className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-xl"
                             />
                         ) : (
-                            <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-4xl font-bold border-4 border-slate-100 dark:border-slate-700 shadow-md">
+                            <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center text-4xl font-bold border-4 border-white dark:border-slate-700 shadow-xl">
                                 {user?.name?.charAt(0).toUpperCase()}
                             </div>
                         )}
                         <div>
-                            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{user?.name}</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
+                            <h3 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{user?.name}</h3>
+                            <p className="text-sm font-medium text-slate-500 dark:text-gray-400">{user?.email}</p>
+                            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-bold uppercase tracking-wide">
+                                Member
+                            </div>
                         </div>
                     </div>
-
+                    {/* Subtle decorative circle */}
+                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl"></div>
                 </Card>
 
                 <div className="md:col-span-2 space-y-6 mb-6">
@@ -74,23 +78,25 @@ const ProfilePage = () => {
 
                     {/* App Tour & Guide Trigger */}
                     <Card
-                        className="cursor-pointer border-2 border-amber-100 dark:border-amber-900/30 hover:border-amber-200 dark:hover:border-amber-800 transition-colors group"
+                        className="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 text-white border-none relative overflow-hidden shadow-xl group hover:shadow-2xl transition-all duration-300"
                         onClick={() => setIsTourOpen(true)}
                     >
-                        <div className="flex items-center justify-between">
+                        <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl group-hover:scale-110 transition-transform">
-                                    <Zap size={24} />
+                                <div className="p-3 bg-white/20 text-white rounded-xl backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Zap size={24} fill="currentColor" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">App Demos & Guides</h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">Restart tours for wallets, budgets, and more.</p>
+                                    <h3 className="text-lg font-bold text-white">App Demos & Guides</h3>
+                                    <p className="text-sm text-amber-100">Restart tours for wallets, budgets.</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-lg group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 transition-colors">
-                                Start Tour <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                            <div className="flex items-center gap-2 text-amber-600 font-bold text-sm bg-white px-4 py-2 rounded-lg shadow-sm group-hover:scale-105 transition-transform">
+                                Start <span className="hidden sm:inline">Tour</span> <span>&rarr;</span>
                             </div>
                         </div>
+                        {/* Decorative glow */}
+                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-yellow-400/30 rounded-full blur-2xl"></div>
                     </Card>
 
                     <Card>
