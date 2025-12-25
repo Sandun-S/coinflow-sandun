@@ -11,15 +11,16 @@ const AppTour = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [width, setWidth] = React.useState(window.innerWidth);
+    const [isMobile, setIsMobile] = React.useState(window.matchMedia('(max-width: 768px)').matches);
 
     useEffect(() => {
-        const handleResize = () => setWidth(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        const handleResize = (e) => setIsMobile(e.matches);
+
+        mediaQuery.addEventListener('change', handleResize);
+        return () => mediaQuery.removeEventListener('change', handleResize);
     }, []);
 
-    const isMobile = width < 768; // Dynamic check
     const navPlacement = isMobile ? 'auto' : 'right'; // Force 'right' on desktop sidebar
 
     // Define Steps for each Module
@@ -97,6 +98,7 @@ const AppTour = () => {
                 placement: 'top',
                 spotlightClicks: true,
                 hideFooter: true,
+                disableOverlay: true,
                 disableScrollParentFix: true,
             }] : [{
                 target: '[data-tour="add-transaction-desktop"]',
@@ -251,6 +253,7 @@ const AppTour = () => {
                     placement: 'top',
                     spotlightClicks: true,
                     hideFooter: true,
+                    disableOverlay: true,
                     disableScrollParentFix: true,
                     data: { route: '/budgets' }
                 }] : [{
