@@ -139,7 +139,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     return (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
             {/* Type Toggle */}
-            <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl">
+            <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl" data-tour="tx-type-toggle">
                 <button
                     type="button"
                     className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${type === 'expense' ? 'bg-white dark:bg-slate-600 text-red-500 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
@@ -156,7 +156,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 </button>
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5" data-tour="tx-wallet-picker">
                 <AccountPicker
                     selectedAccountId={accountId}
                     onSelect={setAccountId}
@@ -171,6 +171,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="e.g. Grocery Trip"
+                data-tour="tx-text-input"
             />
 
             {!isSplit ? (
@@ -184,6 +185,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                         placeholder="0.00"
                         min="0"
                         step="0.01"
+                        data-tour="tx-amount-input"
                     />
                     <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center">
@@ -261,7 +263,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 </div>
             )}
 
-            <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5">
+            <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5" data-tour="tx-submit-btn">
                 <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' || isSplit ? 'Add Transaction(s)' : 'Add Income')}
             </Button>
         </form>

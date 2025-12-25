@@ -11,62 +11,14 @@ const AppTour = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const isMobile = window.innerWidth < 768; // Simple check for Mobile
+    const navPlacement = isMobile ? 'auto' : 'right'; // Force 'right' on desktop sidebar
+
     // Define Steps for each Module
-    const tourSteps = useMemo(() => ({
-        full: [
-            {
-                target: 'body',
-                placement: 'center',
-                title: 'Welcome to CoinFlow! 🚀',
-                content: 'Let\'s take a complete tour of the features.',
-                disableBeacon: true,
-                data: { route: '/' }
-            },
-            {
-                target: '[data-tour="dashboard-nav"]',
-                content: 'This is your Dashboard. See your cash flow at a glance.',
-                placement: 'auto',
-                data: { route: '/' }
-            },
-            {
-                target: '[data-tour="wallets-nav"]',
-                content: 'Manage your Bank Accounts, Cards, and Cash here.',
-                placement: 'auto',
-                data: { route: '/wallets' } // Navigate to Wallets
-            },
-            {
-                target: '[data-tour="add-wallet-btn"]',
-                content: 'Click here to add a new account.',
-                placement: 'auto',
-                data: { route: '/wallets' }
-            },
-            {
-                target: '[data-tour="add-transaction-fab"]',
-                content: 'The magic button! Log income or expenses from anywhere.',
-                placement: 'auto',
-            },
-            {
-                target: '[data-tour="analytics-nav"]',
-                content: 'View charts, savings rate, and predictions.',
-                placement: 'auto',
-                data: { route: '/analytics' }
-            },
-            {
-                target: '[data-tour="profile-nav"]',
-                content: 'Manage your settings, data, and restart this tour here.',
-                placement: 'auto',
-                data: { route: '/profile' }
-            }
-        ],
-        wallets: [
-            {
-                target: 'body',
-                placement: 'center',
-                title: 'Wallet Manager 💳',
-                content: 'Let\'s learn how to add and manage your accounts.',
-                disableBeacon: true,
-                data: { route: '/wallets' }
-            },
+    const tourSteps = useMemo(() => {
+
+        // --- Reusable Steps ---
+        const walletSteps = [
             {
                 target: '[data-tour="wallets-list"]',
                 content: 'Your accounts appear here. You can see their balances.',
@@ -76,30 +28,35 @@ const AppTour = () => {
                 target: '[data-tour="add-wallet-btn"]',
                 content: 'Tap this + button to create a new wallet (e.g., "Demo Bank").',
                 placement: 'auto',
-                spotlightClicks: true, // Allow clicking
-            },
-            // Note: We can't easily target inside the modal unless it's open.
-            // We'll give a general instruction.
-            {
-                target: 'body',
-                placement: 'center',
-                content: 'When the form opens, enter a Name (e.g. "Savings") and Type. Then click Save.',
+                spotlightClicks: true,
             },
             {
-                target: 'body',
-                placement: 'center',
-                content: 'Great! Your new wallet will appear in the list. You can Transfer money between them using the "Transfer" button.',
+                target: '[data-tour="wallet-type-selector"]',
+                content: 'First, select the account type (Bank, Cash, or even a Loan).',
+                placement: 'auto',
+                spotlightClicks: true,
+            },
+            {
+                target: '[data-tour="wallet-name-input"]',
+                content: 'Give your wallet a name, like "Main Savings".',
+                placement: 'auto',
+                spotlightClicks: true,
+            },
+            {
+                target: '[data-tour="wallet-balance-input"]',
+                content: 'Enter your current balance here.',
+                placement: 'auto',
+                spotlightClicks: true,
+            },
+            {
+                target: '[data-tour="wallet-submit-btn"]',
+                content: 'Click here to save your new wallet!',
+                placement: 'auto',
+                spotlightClicks: true,
             }
-        ],
-        transactions: [
-            {
-                target: 'body',
-                placement: 'center',
-                title: 'Logging Transactions 💸',
-                content: 'Tracking every penny is key to financial freedom.',
-                disableBeacon: true,
-                data: { route: '/' }
-            },
+        ];
+
+        const transactionSteps = [
             {
                 target: '[data-tour="add-transaction-fab"]',
                 content: 'Click this button to open the transaction form.',
@@ -107,58 +64,150 @@ const AppTour = () => {
                 spotlightClicks: true,
             },
             {
-                target: 'body',
-                placement: 'center',
-                content: 'Select "Income" or "Expense". Enter the amount, pick a Category, and choose which Wallet used.',
-            },
-            {
-                target: 'body',
-                placement: 'center',
-                content: 'Click "Save Transaction". It will instantly update your dashboard balances.',
-            },
-            {
-                target: '[data-tour="transaction-list"]',
-                content: 'Your recent transactions appear here. Tap one to Edit or Delete (Trash Icon).',
+                target: '[data-tour="tx-type-toggle"]',
+                content: 'Is this money coming in (Income) or going out (Expense)?',
                 placement: 'auto',
-            }
-        ],
-        budgets: [
-            {
-                target: 'body',
-                placement: 'center',
-                title: 'Smart Budgets 📉',
-                content: 'Set monthly limits to save more.',
-                disableBeacon: true,
-                data: { route: '/budgets' }
+                spotlightClicks: true,
             },
             {
-                target: '[data-tour="set-budget-btn"]',
-                content: 'Click here to set a limit for a category (e.g., "Food").',
+                target: '[data-tour="tx-wallet-picker"]',
+                content: 'Choose which wallet is affected.',
                 placement: 'auto',
-                spotlightClicks: true
+                spotlightClicks: true,
             },
             {
-                target: 'body',
-                placement: 'center',
-                content: 'We will track your spending against this limit and warn you if you overspend.',
-            }
-        ],
-        analytics: [
-            {
-                target: 'body',
-                placement: 'center',
-                title: 'Financial Analytics 📊',
-                content: 'Let\'s analyze your spending habits.',
-                disableBeacon: true,
-                data: { route: '/analytics' }
+                target: '[data-tour="tx-text-input"]',
+                content: 'What is this for? (e.g., "Lunch", "Salary").',
+                placement: 'auto',
+                spotlightClicks: true,
             },
             {
-                target: 'body',
-                placement: 'top',
-                content: 'See your Net Savings, Daily Average spend, and Top Categories here.',
+                target: '[data-tour="tx-amount-input"]',
+                content: 'How much?',
+                placement: 'auto',
+                spotlightClicks: true,
+            },
+            {
+                target: '[data-tour="tx-submit-btn"]',
+                content: 'Save it! Your dashboard will update instantly.',
+                placement: 'auto',
+                spotlightClicks: true,
             }
-        ]
-    }), []);
+        ];
+
+        return {
+            full: [
+                {
+                    target: 'body',
+                    placement: 'center',
+                    title: 'Welcome to CoinFlow! 🚀',
+                    content: 'Let\'s take a complete tour of the features.',
+                    disableBeacon: true,
+                    data: { route: '/' }
+                },
+                {
+                    target: '[data-tour="dashboard-nav"]',
+                    content: 'This is your Dashboard. See your cash flow at a glance.',
+                    placement: navPlacement,
+                    data: { route: '/' }
+                },
+                // --- Wallets Section of Full Tour ---
+                {
+                    target: '[data-tour="wallets-nav"]',
+                    content: 'Manage your Bank Accounts, Cards, and Cash here.',
+                    placement: navPlacement,
+                    data: { route: '/wallets' }
+                },
+                ...walletSteps,
+
+                // --- Transactions Section of Full Tour ---
+                {
+                    target: 'body', // Reset to Dashboard before showing transaction FAB
+                    placement: 'center',
+                    content: 'Now let\'s log a transaction.',
+                    data: { route: '/' }
+                },
+                ...transactionSteps,
+
+                // --- Analytics Section ---
+                {
+                    target: '[data-tour="analytics-nav"]',
+                    content: 'View charts, savings rate, and predictions.',
+                    placement: navPlacement,
+                    data: { route: '/analytics' }
+                },
+                {
+                    target: '[data-tour="profile-nav"]',
+                    content: 'Manage your settings, data, and restart this tour here.',
+                    placement: navPlacement,
+                    data: { route: '/profile' }
+                }
+            ],
+            wallets: [
+                {
+                    target: 'body',
+                    placement: 'center',
+                    title: 'Wallet Manager 💳',
+                    content: 'Let\'s learn how to add and manage your accounts.',
+                    disableBeacon: true,
+                    data: { route: '/wallets' }
+                },
+                ...walletSteps
+            ],
+            transactions: [
+                {
+                    target: 'body',
+                    placement: 'center',
+                    title: 'Logging Transactions 💸',
+                    content: 'Tracking every penny is key to financial freedom.',
+                    disableBeacon: true,
+                    data: { route: '/' }
+                },
+                ...transactionSteps,
+                {
+                    target: '[data-tour="transaction-list"]',
+                    content: 'Your recent transactions appear here. Tap one to Edit or Delete.',
+                    placement: 'auto',
+                }
+            ],
+            budgets: [
+                {
+                    target: 'body',
+                    placement: 'center',
+                    title: 'Smart Budgets 📉',
+                    content: 'Set monthly limits to save more.',
+                    disableBeacon: true,
+                    data: { route: '/budgets' }
+                },
+                {
+                    target: '[data-tour="set-budget-btn"]',
+                    content: 'Click here to set a limit for a category (e.g., "Food").',
+                    placement: 'auto',
+                    spotlightClicks: true
+                },
+                {
+                    target: 'body',
+                    placement: 'center',
+                    content: 'We will track your spending against this limit and warn you if you overspend.',
+                }
+            ],
+            analytics: [
+                {
+                    target: 'body',
+                    placement: 'center',
+                    title: 'Financial Analytics 📊',
+                    content: 'Let\'s analyze your spending habits.',
+                    disableBeacon: true,
+                    data: { route: '/analytics' }
+                },
+                {
+                    target: 'body',
+                    placement: 'top',
+                    content: 'See your Net Savings, Daily Average spend, and Top Categories here.',
+                }
+            ]
+        };
+    }, []);
 
     const currentSteps = tourSteps[tourType] || tourSteps.full;
 

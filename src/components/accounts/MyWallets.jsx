@@ -415,7 +415,7 @@ const MyWallets = () => {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Account Type</label>
-                                    <div className="grid grid-cols-5 gap-2">
+                                    <div className="grid grid-cols-5 gap-2" data-tour="wallet-type-selector">
                                         {['Cash', 'Bank', 'Credit Card', 'Investment', 'Loan'].map(t => (
                                             <button
                                                 key={t}
@@ -434,6 +434,7 @@ const MyWallets = () => {
                                     placeholder={type === 'Investment' ? "e.g. CAL Equity Fund" : (type === 'Loan' ? "e.g. Vehicle Loan" : "e.g. Seylan Bank")}
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
+                                    data-tour="wallet-name-input"
                                 />
 
                                 {type === 'Loan' && (
@@ -585,11 +586,12 @@ const MyWallets = () => {
                                             placeholder="0.00"
                                             value={balance}
                                             onChange={(e) => setBalance(e.target.value)}
+                                            data-tour="wallet-balance-input"
                                         />
                                     </div>
                                 )}
 
-                                <Button type="submit" className="w-full mt-2">
+                                <Button type="submit" className="w-full mt-2" data-tour="wallet-submit-btn">
                                     {editingId ? 'Save Changes' : 'Create Wallet'}
                                 </Button>
                             </form>
