@@ -25,30 +25,36 @@ const AppTour = () => {
             {
                 target: '[data-tour="dashboard-nav"]',
                 content: 'This is your Dashboard. See your cash flow at a glance.',
+                placement: 'auto',
                 data: { route: '/' }
             },
             {
                 target: '[data-tour="wallets-nav"]',
                 content: 'Manage your Bank Accounts, Cards, and Cash here.',
+                placement: 'auto',
                 data: { route: '/wallets' } // Navigate to Wallets
             },
             {
                 target: '[data-tour="add-wallet-btn"]',
                 content: 'Click here to add a new account.',
+                placement: 'auto',
                 data: { route: '/wallets' }
             },
             {
                 target: '[data-tour="add-transaction-fab"]',
                 content: 'The magic button! Log income or expenses from anywhere.',
+                placement: 'auto',
             },
             {
                 target: '[data-tour="analytics-nav"]',
                 content: 'View charts, savings rate, and predictions.',
+                placement: 'auto',
                 data: { route: '/analytics' }
             },
             {
                 target: '[data-tour="profile-nav"]',
                 content: 'Manage your settings, data, and restart this tour here.',
+                placement: 'auto',
                 data: { route: '/profile' }
             }
         ],
@@ -64,10 +70,12 @@ const AppTour = () => {
             {
                 target: '[data-tour="wallets-list"]',
                 content: 'Your accounts appear here. You can see their balances.',
+                placement: 'auto',
             },
             {
                 target: '[data-tour="add-wallet-btn"]',
                 content: 'Tap this + button to create a new wallet (e.g., "Demo Bank").',
+                placement: 'auto',
                 spotlightClicks: true, // Allow clicking
             },
             // Note: We can't easily target inside the modal unless it's open.
@@ -95,6 +103,7 @@ const AppTour = () => {
             {
                 target: '[data-tour="add-transaction-fab"]',
                 content: 'Click this button to open the transaction form.',
+                placement: 'auto',
                 spotlightClicks: true,
             },
             {
@@ -110,6 +119,7 @@ const AppTour = () => {
             {
                 target: '[data-tour="transaction-list"]',
                 content: 'Your recent transactions appear here. Tap one to Edit or Delete (Trash Icon).',
+                placement: 'auto',
             }
         ],
         budgets: [
@@ -124,6 +134,7 @@ const AppTour = () => {
             {
                 target: '[data-tour="set-budget-btn"]',
                 content: 'Click here to set a limit for a category (e.g., "Food").',
+                placement: 'auto',
                 spotlightClicks: true
             },
             {
