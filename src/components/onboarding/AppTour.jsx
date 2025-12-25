@@ -21,7 +21,8 @@ const AppTour = () => {
         return () => mediaQuery.removeEventListener('change', handleResize);
     }, []);
 
-    const navPlacement = isMobile ? 'auto' : 'right'; // Force 'right' on desktop sidebar
+    const navPlacement = isMobile ? 'top' : 'right'; // Bottom Nav on Mobile (Top tooltip), Sidebar on Desktop (Right tooltip)
+    const profilePlacement = isMobile ? 'bottom' : 'right'; // Header on Mobile (Bottom tooltip), Sidebar on Desktop (Right tooltip)
 
     // Define Steps for each Module
     const tourSteps = useMemo(() => {
@@ -306,7 +307,7 @@ const AppTour = () => {
                 {
                     target: '[data-tour="profile-nav"]',
                     content: 'Manage your settings, data, and restart this tour here.',
-                    placement: navPlacement,
+                    placement: profilePlacement,
                     disableFlip: !isMobile,
                     delay: 500,
                     // removed route to prevent unmounting sidebar
