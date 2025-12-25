@@ -24,7 +24,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
         onSelect(categoryName);
         setIsOpen(false);
         // Only advance if the tour is targeting this picker (Transaction or Budget)
-        if (currentStepTarget === '[data-tour="category-picker"]' || currentStepTarget === '[data-tour="budget-category-picker"]') {
+        if (currentStepTarget === '[data-tour="category-picker"]' || currentStepTarget === '[data-tour="budget-category-picker"]' || currentStepTarget === '[data-tour="sub-category-picker"]') {
             nextStep();
         }
     };

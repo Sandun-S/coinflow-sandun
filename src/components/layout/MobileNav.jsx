@@ -48,6 +48,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
+                    data-tour="budgets-nav"
                 >
                     <Wallet size={20} />
                     <span className="text-[10px] font-medium">Budgets</span>
@@ -59,6 +60,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
+                    data-tour="subscriptions-nav"
                 >
                     <Calendar size={20} />
                     <span className="text-[10px] font-medium">Subs</span>

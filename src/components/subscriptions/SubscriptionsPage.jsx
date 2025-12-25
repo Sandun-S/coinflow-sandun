@@ -9,6 +9,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
 import CategoryPicker from '../categories/CategoryPicker';
 import { useCategories } from '../../context/CategoryContext';
+import { useTour } from '../../context/TourContext';
 import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
 
 const SubscriptionsPage = () => {
@@ -16,6 +17,7 @@ const SubscriptionsPage = () => {
     const { currency } = useSettings();
     const { addTransaction } = useTransactions();
     const { getCategoryHierarchy } = useCategories(); // Get helper here
+    const { nextStep } = useTour();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
@@ -45,6 +47,7 @@ const SubscriptionsPage = () => {
         }
 
         handleClose();
+        nextStep(); // Advance tour
     };
 
     const handleEdit = (sub) => {
@@ -141,7 +144,7 @@ const SubscriptionsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Subscriptions</h2>
                     <p className="text-slate-500 dark:text-slate-400">Track recurring bills and fixed costs.</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2">
+                <Button onClick={() => { setIsModalOpen(true); nextStep(); }} className="hidden md:flex items-center gap-2" data-tour="add-subscription-btn">
                     <Plus size={20} /> Add Subscription
                 </Button>
             </div>
@@ -257,7 +260,7 @@ const SubscriptionsPage = () => {
             <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? "Edit Subscription" : "Add Subscription"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Type Selector */}
-                    <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl mb-2">
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl mb-2" data-tour="sub-type-selector">
                         <button
                             type="button"
                             className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${type === 'expense' ? 'bg-white dark:bg-slate-600 text-red-500 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
@@ -279,10 +282,12 @@ const SubscriptionsPage = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Netflix, Salary, etc."
+
                         required
+                        data-tour="sub-name-input"
                     />
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5" data-tour="sub-category-picker">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
                         <CategoryPicker
                             selectedCategory={category}
@@ -299,9 +304,10 @@ const SubscriptionsPage = () => {
                         placeholder="0.00"
                         required
                         step="0.01"
+                        data-tour="sub-amount-input"
                     />
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5" data-tour="sub-cycle-select">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Billing Cycle</label>
                         <select
                             value={billingCycle}
@@ -318,19 +324,22 @@ const SubscriptionsPage = () => {
                         type="date"
                         value={nextBillingDate}
                         onChange={(e) => setNextBillingDate(e.target.value)}
+
                         required
+                        data-tour="sub-date-input"
                     />
 
-                    <Button type="submit" variant="primary" className="w-full">
+                    <Button type="submit" variant="primary" className="w-full" data-tour="sub-submit-btn">
                         {editingId ? "Update Subscription" : "Add Subscription"}
                     </Button>
                 </form>
             </Modal>
             {/* Mobile Floating Action Button */}
             <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => { setIsModalOpen(true); nextStep(); }}
                 className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
                 aria-label="Add Subscription"
+                data-tour="add-subscription-mobile"
             >
                 <Plus size={24} />
             </button>

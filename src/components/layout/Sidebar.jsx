@@ -91,6 +91,7 @@ const Sidebar = () => {
                         <NavLink
                             to="/subscriptions"
                             className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                            data-tour="subscriptions-nav"
                         >
                             {({ isActive }) => (
                                 <>

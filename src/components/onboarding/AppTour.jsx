@@ -110,6 +110,53 @@ const AppTour = () => {
             }
         ];
 
+        const subscriptionSteps = [
+            {
+                target: isMobile ? '[data-tour="add-subscription-mobile"]' : '[data-tour="add-subscription-btn"]',
+                content: 'Tap here to add a recurring bill like Netflix or Rent.',
+                placement: 'auto',
+                spotlightClicks: true,
+                hideFooter: true,
+            },
+            {
+                target: '[data-tour="sub-name-input"]',
+                content: 'What is this subscription for?',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="sub-category-picker"]',
+                content: 'Categorize it (e.g., Bills, Entertainment).',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="sub-amount-input"]',
+                content: 'How much do you pay?',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="sub-cycle-select"]',
+                content: 'Is it Monthly or Yearly?',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="sub-date-input"]',
+                content: 'When is the next bill due?',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="sub-submit-btn"]',
+                content: 'Save it! We’ll remind you before it’s due.',
+                placement: 'bottom',
+                disableOverlay: true,
+                hideFooter: true,
+            }
+        ];
+
         return {
             full: [
                 {
@@ -150,14 +197,61 @@ const AppTour = () => {
                 },
                 ...transactionSteps,
 
-                // --- Analytics Section ---
+                // --- Budgets Section ---
                 {
-                    target: '[data-tour="analytics-nav"]',
-                    content: 'View charts, savings rate, and predictions.',
+                    target: '[data-tour="budgets-nav"]',
+                    content: 'Set monthly limits to save more.',
                     placement: navPlacement,
                     disableFlip: !isMobile,
-                    data: { route: '/analytics' }
+                    data: { route: '/budgets' }
                 },
+                {
+                    target: isMobile ? '[data-tour="set-budget-mobile"]' : '[data-tour="set-budget-desktop"]',
+                    content: 'Click here to set a limit for a category (e.g., "Food").',
+                    placement: 'auto',
+                    spotlightClicks: true,
+                    hideFooter: true,
+                    data: { route: '/budgets' } // Ensure route
+                },
+                {
+                    target: 'body',
+                    placement: 'center',
+                    content: 'We will track your spending against this limit and warn you if you overspend.',
+                },
+                {
+                    target: '[data-tour="budget-category-picker"]',
+                    content: 'Select the category you want to limit (e.g. Food, Transport).',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                },
+                {
+                    target: '[data-tour="budget-limit-input"]',
+                    content: 'How much do you want to spend max?',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                },
+                {
+                    target: '[data-tour="budget-save-btn"]',
+                    content: 'Save it to start tracking!',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                    hideFooter: true,
+                },
+
+                // --- Subscriptions Section ---
+                {
+                    target: '[data-tour="subscriptions-nav"]',
+                    content: 'Track recurring bills so you are never late.',
+                    placement: navPlacement,
+                    disableFlip: !isMobile,
+                    data: { route: '/subscriptions' }
+                },
+                {
+                    ...subscriptionSteps[0],
+                    data: { route: '/subscriptions' }
+                },
+                ...subscriptionSteps.slice(1),
+
                 {
                     target: '[data-tour="profile-nav"]',
                     content: 'Manage your settings, data, and restart this tour here.',
@@ -234,20 +328,16 @@ const AppTour = () => {
                     hideFooter: true,
                 }
             ],
-            analytics: [
+            subscriptions: [
                 {
                     target: 'body',
                     placement: 'center',
-                    title: 'Financial Analytics 📊',
-                    content: 'Let\'s analyze your spending habits.',
+                    title: 'Subscriptions 🔄',
+                    content: 'Never miss a bill payment again.',
                     disableBeacon: true,
-                    data: { route: '/analytics' }
+                    data: { route: '/subscriptions' }
                 },
-                {
-                    target: 'body',
-                    placement: 'top',
-                    content: 'See your Net Savings, Daily Average spend, and Top Categories here.',
-                }
+                ...subscriptionSteps
             ]
         };
     }, []);
