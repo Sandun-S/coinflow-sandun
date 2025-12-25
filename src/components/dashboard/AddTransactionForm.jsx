@@ -4,6 +4,7 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../context/AccountContext'; // Import useAccounts
+import { useTour } from '../../context/TourContext';
 import CategoryPicker from '../categories/CategoryPicker';
 import AccountPicker from '../accounts/AccountPicker'; // Import AccountPicker
 import { PlusCircle, Split, Trash2, Plus } from 'lucide-react'; // Added icons
@@ -11,6 +12,7 @@ import { PlusCircle, Split, Trash2, Plus } from 'lucide-react'; // Added icons
 const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     const { addTransaction, updateTransaction } = useTransactions();
     const { accounts, updateBalance } = useAccounts();
+    const { nextStep } = useTour();
     const [text, setText] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -134,6 +136,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
         if (onSuccess) {
             onSuccess();
         }
+        nextStep(); // Advance tour
     };
 
     return (

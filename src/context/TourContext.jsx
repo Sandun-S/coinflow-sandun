@@ -28,7 +28,7 @@ export const TourProvider = ({ children }) => {
         setStepIndex(0);
         setTourActive(true);
     };
-    
+
     const startSpecificTour = (type) => {
         setTourType(type);
         setRun(true);
@@ -49,6 +49,12 @@ export const TourProvider = ({ children }) => {
         }
     };
 
+    const nextStep = () => {
+        if (tourActive && run) {
+            setStepIndex(prev => prev + 1);
+        }
+    };
+
     return (
         <TourContext.Provider value={{
             run,
@@ -60,7 +66,8 @@ export const TourProvider = ({ children }) => {
             startTour,
             startSpecificTour,
             stopTour,
-            completeTour
+            completeTour,
+            nextStep
         }}>
             {children}
         </TourContext.Provider>

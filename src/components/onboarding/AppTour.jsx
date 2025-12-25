@@ -29,6 +29,7 @@ const AppTour = () => {
                 content: 'Tap this + button to create a new wallet (e.g., "Demo Bank").',
                 placement: 'auto',
                 spotlightClicks: true,
+                hideFooter: true,
             },
             {
                 target: '[data-tour="wallet-type-selector"]',
@@ -53,6 +54,7 @@ const AppTour = () => {
                 content: 'Click here to save your new wallet!',
                 placement: 'auto',
                 spotlightClicks: true,
+                hideFooter: true,
             }
         ];
 
@@ -62,6 +64,7 @@ const AppTour = () => {
                 content: 'Click this button to open the transaction form.',
                 placement: 'auto',
                 spotlightClicks: true,
+                hideFooter: true,
             },
             {
                 target: '[data-tour="tx-type-toggle"]',
@@ -92,6 +95,7 @@ const AppTour = () => {
                 content: 'Save it! Your dashboard will update instantly.',
                 placement: 'auto',
                 spotlightClicks: true,
+                hideFooter: true,
             }
         ];
 
@@ -191,7 +195,8 @@ const AppTour = () => {
                     target: isMobile ? '[data-tour="set-budget-mobile"]' : '[data-tour="set-budget-desktop"]',
                     content: 'Click here to set a limit for a category (e.g., "Food").',
                     placement: 'auto',
-                    spotlightClicks: true
+                    spotlightClicks: true,
+                    hideFooter: true,
                 },
                 {
                     target: 'body',

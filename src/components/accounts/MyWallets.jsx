@@ -3,6 +3,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { useAccounts } from '../../context/AccountContext';
+import { useTour } from '../../context/TourContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Import transactions
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useCategories } from '../../context/CategoryContext';
@@ -16,6 +17,7 @@ const MyWallets = () => {
     const { addTransaction } = useTransactions();
     const { addSubscription } = useSubscriptions();
     const { categories } = useCategories();
+    const { nextStep } = useTour();
     const formatMoney = useCurrencyFormatter();
 
     // Modal States
@@ -138,6 +140,7 @@ const MyWallets = () => {
         }
 
         closeForm();
+        nextStep(); // Advance tour on successful submit
     };
 
     const handleEdit = (acc) => {
@@ -319,7 +322,7 @@ const MyWallets = () => {
                         <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
                             <ArrowRightLeft size={20} /> Transfer
                         </Button>
-                        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2" data-tour="add-wallet-btn">
+                        <Button onClick={() => { setIsAdding(true); nextStep(); }} className="flex items-center gap-2" data-tour="add-wallet-btn">
                             <Plus size={20} /> Add Wallet
                         </Button>
                     </div>
