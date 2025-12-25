@@ -32,7 +32,7 @@ const ProfilePage = () => {
 
             <div className="max-w-2xl">
                 <Card className="mb-6 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-none shadow-lg relative overflow-hidden">
-                    <div className="relative z-10 flex items-center gap-6 mb-8">
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-8 text-center sm:text-left">
                         {user?.photoURL ? (
                             <img
                                 src={user.photoURL}
@@ -44,9 +44,9 @@ const ProfilePage = () => {
                                 {user?.name?.charAt(0).toUpperCase()}
                             </div>
                         )}
-                        <div>
-                            <h3 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{user?.name}</h3>
-                            <p className="text-sm font-medium text-slate-500 dark:text-gray-400">{user?.email}</p>
+                        <div className="flex flex-col items-center sm:items-start w-full">
+                            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{user?.name}</h3>
+                            <p className="text-sm font-medium text-slate-500 dark:text-gray-400 break-all">{user?.email}</p>
                             <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-bold uppercase tracking-wide">
                                 Member
                             </div>
