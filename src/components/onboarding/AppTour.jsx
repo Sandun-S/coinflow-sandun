@@ -97,7 +97,6 @@ const AppTour = () => {
                 placement: 'top',
                 spotlightClicks: true,
                 hideFooter: true,
-                disableOverlay: true,
                 disableScrollParentFix: true,
             }] : [{
                 target: '[data-tour="add-transaction-desktop"]',
@@ -252,7 +251,6 @@ const AppTour = () => {
                     placement: 'top',
                     spotlightClicks: true,
                     hideFooter: true,
-                    disableOverlay: true,
                     disableScrollParentFix: true,
                     data: { route: '/budgets' }
                 }] : [{
