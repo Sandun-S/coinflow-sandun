@@ -11,11 +11,20 @@ const AppTour = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const isMobile = window.innerWidth < 768; // Simple check for Mobile
+    const [width, setWidth] = React.useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isMobile = width < 768; // Dynamic check
     const navPlacement = isMobile ? 'auto' : 'right'; // Force 'right' on desktop sidebar
 
     // Define Steps for each Module
     const tourSteps = useMemo(() => {
+
 
         // --- Reusable Steps ---
         const walletSteps = [
@@ -135,6 +144,12 @@ const AppTour = () => {
                 placement: 'auto',
                 spotlightClicks: true,
                 hideFooter: true,
+            },
+            {
+                target: '[data-tour="sub-type-selector"]',
+                content: 'Is this an Expense (like Netflix) or Income (like Salary)?',
+                placement: 'bottom',
+                disableOverlay: true,
             },
             {
                 target: '[data-tour="sub-name-input"]',
@@ -275,7 +290,8 @@ const AppTour = () => {
                     content: 'Manage your settings, data, and restart this tour here.',
                     placement: navPlacement,
                     disableFlip: !isMobile,
-                    data: { route: '/profile' }
+                    delay: 500,
+                    // removed route to prevent unmounting sidebar
                 }
             ],
             wallets: [
@@ -358,7 +374,7 @@ const AppTour = () => {
                 ...subscriptionSteps
             ]
         };
-    }, []);
+    }, [isMobile, navPlacement]);
 
     const currentSteps = tourSteps[tourType] || tourSteps.full;
 
