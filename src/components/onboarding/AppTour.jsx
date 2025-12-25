@@ -99,16 +99,6 @@ const AppTour = () => {
                 hideFooter: true,
                 disableOverlay: true,
                 disableScrollParentFix: true,
-            }, {
-                target: '[data-tour="add-transaction-mobile"]',
-                // Wait for modal via interaction, but in case we need a bridging step
-                // Actually the user click opens modal, next step is amount input.
-                // We just need the trigger step.
-                content: 'Opening transaction form...',
-                placement: 'center',
-                disableOverlay: true,
-                hideFooter: true,
-                delay: 100,
             }] : [{
                 target: '[data-tour="add-transaction-desktop"]',
                 content: 'Click here to log a new Expense or Income.',
