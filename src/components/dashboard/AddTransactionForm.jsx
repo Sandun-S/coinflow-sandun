@@ -190,7 +190,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                         step="0.01"
                         data-tour="tx-amount-input"
                     />
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5" data-tour="category-picker">
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
                             <button

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useCategories } from '../../context/CategoryContext';
+import { useTour } from '../../context/TourContext';
 import { ChevronRight, ChevronDown, Check, X, Settings } from 'lucide-react'; // Added Settings
 import { Link } from 'react-router-dom'; // Added Link
 import * as Icons from 'lucide-react';
 
 const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
     const { categories } = useCategories();
+    const { nextStep } = useTour();
     const [isOpen, setIsOpen] = useState(false);
     const [expandedCategory, setExpandedCategory] = useState(null);
 
@@ -21,6 +23,7 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
     const handleSelect = (categoryName) => {
         onSelect(categoryName);
         setIsOpen(false);
+        nextStep(); // Advance tour
     };
 
     return (

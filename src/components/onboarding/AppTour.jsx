@@ -33,6 +33,16 @@ const AppTour = () => {
             },
 
             {
+                target: '[data-tour="wallet-type-selector"]',
+                content: 'First, select the account type (Bank, Cash, or even a Loan).',
+                placement: 'bottom',
+                disableOverlay: true,
+                spotlightClicks: true,
+                delay: 500,
+                hideFooter: true,
+                disableScrollParentFix: true,
+            },
+            {
                 target: '[data-tour="wallet-name-input"]',
                 content: 'Give your wallet a name, like "Main Savings".',
                 placement: 'bottom',
@@ -82,6 +92,12 @@ const AppTour = () => {
             {
                 target: '[data-tour="tx-amount-input"]',
                 content: 'How much?',
+                placement: 'bottom',
+                disableOverlay: true,
+            },
+            {
+                target: '[data-tour="category-picker"]',
+                content: 'Select a category.',
                 placement: 'bottom',
                 disableOverlay: true,
             },
