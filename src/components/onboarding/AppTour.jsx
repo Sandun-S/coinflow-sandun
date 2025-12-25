@@ -35,7 +35,7 @@ const AppTour = () => {
                 {
                     target: '[data-tour="add-wallet-mobile-action"]',
                     content: 'Tap the Wallet icon to add a new account.',
-                    placement: 'left',
+                    placement: 'top',
                     spotlightClicks: true,
                     hideFooter: true,
                     disableOverlay: true,

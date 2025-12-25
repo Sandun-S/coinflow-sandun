@@ -46,7 +46,7 @@ const ProfilePage = () => {
                         )}
                         <div>
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{user?.name}</h3>
-                            <p className="text-slate-500 dark:text-slate-400">Free Member</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
                         </div>
                     </div>
 
@@ -54,37 +54,22 @@ const ProfilePage = () => {
 
                 <div className="md:col-span-2 space-y-6 mb-6">
                     {/* Plan Status Card */}
-                    <Card className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white border-none relative overflow-hidden">
-                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    {/* Plan Status Card */}
+                    <Card className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-0 relative overflow-hidden shadow-xl">
+                        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <h3 className="text-indigo-200 font-medium mb-1 uppercase text-xs tracking-wider">Current Plan</h3>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl font-bold">
-                                        {user?.plan === 'lifetime' ? 'Lifetime Pro 💎' : (user?.plan === 'pro' ? 'Pro Trial 🚀' : 'Free Member')}
+                                    <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">
+                                        Lifetime Pro 💎
                                     </span>
                                 </div>
-                                {user?.plan === 'pro' && user?.subscriptionExpiry && (
-                                    <p className="text-indigo-200 text-sm mt-1">
-                                        Expires on {new Date(user.subscriptionExpiry.seconds * 1000).toLocaleDateString()}
-                                    </p>
-                                )}
                             </div>
-
-                            {user?.plan !== 'lifetime' && (
-                                <a
-                                    href="https://shop.sandunsiwantha.com/products/coinflow-pro-plan"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-6 py-3 bg-white text-indigo-900 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg active:scale-95 text-center w-full md:w-auto"
-                                >
-                                    Upgrade to Lifetime
-                                </a>
-                            )}
                         </div>
 
                         {/* Decorative Background */}
-                        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
-                        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
                     </Card>
 
                     {/* App Tour & Guide Trigger */}
@@ -94,7 +79,7 @@ const ProfilePage = () => {
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl group-hover:scale-110 transition-transform">
+                                <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl group-hover:scale-110 transition-transform">
                                     <Zap size={24} />
                                 </div>
                                 <div>
@@ -102,8 +87,8 @@ const ProfilePage = () => {
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Restart tours for wallets, budgets, and more.</p>
                                 </div>
                             </div>
-                            <div className="text-amber-500 dark:text-amber-400 font-bold text-sm bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full">
-                                Start Tour &rarr;
+                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-lg group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 transition-colors">
+                                Start Tour <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                             </div>
                         </div>
                     </Card>
