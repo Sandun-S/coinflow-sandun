@@ -348,13 +348,20 @@ const AppTour = () => {
                     disableBeacon: true,
                     data: { route: '/budgets' }
                 },
-                {
-                    target: isMobile ? '[data-tour="set-budget-mobile"]' : '[data-tour="set-budget-desktop"]',
+                ...(isMobile ? [{
+                    target: '[data-tour="set-budget-mobile"]',
+                    content: 'Tap here to set a limit for a category (e.g., "Food").',
+                    placement: 'top',
+                    spotlightClicks: true,
+                    hideFooter: true,
+                    disableScrollParentFix: true,
+                }] : [{
+                    target: '[data-tour="set-budget-desktop"]',
                     content: 'Click here to set a limit for a category (e.g., "Food").',
                     placement: 'auto',
                     spotlightClicks: true,
                     hideFooter: true,
-                },
+                }]),
                 {
                     target: 'body',
                     placement: 'center',
