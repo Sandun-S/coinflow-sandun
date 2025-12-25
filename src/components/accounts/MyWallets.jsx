@@ -319,7 +319,7 @@ const MyWallets = () => {
                         <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
                             <ArrowRightLeft size={20} /> Transfer
                         </Button>
-                        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
+                        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2" data-tour="add-wallet-btn">
                             <Plus size={20} /> Add Wallet
                         </Button>
                     </div>
@@ -370,7 +370,7 @@ const MyWallets = () => {
                 )}
 
                 {/* Accounts Section */}
-                <div>
+                <div data-tour="wallets-list">
                     <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <Banknote size={20} className="text-emerald-500" /> Cash & Bank
                     </h2>

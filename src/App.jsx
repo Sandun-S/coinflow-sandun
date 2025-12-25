@@ -50,7 +50,7 @@ function Dashboard() {
           <p className="text-slate-500 dark:text-slate-400">Overview of your personal finances.</p>
         </header>
 
-        <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none">
+        <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none" data-tour="add-transaction-desktop">
           <Plus size={20} />
           New Transaction
         </Button>
@@ -61,7 +61,7 @@ function Dashboard() {
         onClick={() => setIsModalOpen(true)}
         className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
         aria-label="Add Transaction"
-        data-tour="add-transaction-fab"
+        data-tour="add-transaction-mobile"
       >
         <Plus size={24} />
       </button>
@@ -91,7 +91,7 @@ function Dashboard() {
       >
         <AddTransactionForm onSuccess={handleClose} initialData={editingTransaction} />
       </Modal>
-    </MainLayout>
+    </MainLayout >
   );
 }
 

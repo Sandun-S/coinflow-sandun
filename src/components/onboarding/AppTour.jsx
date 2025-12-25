@@ -58,7 +58,7 @@ const AppTour = () => {
 
         const transactionSteps = [
             {
-                target: '[data-tour="add-transaction-fab"]',
+                target: isMobile ? '[data-tour="add-transaction-mobile"]' : '[data-tour="add-transaction-desktop"]',
                 content: 'Click this button to open the transaction form.',
                 placement: 'auto',
                 spotlightClicks: true,
@@ -109,6 +109,7 @@ const AppTour = () => {
                     target: '[data-tour="dashboard-nav"]',
                     content: 'This is your Dashboard. See your cash flow at a glance.',
                     placement: navPlacement,
+                    disableFlip: !isMobile,
                     data: { route: '/' }
                 },
                 // --- Wallets Section of Full Tour ---
@@ -116,9 +117,14 @@ const AppTour = () => {
                     target: '[data-tour="wallets-nav"]',
                     content: 'Manage your Bank Accounts, Cards, and Cash here.',
                     placement: navPlacement,
+                    disableFlip: !isMobile,
                     data: { route: '/wallets' }
                 },
-                ...walletSteps,
+                {
+                    ...walletSteps[0],
+                    data: { route: '/wallets' } // Ensure we are on the route for the first internal step
+                },
+                ...walletSteps.slice(1),
 
                 // --- Transactions Section of Full Tour ---
                 {
@@ -134,12 +140,14 @@ const AppTour = () => {
                     target: '[data-tour="analytics-nav"]',
                     content: 'View charts, savings rate, and predictions.',
                     placement: navPlacement,
+                    disableFlip: !isMobile,
                     data: { route: '/analytics' }
                 },
                 {
                     target: '[data-tour="profile-nav"]',
                     content: 'Manage your settings, data, and restart this tour here.',
                     placement: navPlacement,
+                    disableFlip: !isMobile,
                     data: { route: '/profile' }
                 }
             ],
@@ -180,7 +188,7 @@ const AppTour = () => {
                     data: { route: '/budgets' }
                 },
                 {
-                    target: '[data-tour="set-budget-btn"]',
+                    target: isMobile ? '[data-tour="set-budget-mobile"]' : '[data-tour="set-budget-desktop"]',
                     content: 'Click here to set a limit for a category (e.g., "Food").',
                     placement: 'auto',
                     spotlightClicks: true
