@@ -673,7 +673,7 @@ const MyWallets = () => {
                                     Add Wallet
                                 </span>
                                 <button
-                                    onClick={() => { setIsAdding(true); setIsFabOpen(false); }}
+                                    onClick={() => { setIsAdding(true); setIsFabOpen(false); nextStep(); }}
                                     className="p-3 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 transition-all"
                                     data-tour="add-wallet-mobile-action"
                                 >
