@@ -12,6 +12,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
+                    data-tour="dashboard-nav"
                 >
                     <Home size={20} />
                     <span className="text-[10px] font-medium">Home</span>
@@ -23,6 +24,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
+                    data-tour="wallets-nav"
                 >
                     <CreditCard size={20} />
                     <span className="text-[10px] font-medium">Wallets</span>
@@ -34,6 +36,7 @@ const MobileNav = () => {
                         `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                         }`
                     }
+                    data-tour="analytics-nav"
                 >
                     <PieChart size={20} />
                     <span className="text-[10px] font-medium">Analytics</span>

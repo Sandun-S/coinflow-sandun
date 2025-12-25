@@ -131,7 +131,7 @@ const Sidebar = () => {
             </nav>
             <div className="p-4 border-t border-slate-800">
                 <div className="flex items-center gap-3 justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-800">
-                    <Link to="/profile" className="flex items-center gap-3 overflow-hidden flex-1 group">
+                    <Link to="/profile" data-tour="profile-nav" className="flex items-center gap-3 overflow-hidden flex-1 group">
                         {user?.photoURL ? (
                             <img
                                 src={user.photoURL}

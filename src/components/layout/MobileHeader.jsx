@@ -23,6 +23,7 @@ const MobileHeader = () => {
             <button
                 onClick={() => navigate('/profile')}
                 className="relative group focus:outline-none"
+                data-tour="profile-nav"
             >
                 {user?.photoURL ? (
                     <img

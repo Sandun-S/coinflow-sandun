@@ -9,17 +9,28 @@ export const TourProvider = ({ children }) => {
     const [stepIndex, setStepIndex] = useState(0);
     const [tourActive, setTourActive] = useState(false);
 
+    const [tourType, setTourType] = useState('full'); // 'full', 'wallets', 'transactions', 'budgets', 'analytics'
+
     // Load state from localStorage on mount
     useEffect(() => {
         const hasSeenTour = localStorage.getItem('coinflow_tour_completed');
         if (!hasSeenTour) {
             // Auto-start for new users
+            setTourType('full');
             setRun(true);
             setTourActive(true);
         }
     }, []);
 
     const startTour = () => {
+        setTourType('full');
+        setRun(true);
+        setStepIndex(0);
+        setTourActive(true);
+    };
+    
+    const startSpecificTour = (type) => {
+        setTourType(type);
         setRun(true);
         setStepIndex(0);
         setTourActive(true);
@@ -32,7 +43,10 @@ export const TourProvider = ({ children }) => {
 
     const completeTour = () => {
         stopTour();
-        localStorage.setItem('coinflow_tour_completed', 'true');
+        // Only mark 'full' tour as complete in local storage to avoid pestering again
+        if (tourType === 'full') {
+            localStorage.setItem('coinflow_tour_completed', 'true');
+        }
     };
 
     return (
@@ -42,7 +56,9 @@ export const TourProvider = ({ children }) => {
             stepIndex,
             setStepIndex,
             tourActive,
+            tourType,
             startTour,
+            startSpecificTour,
             stopTour,
             completeTour
         }}>
