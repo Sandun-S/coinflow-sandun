@@ -354,6 +354,7 @@ const AppTour = () => {
                     placement: 'top',
                     spotlightClicks: true,
                     hideFooter: true,
+                    disableOverlay: true,
                     disableScrollParentFix: true,
                 }] : [{
                     target: '[data-tour="set-budget-desktop"]',
