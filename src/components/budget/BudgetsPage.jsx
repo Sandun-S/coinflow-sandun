@@ -5,6 +5,7 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import { useBudgets } from '../../context/BudgetContext';
 import { useCategories } from '../../context/CategoryContext'; // Import categories
+import { useTour } from '../../context/TourContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
@@ -15,6 +16,7 @@ const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
     const { categories } = useCategories(); // Get categories
+    const { nextStep } = useTour();
     const formatMoney = useCurrencyFormatter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,6 +94,7 @@ const BudgetsPage = () => {
         await setBudget(selectedCategory, limit);
         setIsModalOpen(false);
         setLimit('');
+        nextStep(); // Advance tour
     };
 
     const handleEdit = (budget) => {
@@ -153,7 +156,7 @@ const BudgetsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
                     <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2" data-tour="set-budget-desktop">
+                <Button onClick={() => { setIsModalOpen(true); nextStep(); }} className="hidden md:flex items-center gap-2" data-tour="set-budget-desktop">
                     <Plus size={20} /> Set Budget
                 </Button>
             </div>
@@ -374,7 +377,7 @@ const BudgetsPage = () => {
                 {budgets.length === 0 && (
                     <div className="col-span-full text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
                         <p className="text-slate-400 mb-4">No budgets set yet.</p>
-                        <Button variant="outline" onClick={() => setIsModalOpen(true)}>Create your first budget</Button>
+                        <Button variant="outline" onClick={() => { setIsModalOpen(true); nextStep(); }}>Create your first budget</Button>
                     </div>
                 )}
             </div>
@@ -385,7 +388,7 @@ const BudgetsPage = () => {
                 title="Set Category Budget"
             >
                 <form onSubmit={handleSaveBudget} className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5" data-tour="budget-category-picker">
                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
                         <CategoryPicker
                             selectedCategory={selectedCategory}
@@ -401,15 +404,16 @@ const BudgetsPage = () => {
                         placeholder="e.g. 20000"
                         min="0"
                         required
+                        data-tour="budget-limit-input"
                     />
-                    <Button type="submit" variant="primary" className="w-full mt-2">
+                    <Button type="submit" variant="primary" className="w-full mt-2" data-tour="budget-save-btn">
                         Save Budget
                     </Button>
                 </form>
             </Modal>
             {/* Mobile Floating Action Button */}
             <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => { setIsModalOpen(true); nextStep(); }}
                 className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
                 aria-label="Set Budget"
                 data-tour="set-budget-mobile"

@@ -8,6 +8,7 @@ export const TourProvider = ({ children }) => {
     const [run, setRun] = useState(false);
     const [stepIndex, setStepIndex] = useState(0);
     const [tourActive, setTourActive] = useState(false);
+    const [currentStepTarget, setCurrentStepTarget] = useState(null);
 
     const [tourType, setTourType] = useState('full'); // 'full', 'wallets', 'transactions', 'budgets', 'analytics'
 
@@ -63,6 +64,8 @@ export const TourProvider = ({ children }) => {
             setStepIndex,
             tourActive,
             tourType,
+            currentStepTarget,
+            setCurrentStepTarget,
             startTour,
             startSpecificTour,
             stopTour,

@@ -213,6 +213,25 @@ const AppTour = () => {
                     target: 'body',
                     placement: 'center',
                     content: 'We will track your spending against this limit and warn you if you overspend.',
+                },
+                {
+                    target: '[data-tour="budget-category-picker"]',
+                    content: 'Select the category you want to limit (e.g. Food, Transport).',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                },
+                {
+                    target: '[data-tour="budget-limit-input"]',
+                    content: 'How much do you want to spend max?',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                },
+                {
+                    target: '[data-tour="budget-save-btn"]',
+                    content: 'Save it to start tracking!',
+                    placement: 'bottom',
+                    disableOverlay: true,
+                    hideFooter: true,
                 }
             ],
             analytics: [
@@ -271,6 +290,15 @@ const AppTour = () => {
             }
         }
     }, [run, stepIndex, currentSteps, location.pathname, navigate]);
+
+    // Sync current step target to Context
+    useEffect(() => {
+        if (run && currentSteps[stepIndex]) {
+            setCurrentStepTarget(currentSteps[stepIndex].target);
+        } else {
+            setCurrentStepTarget(null);
+        }
+    }, [run, stepIndex, currentSteps, setCurrentStepTarget]);
 
     return (
         <Joyride

@@ -17,7 +17,7 @@ const MyWallets = () => {
     const { addTransaction } = useTransactions();
     const { addSubscription } = useSubscriptions();
     const { categories } = useCategories();
-    const { nextStep } = useTour();
+    const { nextStep, currentStepTarget } = useTour();
     const formatMoney = useCurrencyFormatter();
 
     // Modal States
@@ -423,7 +423,13 @@ const MyWallets = () => {
                                             <button
                                                 key={t}
                                                 type="button"
-                                                onClick={() => { setType(t); nextStep(); }}
+                                                onClick={() => {
+                                                    setType(t);
+                                                    // Only auto-advance if the tour is currently pointing at this step
+                                                    if (currentStepTarget === '[data-tour="wallet-type-selector"]') {
+                                                        nextStep();
+                                                    }
+                                                }}
                                                 className={`py-2 px-1 rounded-lg text-[10px] md:text-xs font-bold transition-colors border ${type === t ? 'bg-indigo-50 border-indigo-500 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'}`}
                                             >
                                                 {t}

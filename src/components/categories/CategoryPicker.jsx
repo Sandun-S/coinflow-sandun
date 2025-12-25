@@ -7,7 +7,7 @@ import * as Icons from 'lucide-react';
 
 const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
     const { categories } = useCategories();
-    const { nextStep } = useTour();
+    const { nextStep, currentStepTarget } = useTour();
     const [isOpen, setIsOpen] = useState(false);
     const [expandedCategory, setExpandedCategory] = useState(null);
 
@@ -23,7 +23,10 @@ const CategoryPicker = ({ selectedCategory, onSelect, type = 'expense' }) => {
     const handleSelect = (categoryName) => {
         onSelect(categoryName);
         setIsOpen(false);
-        nextStep(); // Advance tour
+        // Only advance if the tour is targeting this picker (Transaction or Budget)
+        if (currentStepTarget === '[data-tour="category-picker"]' || currentStepTarget === '[data-tour="budget-category-picker"]') {
+            nextStep();
+        }
     };
 
     return (
