@@ -91,13 +91,31 @@ const AppTour = () => {
         ];
 
         const transactionSteps = [
-            {
-                target: isMobile ? '[data-tour="add-transaction-mobile"]' : '[data-tour="add-transaction-desktop"]',
-                content: 'Click this button to open the transaction form.',
-                placement: 'auto',
+            ...(isMobile ? [{
+                target: '[data-tour="add-transaction-mobile"]',
+                content: 'Tap the + button here.',
+                placement: 'top',
                 spotlightClicks: true,
                 hideFooter: true,
-            },
+                disableOverlay: true,
+                disableScrollParentFix: true,
+            }, {
+                target: '[data-tour="add-transaction-mobile"]',
+                // Wait for modal via interaction, but in case we need a bridging step
+                // Actually the user click opens modal, next step is amount input.
+                // We just need the trigger step.
+                content: 'Opening transaction form...',
+                placement: 'center',
+                disableOverlay: true,
+                hideFooter: true,
+                delay: 100,
+            }] : [{
+                target: '[data-tour="add-transaction-desktop"]',
+                content: 'Click here to log a new Expense or Income.',
+                placement: 'bottom',
+                spotlightClicks: true,
+                hideFooter: true,
+            }]),
             {
                 target: '[data-tour="tx-type-toggle"]',
                 content: 'Is this money coming in (Income) or going out (Expense)?',
@@ -238,14 +256,23 @@ const AppTour = () => {
                     disableFlip: !isMobile,
                     data: { route: '/budgets' }
                 },
-                {
-                    target: isMobile ? '[data-tour="set-budget-mobile"]' : '[data-tour="set-budget-desktop"]',
+                ...(isMobile ? [{
+                    target: '[data-tour="set-budget-mobile"]',
+                    content: 'Tap here to set a limit for a category (e.g., "Food").',
+                    placement: 'top',
+                    spotlightClicks: true,
+                    hideFooter: true,
+                    disableOverlay: true,
+                    disableScrollParentFix: true,
+                    data: { route: '/budgets' }
+                }] : [{
+                    target: '[data-tour="set-budget-desktop"]',
                     content: 'Click here to set a limit for a category (e.g., "Food").',
                     placement: 'auto',
                     spotlightClicks: true,
                     hideFooter: true,
-                    data: { route: '/budgets' } // Ensure route
-                },
+                    data: { route: '/budgets' }
+                }]),
                 {
                     target: 'body',
                     placement: 'center',
