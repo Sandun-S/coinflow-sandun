@@ -28,7 +28,7 @@ const AnalyticsPage = () => {
             style: 'currency',
             currency: currency,
             maximumFractionDigits: 0
-        }).format(Math.abs(val));
+        }).format(val);
     };
 
     // --- 1. Filter Logic ---
@@ -247,7 +247,7 @@ const AnalyticsPage = () => {
                             {metrics.savingsRate.toFixed(1)}%
                         </h4>
                         <p className="text-xs text-slate-400 mt-1">
-                            {metrics.savings >= 0 ? 'Saved ' : 'Deficit '} {formatMoney(metrics.savings)}
+                            {metrics.savings >= 0 ? 'Saved ' : 'Deficit '} {formatMoney(Math.abs(metrics.savings))}
                         </p>
                     </div>
                 </Card>
