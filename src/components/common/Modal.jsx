@@ -3,10 +3,21 @@ import { X } from 'lucide-react';
 import { cn } from '../../utils';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
+    // Handle Escape Key
+    React.useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        if (isOpen) {
+            window.addEventListener('keydown', handleEsc);
+        }
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
@@ -14,9 +25,9 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-2xl transform transition-all border border-slate-200 dark:border-slate-700">
+            <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-2xl transform transition-all border border-slate-200 dark:border-slate-700 flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 shrink-0">
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                         {title}
                     </h3>
@@ -28,8 +39,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     </button>
                 </div>
 
-                {/* Body */}
-                <div className="p-6">
+                {/* Body - Scrollable */}
+                <div className="p-6 overflow-y-auto custom-scrollbar">
                     {children}
                 </div>
             </div>
