@@ -3,6 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import Card from '../common/Card';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../context/AccountContext';
+import { useBudgets } from '../../context/BudgetContext';
+import { useSubscriptions } from '../../context/SubscriptionContext';
 import MainLayout from '../layout/MainLayout';
 import { useSettings } from '../../context/SettingsContext';
 import { Calendar, TrendingUp, AlertCircle, Target, Award, Wallet, Briefcase, CreditCard, PiggyBank } from 'lucide-react';
@@ -14,6 +16,8 @@ const PIE_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
 const AnalyticsPage = () => {
     const { transactions } = useTransactions();
     const { accounts } = useAccounts();
+    const { budgets } = useBudgets();
+    const { subscriptions } = useSubscriptions();
     const { currency } = useSettings();
     const [timeRange, setTimeRange] = useState('thisMonth'); // '30days', 'thisMonth', 'year'
 
@@ -362,38 +366,92 @@ const AnalyticsPage = () => {
                             </div>
 
                             {/* Smart Projection */}
-                            {metrics.totalInvested > 0 && (() => {
-                                // Calculate Weighted Average Interest Rate
+                            {metrics.totalInvested >= 0 && (() => {
+                                // 1. Calculate Monthly Contribution from Budget & Subscriptions
+                                const invBudget = budgets.find(b => b.category === 'Investment')?.limit || 0;
+                                const invSubs = subscriptions
+                                    .filter(s => s.category === 'Investment')
+                                    .reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+
+                                // Use the greater of the two to avoid double counting, as per user request
+                                const monthlyContribution = Math.max(invBudget, invSubs);
+
+                                // 2. Calculate Weighted Average Interest Rate
                                 const investments = accounts.filter(a => a.type === 'Investment');
-                                const weightedSum = investments.reduce((sum, inv) => {
-                                    const rate = parseFloat(inv.interestRate) || 6.0; // Default 6%
-                                    return sum + (inv.balance * rate);
-                                }, 0);
-                                const avgRate = weightedSum / metrics.totalInvested;
-                                const projection = metrics.totalInvested * Math.pow(1 + (avgRate / 100), 5); // 5 Years
+                                let avgRate = 6.0; // Default 6%
+
+                                if (investments.length > 0 && metrics.totalInvested > 0) {
+                                    const weightedSum = investments.reduce((sum, inv) => {
+                                        const rate = parseFloat(inv.interestRate) || 6.0;
+                                        return sum + (inv.balance * rate);
+                                    }, 0);
+                                    avgRate = weightedSum / metrics.totalInvested;
+                                }
+
+                                // 3. Compound Interest Formula with Monthly Contributions
+                                // FV = P * (1 + r/n)^(nt) + PMT * [ ((1 + r/n)^(nt) - 1) / (r/n) ]
+                                const r = avgRate / 100;
+                                const n = 12; // Monthly
+                                const t = 5;  // Years
+                                const nt = n * t;
+                                const ratePerPeriod = r / n;
+
+                                const fvPrincipal = metrics.totalInvested * Math.pow(1 + ratePerPeriod, nt);
+                                const fvContributions = monthlyContribution * ((Math.pow(1 + ratePerPeriod, nt) - 1) / ratePerPeriod);
+
+                                const projection = fvPrincipal + fvContributions;
+                                const totalContributed = monthlyContribution * nt;
+                                const interestEarned = projection - (metrics.totalInvested + totalContributed);
 
                                 return (
-                                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
-                                        <h5 className="font-bold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-1">
-                                            <TrendingUp size={16} /> 5-Year Projection
-                                        </h5>
-                                        <div className="flex justify-between items-end">
-                                            <div className="text-xs text-emerald-700/70 dark:text-emerald-400">
-                                                @ ~{avgRate.toFixed(1)}% Avg Return
+                                    <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 space-y-4">
+
+                                        <div className="flex justify-between items-center pb-3 border-b border-emerald-100 dark:border-emerald-800/50">
+                                            <div>
+                                                <h5 className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                                    <TrendingUp size={16} /> 5-Year Projection
+                                                </h5>
+                                                <p className="text-xs text-emerald-600/70 dark:text-emerald-400 mt-1">
+                                                    Assuming {avgRate.toFixed(1)}% annual return
+                                                </p>
                                             </div>
-                                            <div className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
-                                                {formatMoney(projection)}
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                                                    {formatMoney(projection)}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="mt-2 text-[10px] text-emerald-600/60 text-center">
-                                            *Estimated based on account rates (Default 6%)
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-xs text-slate-500 uppercase font-semibold">Monthly Investment</p>
+                                                {monthlyContribution > 0 ? (
+                                                    <p className="font-bold text-slate-700 dark:text-slate-200">{formatMoney(monthlyContribution)}</p>
+                                                ) : (
+                                                    <p className="text-xs text-amber-500 mt-1">No monthly plan found</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-slate-500 uppercase font-semibold">Interest Earned</p>
+                                                <p className="font-bold text-emerald-600">+{formatMoney(interestEarned)}</p>
+                                            </div>
+                                        </div>
+
+                                        {monthlyContribution > 0 && (
+                                            <div className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded text-center text-emerald-700 dark:text-emerald-400 font-medium">
+                                                "Compound interest is the eighth wonder of the world!" 🚀
+                                            </div>
+                                        )}
+
+                                        <div className="text-[10px] text-emerald-600/40 text-center">
+                                            *Based on your 'Investment' budget & subscriptions + account rates.
                                         </div>
                                     </div>
                                 );
                             })()}
 
                             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500">
-                                💡 Tip: Add "Interest Rate" to accounts for accuracy.
+                                💡 Tip: Set an "Investment" budget or subscription to see your wealth grow!
                             </div>
                         </div>
                     </Card>
