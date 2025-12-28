@@ -124,6 +124,12 @@ const AnalyticsPage = () => {
         const totalInvested = investments.reduce((sum, a) => sum + a.balance, 0);
         const cash = accounts.filter(a => a.type !== 'Loan' && a.type !== 'Investment' && a.type !== 'Credit Card').reduce((sum, a) => sum + a.balance, 0);
 
+        // Credit Card Debt (Limit - Available)
+        const creditCards = accounts.filter(a => a.type === 'Credit Card');
+        const creditCardDebt = creditCards.reduce((sum, a) => sum + ((a.creditLimit || 0) - a.balance), 0);
+
+        const totalDebtRaw = totalLoanDebt + creditCardDebt;
+
         return {
             income,
             expense,
@@ -134,12 +140,14 @@ const AnalyticsPage = () => {
             topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null,
             // New
             totalLoanDebt,
+            creditCardDebt,
+            totalDebtRaw,
             monthlyLoanCommitments,
             loanProgress,
             dtiRatio,
             totalInvested,
             cash,
-            netWorth: (cash + totalInvested) - totalLoanDebt
+            netWorth: (cash + totalInvested) - totalDebtRaw
         };
     }, [filteredTransactions, timeRange, accounts]);
 
@@ -179,7 +187,7 @@ const AnalyticsPage = () => {
     const netWorthData = [
         { name: 'Cash', value: Math.max(0, metrics.cash) },
         { name: 'Investments', value: metrics.totalInvested },
-        { name: 'Debt', value: metrics.totalLoanDebt },
+        { name: 'Debt', value: metrics.totalDebtRaw },
     ].filter(i => i.value > 0);
 
     return (
