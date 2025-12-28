@@ -5,6 +5,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../context/AccountContext';
 import { useBudgets } from '../../context/BudgetContext';
 import { useSubscriptions } from '../../context/SubscriptionContext';
+import { useCategories } from '../../context/CategoryContext';
 import MainLayout from '../layout/MainLayout';
 import { useSettings } from '../../context/SettingsContext';
 import { Calendar, TrendingUp, AlertCircle, Target, Award, Wallet, Briefcase, CreditCard, PiggyBank } from 'lucide-react';
@@ -18,6 +19,7 @@ const AnalyticsPage = () => {
     const { accounts } = useAccounts();
     const { budgets } = useBudgets();
     const { subscriptions } = useSubscriptions();
+    const { categories } = useCategories();
     const { currency } = useSettings();
     const [timeRange, setTimeRange] = useState('thisMonth'); // '30days', 'thisMonth', 'year'
 
@@ -368,13 +370,33 @@ const AnalyticsPage = () => {
                             {/* Smart Projection */}
                             {metrics.totalInvested >= 0 && (() => {
                                 // 1. Calculate Monthly Contribution from Budget & Subscriptions
-                                const invBudget = budgets.find(b => b.category === 'Investment')?.limit || 0;
-                                const invSubs = subscriptions
-                                    .filter(s => s.category === 'Investment')
+                                // Get valid investment categories
+                                const invCategory = categories.find(c => c.name === 'Investment');
+                                const invSubCats = invCategory ? invCategory.subcategories : []; // ['Stocks', 'Savings', ...]
+                                const invKeywords = ['Investment', ...invSubCats];
+
+                                // Filter Budgets
+                                const invBudgetTotal = budgets
+                                    .filter(b => invKeywords.includes(b.category))
+                                    .reduce((sum, b) => sum + b.limit, 0);
+
+                                // Filter Subscriptions
+                                const invSubsTotal = subscriptions
+                                    .filter(s => {
+                                        // Case 1: Exact match on Category (e.g. "Investment", "Savings")
+                                        if (invKeywords.includes(s.category)) return true;
+                                        // Case 2: Compound strings like "Investment > Savings" (common in some UI inputs)
+                                        if (s.category && typeof s.category === 'string') {
+                                            const parts = s.category.split('>');
+                                            const mainCat = parts[0].trim();
+                                            if (invKeywords.includes(mainCat)) return true;
+                                        }
+                                        return false;
+                                    })
                                     .reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
 
-                                // Use the greater of the two to avoid double counting, as per user request
-                                const monthlyContribution = Math.max(invBudget, invSubs);
+                                // Use the greater of the two
+                                const monthlyContribution = Math.max(invBudgetTotal, invSubsTotal);
 
                                 // 2. Calculate Weighted Average Interest Rate
                                 const investments = accounts.filter(a => a.type === 'Investment');
