@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const TourContext = createContext();
 
 export const useTour = () => useContext(TourContext);
 
 export const TourProvider = ({ children }) => {
+    const { user } = useAuth();
     const [run, setRun] = useState(false);
     const [stepIndex, setStepIndex] = useState(0);
     const [tourActive, setTourActive] = useState(false);
@@ -14,14 +16,16 @@ export const TourProvider = ({ children }) => {
 
     // Load state from localStorage on mount
     useEffect(() => {
-        const hasSeenTour = localStorage.getItem('coinflow_tour_completed');
-        if (!hasSeenTour) {
-            // Auto-start for new users
-            setTourType('full');
-            setRun(true);
-            setTourActive(true);
+        if (user) {
+            const hasSeenTour = localStorage.getItem('coinflow_tour_completed');
+            if (!hasSeenTour) {
+                // Auto-start for new users
+                setTourType('full');
+                setRun(true);
+                setTourActive(true);
+            }
         }
-    }, []);
+    }, [user]);
 
     const startTour = () => {
         setTourType('full');
