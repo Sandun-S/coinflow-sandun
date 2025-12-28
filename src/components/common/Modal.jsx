@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '../../utils';
 
@@ -16,8 +17,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    return ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
@@ -44,7 +45,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
