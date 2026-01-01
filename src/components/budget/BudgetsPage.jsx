@@ -11,12 +11,14 @@ import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
 import CategoryPicker from '../categories/CategoryPicker';
+import { useAuth } from '../../context/AuthContext'; // Managed Gating
 
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
     const { categories } = useCategories(); // Get categories
     const { nextStep } = useTour();
+    const { user, isPro } = useAuth(); // Auth for gating
     const formatMoney = useCurrencyFormatter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,6 +92,12 @@ const BudgetsPage = () => {
 
     const handleSaveBudget = async (e) => {
         e.preventDefault();
+        // Gating Check inside handler as fallback
+        if (!isPro(user) && budgets.length >= 3) {
+            alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
+            return;
+        }
+
         if (!limit || !selectedCategory) return;
         await setBudget(selectedCategory, limit);
         setIsModalOpen(false);
@@ -156,7 +164,18 @@ const BudgetsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
                     <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
-                <Button onClick={() => { setIsModalOpen(true); nextStep(); }} className="hidden md:flex items-center gap-2" data-tour="set-budget-desktop">
+                <Button
+                    onClick={() => {
+                        if (!isPro(user) && budgets.length >= 3) {
+                            alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
+                            return;
+                        }
+                        setIsModalOpen(true);
+                        nextStep();
+                    }}
+                    className="hidden md:flex items-center gap-2"
+                    data-tour="set-budget-desktop"
+                >
                     <Plus size={20} /> Set Budget
                 </Button>
             </div>
@@ -302,6 +321,11 @@ const BudgetsPage = () => {
                                             const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
                                             const isSubOver = item.limit > 0 && item.spent > item.limit;
 
+                                            // UI Tweak: Differentiate Budgeted vs. Unbudgeted bars
+                                            const barColor = item.hasBudget
+                                                ? (isSubOver ? 'bg-red-400' : 'bg-indigo-400/70')
+                                                : 'bg-slate-300 dark:bg-slate-600'; // Neutral
+
                                             return (
                                                 <div key={item.name} className="text-sm group">
                                                     <div className="flex justify-between mb-1 items-center">
@@ -349,7 +373,7 @@ const BudgetsPage = () => {
                                                     {/* Sub Progress Bar */}
                                                     <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                                                         <div
-                                                            className={`h-full rounded-full ${isSubOver ? 'bg-red-400' : 'bg-indigo-400/70'}`}
+                                                            className={`h-full rounded-full ${barColor}`}
                                                             style={{ width: `${itemPercent}%` }}
                                                         />
                                                     </div>
@@ -413,7 +437,14 @@ const BudgetsPage = () => {
             </Modal>
             {/* Mobile Floating Action Button */}
             <button
-                onClick={() => { setIsModalOpen(true); nextStep(); }}
+                onClick={() => {
+                    if (!isPro(user) && budgets.length >= 3) {
+                        alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
+                        return;
+                    }
+                    setIsModalOpen(true);
+                    nextStep();
+                }}
                 className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
                 aria-label="Set Budget"
                 data-tour="set-budget-mobile"
