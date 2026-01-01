@@ -9,12 +9,22 @@ import { Link } from 'react-router-dom';
 import TourSelectionModal from '../onboarding/TourSelectionModal';
 
 const ProfilePage = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, isPro: checkIsPro } = useAuth();
     const [isTourOpen, setIsTourOpen] = React.useState(false);
 
     // Plan Logic
+    const hasActivePro = checkIsPro(user);
     const isLifetime = user?.plan === 'lifetime';
-    const isPro = user?.plan === 'pro';
+    const isTrial = hasActivePro && user?.trialEndsAt;
+
+    // Determine Display Name
+    const planName = isLifetime
+        ? 'Lifetime Pro'
+        : isTrial
+            ? 'Pro Trial'
+            : hasActivePro
+                ? 'Monthly Pro'
+                : 'Free Plan';
 
     // We access localStorage directly for the "Nuclear" option or better, expose a 'clearData' method in TransactionContext.
     // However, simplest is to clear the key.
@@ -62,14 +72,13 @@ const ProfilePage = () => {
 
                 <div className="md:col-span-2 space-y-6 mb-6">
                     {/* Plan Status Card */}
-                    {/* Plan Status Card */}
                     <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                         <div className="relative z-10">
                             <div className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Current Plan</div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-3xl font-bold">
-                                    {isLifetime ? 'Lifetime Pro' : isPro ? 'Monthly Pro' : 'Free Plan'}
+                                    {planName}
                                 </h2>
                                 {isLifetime && <Sparkles className="text-yellow-400" size={24} />}
                             </div>
@@ -93,9 +102,9 @@ const ProfilePage = () => {
                                 </div>
                             )}
 
-                            {isPro && !isLifetime && user?.subscriptionExpiry && (
+                            {isTrial && user?.trialEndsAt && (
                                 <div className="mt-2 text-xs text-slate-500">
-                                    Trial ends on {user.subscriptionExpiry.toDate().toLocaleDateString()}
+                                    Trial ends on {new Date(user.trialEndsAt).toLocaleDateString()}
                                 </div>
                             )}
                         </div>
