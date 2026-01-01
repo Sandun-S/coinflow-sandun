@@ -1,11 +1,14 @@
 import React, { useState, useRef } from 'react';
 import Modal from '../common/Modal';
-import { Download, Upload, FileJson, FileSpreadsheet, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, Upload, FileJson, FileSpreadsheet, Check, AlertCircle, RefreshCw, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useTransactions } from '../../context/TransactionContext';
 import { useAccounts } from '../../context/AccountContext';
 import { useCategories } from '../../context/CategoryContext';
 import { useBudgets } from '../../context/BudgetContext';
 import { useSubscriptions } from '../../context/SubscriptionContext';
+import { useAuth } from '../../context/AuthContext';
+
+const SECRET_KEY = "COINFLOW_SECURE_BACKUP_2024";
 
 const DataBackupModal = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('backup'); // 'backup' or 'restore'
@@ -25,14 +28,39 @@ const DataBackupModal = ({ isOpen, onClose }) => {
     const [previewData, setPreviewData] = useState(null);
     const [importStatus, setImportStatus] = useState('idle'); // idle, processing, success, error
     const [importLog, setImportLog] = useState([]);
+    const [securityStatus, setSecurityStatus] = useState(null); // 'valid', 'invalid', 'unchecked'
     const fileInputRef = useRef(null);
 
     // Context Hooks
+    const { user, updateUser } = useAuth();
     const { transactions, addTransaction } = useTransactions();
     const { accounts, addAccount } = useAccounts();
     const { categories, addCategory } = useCategories();
     const { budgets, setBudget } = useBudgets();
     const { subscriptions, addSubscription } = useSubscriptions();
+
+    // --- CRYPTO HELPER ---
+    const generateSignature = async (data, emailSalt) => {
+        try {
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(SECRET_KEY + (emailSalt || ''));
+            const msgData = encoder.encode(JSON.stringify(data));
+
+            const key = await window.crypto.subtle.importKey(
+                'raw',
+                keyData,
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign']
+            );
+
+            const signature = await window.crypto.subtle.sign('HMAC', key, msgData);
+            return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            console.error("Signing error:", e);
+            return null;
+        }
+    };
 
     // --- EXPORT LOGIC ---
 
@@ -58,7 +86,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
             t.category,
             Math.abs(t.amount),
             t.amount < 0 ? "Expense" : "Income",
-            t.accountName || "N/A", // Assuming accountName might be joined, usually it's just ID in normalized DBs but let's be safe
+            t.accountName || "N/A",
             t.createdAt || ""
         ]);
 
@@ -66,22 +94,39 @@ const DataBackupModal = ({ isOpen, onClose }) => {
         downloadFile(csvContent, `coinflow_transactions_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
     };
 
-    const exportJSON = () => {
-        const payload = {};
+    const exportJSON = async () => {
+        // 1. Prepare Data Payload
+        const data = {};
+        if (selectedEntities.transactions) data.transactions = transactions;
+        if (selectedEntities.accounts) data.accounts = accounts;
+        if (selectedEntities.categories) data.categories = categories;
+        if (selectedEntities.budgets) data.budgets = budgets;
+        if (selectedEntities.subscriptions) data.subscriptions = subscriptions;
 
-        if (selectedEntities.transactions) payload.transactions = transactions;
-        if (selectedEntities.accounts) payload.accounts = accounts;
-        if (selectedEntities.categories) payload.categories = categories;
-        if (selectedEntities.budgets) payload.budgets = budgets;
-        if (selectedEntities.subscriptions) payload.subscriptions = subscriptions;
-
-        payload.meta = {
-            version: '1.0',
-            exportedAt: new Date().toISOString(),
-            app: 'CoinFlow'
+        // 2. Prepare User Meta (for Trial Protection)
+        const userMeta = {
+            email: user?.email,
+            plan: user?.plan || 'Free',
+            trialEndsAt: user?.trialEndsAt || null,
+            isPro: !!user?.isPro // Snapshot current status
         };
 
-        const jsonContent = JSON.stringify(payload, null, 2);
+        const exportPayload = {
+            data,
+            user: userMeta,
+            meta: {
+                version: '2.0',
+                exportedAt: new Date().toISOString(),
+                app: 'CoinFlow'
+            }
+        };
+
+        // 3. Generate Signature
+        // Sign { data, user } using the User's Email as part of the salt
+        const signature = await generateSignature({ data, user: userMeta }, user?.email);
+        exportPayload.signature = signature;
+
+        const jsonContent = JSON.stringify(exportPayload, null, 2);
         downloadFile(jsonContent, `coinflow_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
     };
 
@@ -108,21 +153,36 @@ const DataBackupModal = ({ isOpen, onClose }) => {
         }
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
             try {
                 const json = JSON.parse(event.target.result);
+
+                // Basic Validation
+                const data = json.data || json; // Support legacy structure
+
+                // Verify Signature if present
+                let isValid = false;
+                if (json.signature && json.user) {
+                    const checkSig = await generateSignature({ data: json.data, user: json.user }, json.user.email);
+                    isValid = checkSig === json.signature;
+                    setSecurityStatus(isValid ? 'valid' : 'invalid');
+                } else {
+                    setSecurityStatus('unchecked');
+                }
+
                 setPreviewData({
-                    transactions: json.transactions?.length || 0,
-                    accounts: json.accounts?.length || 0,
-                    categories: json.categories?.length || 0,
-                    budgets: json.budgets?.length || 0,
-                    subscriptions: json.subscriptions?.length || 0,
-                    raw: json
+                    transactions: data.transactions?.length || 0,
+                    accounts: data.accounts?.length || 0,
+                    categories: data.categories?.length || 0,
+                    budgets: data.budgets?.length || 0,
+                    subscriptions: data.subscriptions?.length || 0,
+                    raw: json // Clean reference
                 });
                 setImportFile(file);
                 setImportStatus('idle');
             } catch (err) {
                 alert("Invalid JSON file.");
+                console.error(err);
             }
         };
         reader.readAsText(file);
@@ -131,71 +191,114 @@ const DataBackupModal = ({ isOpen, onClose }) => {
     const handleImport = async () => {
         if (!previewData || !previewData.raw) return;
         setImportStatus('processing');
-        const data = previewData.raw;
         let log = [];
 
         try {
-            // Import Accounts
-            if (data.accounts && selectedEntities.accounts) {
-                let count = 0;
-                for (const acc of data.accounts) {
-                    // Check duplicate logic if needed, for now we append new
-                    // Ideally we should check if name exists
-                    const exists = accounts.find(a => a.name === acc.name);
-                    if (!exists) {
-                        const { id, ...cleanData } = acc;
-                        await addAccount(cleanData);
-                        count++;
-                    }
+            const root = previewData.raw;
+            const data = root.data || root; // Support v1/v2
+            const userMeta = root.user;
+
+            // 1. Security Check & Trial Sync
+            if (root.signature && securityStatus === 'valid' && userMeta) {
+                // Sync Plan
+                if (userMeta.plan && user?.id) {
+                    await updateUser(user.id, {
+                        plan: userMeta.plan,
+                        trialEndsAt: userMeta.trialEndsAt,
+                        isPro: userMeta.isPro
+                    });
+                    // Force refresh or just log it
+                    log.push(`ℹ️ Account synced to ${userMeta.plan} Plan`);
                 }
-                log.push(`✅ Imported ${count} new Accounts`);
+            } else if (root.signature && securityStatus === 'invalid') {
+                log.push(`⚠️ Security Warning: Backup signature mismatch. Skipped plan sync.`);
             }
 
-            // Import Categories
+            // 2. Import Data with ID Mapping
+            const idMap = {
+                accounts: {},
+                categories: {}
+            };
+
+            // > Categories
             if (data.categories && selectedEntities.categories) {
                 let count = 0;
                 for (const cat of data.categories) {
                     const exists = categories.find(c => c.name === cat.name);
                     if (!exists) {
-                        const { id, ...cleanData } = cat;
-                        await addCategory(cleanData);
+                        const { id, ...clean } = cat;
+                        await addCategory(clean); // Assume safe
                         count++;
                     }
                 }
                 log.push(`✅ Imported ${count} new Categories`);
             }
 
-            // Import Budgets
+            // > Accounts
+            if (data.accounts && selectedEntities.accounts) {
+                let count = 0;
+                for (const acc of data.accounts) {
+                    const exists = accounts.find(a => a.name === acc.name && a.type === acc.type);
+                    if (!exists) {
+                        const { id: oldId, ...clean } = acc;
+                        // Import with FULL balance
+                        const res = await addAccount(clean);
+                        if (res && res.id) {
+                            idMap.accounts[oldId] = res.id;
+                        }
+                        count++;
+                    } else {
+                        // Map old ID to existing ID
+                        idMap.accounts[acc.id] = exists.id;
+                    }
+                }
+                log.push(`✅ Imported ${count} new Accounts`);
+            }
+
+            // > Budgets
             if (data.budgets && selectedEntities.budgets) {
                 let count = 0;
                 for (const bud of data.budgets) {
-                    // setBudget handles upsert/create
                     await setBudget(bud.category, bud.limit);
                     count++;
                 }
                 log.push(`✅ Restored ${count} Budgets`);
             }
 
-            // Import Subscriptions
+            // > Subscriptions
             if (data.subscriptions && selectedEntities.subscriptions) {
                 let count = 0;
                 for (const sub of data.subscriptions) {
-                    const { id, ...cleanData } = sub;
-                    // Simple append
-                    await addSubscription(cleanData);
+                    const { id, ...clean } = sub;
+                    // Map Wallet
+                    if (clean.walletId && idMap.accounts[clean.walletId]) {
+                        clean.walletId = idMap.accounts[clean.walletId];
+                    }
+                    await addSubscription(clean);
                     count++;
                 }
                 log.push(`✅ Imported ${count} Subscriptions`);
             }
 
-            // Import Transactions
+            // > Transactions
             if (data.transactions && selectedEntities.transactions) {
                 let count = 0;
                 for (const tx of data.transactions) {
-                    const { id, ...cleanData } = tx;
-                    // Always add as new for history integrity
-                    await addTransaction(cleanData);
-                    count++;
+                    const { id, ...clean } = tx;
+
+                    // Map Wallet
+                    if (clean.accountId && idMap.accounts[clean.accountId]) {
+                        clean.accountId = idMap.accounts[clean.accountId];
+
+                        // SKIP BALANCE UPDATE
+                        await addTransaction(clean, { skipBalanceUpdate: true });
+                        count++;
+                    } else {
+                        if (selectedEntities.accounts) {
+                            // Account was expected but not found/mapped
+                            // Skip to prevent error
+                        }
+                    }
                 }
                 log.push(`✅ Imported ${count} Transactions`);
             }
@@ -242,7 +345,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
                                 </div>
                                 <span className="font-bold text-slate-800 dark:text-white">JSON Format</span>
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Complete backup of all data. Best for restoring later.</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Complete backup. Includes <span className="font-semibold text-indigo-500">Secure Signature</span>.</p>
                         </div>
 
                         <div
@@ -255,7 +358,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
                                 </div>
                                 <span className="font-bold text-slate-800 dark:text-white">CSV Format</span>
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Transactions only. Best for Excel/Sheets analysis.</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Transactions only. Best for Excel/Sheets.</p>
                         </div>
                     </div>
 
@@ -314,13 +417,23 @@ const DataBackupModal = ({ isOpen, onClose }) => {
                                         <FileJson size={18} className="text-indigo-500" />
                                         Backup Summary
                                     </h4>
-                                    <button onClick={() => { setPreviewData(null); setImportFile(null); setImportStatus('idle'); setImportLog([]) }} className="text-xs text-red-500 hover:underline">Change File</button>
+                                    <button onClick={() => { setPreviewData(null); setImportFile(null); setImportStatus('idle'); setImportLog([]); setSecurityStatus(null) }} className="text-xs text-red-500 hover:underline">Change File</button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-y-2 text-sm">
                                     <div className="text-slate-500">Transactions: <strong className="text-slate-800 dark:text-white">{previewData.transactions}</strong></div>
                                     <div className="text-slate-500">Wallets: <strong className="text-slate-800 dark:text-white">{previewData.accounts}</strong></div>
                                     <div className="text-slate-500">Categories: <strong className="text-slate-800 dark:text-white">{previewData.categories}</strong></div>
                                     <div className="text-slate-500">Budgets: <strong className="text-slate-800 dark:text-white">{previewData.budgets}</strong></div>
+                                </div>
+
+                                {/* Security Badge */}
+                                <div className={`mt-4 p-3 rounded-lg flex items-start gap-3 border ${securityStatus === 'valid' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (securityStatus === 'invalid' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-slate-100 border-slate-200 text-slate-600')}`}>
+                                    {securityStatus === 'valid' ? <ShieldCheck size={18} className="shrink-0 mt-0.5" /> : (securityStatus === 'invalid' ? <ShieldAlert size={18} className="shrink-0 mt-0.5" /> : <AlertCircle size={18} className="shrink-0 mt-0.5" />)}
+                                    <div className="text-xs">
+                                        {securityStatus === 'valid' && <span><strong>Verified Backup:</strong> This file is signed and authentic. Account plan will be synced.</span>}
+                                        {securityStatus === 'invalid' && <span><strong>Security Mismatch:</strong> Signature invalid. This file may have been modified. Plan details will be ignored.</span>}
+                                        {securityStatus === 'unchecked' && <span><strong>Unverified Backup:</strong> No signature found (Legacy). Data will be imported, but plan status will not be updated.</span>}
+                                    </div>
                                 </div>
                             </div>
 
@@ -348,7 +461,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
                                         className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold flex items-center justify-center gap-2"
                                     >
                                         {importStatus === 'processing' ? <RefreshCw className="animate-spin" /> : <Upload size={20} />}
-                                        {importStatus === 'processing' ? 'Restoring...' : 'Restore Selected Data'}
+                                        {importStatus === 'processing' ? 'Restoring...' : 'Restore Data'}
                                     </button>
                                 </>
                             )}

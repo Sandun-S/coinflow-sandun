@@ -113,7 +113,7 @@ export const TransactionProvider = ({ children }) => {
     }
 
     // Add Transaction
-    async function addTransaction(transaction) {
+    async function addTransaction(transaction, options = {}) {
         try {
             const { id, ...data } = transaction; // Exclude local ID if present
 
@@ -125,8 +125,10 @@ export const TransactionProvider = ({ children }) => {
                 createdAt: new Date().toISOString()
             });
 
-            // 2. Update Balance
-            await updateBalance(transaction.accountId, transaction.amount);
+            // 2. Update Balance (Skip if requested, e.g., during import)
+            if (!options.skipBalanceUpdate) {
+                await updateBalance(transaction.accountId, transaction.amount);
+            }
 
             return { success: true };
         } catch (error) {
