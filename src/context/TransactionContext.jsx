@@ -1,7 +1,8 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
+import { useAccounts } from './AccountContext';
 
 // Initial state
 const initialState = {
@@ -38,6 +39,7 @@ const AppReducer = (state, action) => {
 export const TransactionProvider = ({ children }) => {
     const [state, dispatch] = useReducer(AppReducer, initialState);
     const { user } = useAuth();
+    const { updateBalance } = useAccounts(); // Consume Account Context
 
     // Load transactions from Firestore
     useEffect(() => {
@@ -64,7 +66,21 @@ export const TransactionProvider = ({ children }) => {
     // Delete Transaction
     async function deleteTransaction(id) {
         try {
-            await deleteDoc(doc(db, 'transactions', id));
+            // 1. Get the transaction to know what to revert
+            const transactionRef = doc(db, 'transactions', id);
+            const transactionSnap = await getDoc(transactionRef);
+
+            if (transactionSnap.exists()) {
+                const transaction = transactionSnap.data();
+
+                // 2. Revert Balance (Opposite operation)
+                // If it was an expense (-500), we add 500. If income (+500), we subtract 500.
+                // updateBalance adds the value passed. So we pass -amount.
+                await updateBalance(transaction.accountId, -transaction.amount);
+            }
+
+            // 3. Delete Doc
+            await deleteDoc(transactionRef);
             // Dispatch is handled by onSnapshot
         } catch (error) {
             console.error("Error deleting transaction:", error);
@@ -75,11 +91,17 @@ export const TransactionProvider = ({ children }) => {
     async function addTransaction(transaction) {
         try {
             const { id, ...data } = transaction; // Exclude local ID if present
+
+            // 1. Add Doc
             await addDoc(collection(db, 'transactions'), {
                 ...data,
                 userId: user.id,
                 createdAt: new Date().toISOString()
             });
+
+            // 2. Update Balance
+            await updateBalance(transaction.accountId, transaction.amount);
+
             return { success: true };
         } catch (error) {
             console.error("Error adding transaction:", error);
@@ -91,7 +113,22 @@ export const TransactionProvider = ({ children }) => {
     async function updateTransaction(id, updatedTransaction) {
         try {
             const transactionRef = doc(db, 'transactions', id);
+
+            // 1. Get Old Transaction
+            const oldTransactionSnap = await getDoc(transactionRef);
+            if (oldTransactionSnap.exists()) {
+                const oldTransaction = oldTransactionSnap.data();
+
+                // 2. Revert Old Balance
+                await updateBalance(oldTransaction.accountId, -oldTransaction.amount);
+            }
+
+            // 3. Update Doc
             await updateDoc(transactionRef, updatedTransaction);
+
+            // 4. Apply New Balance
+            await updateBalance(updatedTransaction.accountId, updatedTransaction.amount);
+
             return { success: true };
         } catch (error) {
             console.error("Error updating transaction:", error);

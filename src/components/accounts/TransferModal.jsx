@@ -9,7 +9,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { ArrowRight, X } from 'lucide-react';
 
 const TransferModal = ({ isOpen, onClose }) => {
-    const { updateBalance, accounts } = useAccounts();
+    const { accounts } = useAccounts();
     const { addTransaction } = useTransactions();
     const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'LKR' }).format(val);
 
@@ -83,13 +83,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                 destCategory = 'Investment Return';
             }
 
-            // 1. Deduct from Source
-            await updateBalance(fromAccount, -transferAmount);
-
-            // 2. Add to Destination
-            await updateBalance(toAccount, transferAmount);
-
-            // 3. Record Transactions
+            // 1. Record Transaction (Source Expense) - Context updates balance
             await addTransaction({
                 text: `${description} (to ${destAcc?.name || 'Destination'})`,
                 amount: -transferAmount,
@@ -99,6 +93,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                 date: new Date(date).toISOString()
             });
 
+            // 2. Record Transaction (Dest Income) - Context updates balance
             await addTransaction({
                 text: `${description} (from ${sourceAcc?.name || 'Source'})`,
                 amount: transferAmount,

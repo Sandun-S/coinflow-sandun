@@ -11,7 +11,7 @@ import { PlusCircle, Split, Trash2, Plus } from 'lucide-react'; // Added icons
 
 const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     const { addTransaction, updateTransaction } = useTransactions();
-    const { accounts, updateBalance } = useAccounts();
+    const { accounts } = useAccounts();
     const { nextStep } = useTour();
     const [text, setText] = useState('');
     const [amount, setAmount] = useState('');
@@ -97,9 +97,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 };
 
                 await addTransaction(transactionData);
-                updateBalance(accountId, finalAmount);
             }
-
         } else {
             // Standard Single Transaction
             if (!text || !amount || !category) {
@@ -121,8 +119,6 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 updateTransaction(initialData.id, transactionData);
             } else {
                 await addTransaction(transactionData);
-                // Don't await balance update - let it happen in background to keep UI snappy
-                updateBalance(accountId, finalAmount);
             }
         }
 
