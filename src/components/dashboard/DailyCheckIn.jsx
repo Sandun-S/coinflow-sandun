@@ -17,9 +17,16 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         checkVisibility();
         // Check permission status
         if ('Notification' in window) {
-            setNotificationPermission(Notification.permission);
+            const currentPermission = Notification.permission;
+            setNotificationPermission(currentPermission);
+
+            // AUTO-SUBSCRIBE: If already granted, ensure they are subscribed on the server
+            // This fixes the issue where existing users never hit the "Enable" button.
+            if (currentPermission === 'granted' && currentUser) {
+                subscribeToPush(currentUser.uid).catch(err => console.error("Auto-sub failed", err));
+            }
         }
-    }, [transactions]);
+    }, [transactions, currentUser]);
 
     const checkVisibility = () => {
         const now = new Date();
