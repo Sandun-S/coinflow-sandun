@@ -28,124 +28,110 @@ const BudgetsPage = () => {
     const [limit, setLimit] = useState('');
     const [editingId, setEditingId] = useState(null);
 
-    // Calculate Category Spending (This Month)
+    // Pre-select first expense category if available
+    useEffect(() => {
+        if (!selectedCategory && categories.length > 0) {
+            const firstExpense = categories.find(c => c.type === 'expense');
+            if (firstExpense) setSelectedCategory(firstExpense.name);
+        }
+    }, [categories, selectedCategory]);
+
+    // Helper: Find Parent Name for a given category name (Sub or Parent)
+    const getParentCategoryName = (catName) => {
+        // Check if it's a parent
+        const parent = categories.find(c => c.name === catName);
+        if (parent) return parent.name;
+
+        // Check if it's a sub
+        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
+        if (parentOfSub) return parentOfSub.name;
+
+        // Fallback: Check Default Categories if user categories not fully loaded?
+        // Or just rely on what we have. User provided logic relies on 'categories'.
+        // I will add the default fallback here too for robustness as per previous fix.
+        const defaultParentOfSub = DEFAULT_CATEGORIES.find(c => c.subcategories && c.subcategories.includes(catName));
+        if (defaultParentOfSub) return defaultParentOfSub.name;
+
+        return catName;
+    };
+
+    // Calculate spending per PARENT category (Monthly)
     const categorySpending = useMemo(() => {
-        const spending = {};
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Fix: Include last second of month
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Ensure full month coverage
 
-        // Build Child -> Parent map for robust aggregation
-        const childParentMap = {};
-
-        // 1. Seed with Default Categories (Robust fallback)
-        DEFAULT_CATEGORIES.forEach(c => {
-            if (c.subcategories) {
-                c.subcategories.forEach(sub => {
-                    childParentMap[sub] = c.name;
-                });
+        const monthlyExpenses = transactions.filter(t => {
+            if (t.type !== 'expense') return false;
+            // Date parsing
+            let tDate;
+            if (t.date?.seconds) {
+                tDate = new Date(t.date.seconds * 1000);
+            } else {
+                tDate = new Date(t.date);
             }
+            return tDate >= startOfMonth && tDate <= endOfMonth;
         });
 
-        // 2. Override with User Categories (Custom definitions)
-        categories.forEach(c => {
-            if (c.subcategories) {
-                c.subcategories.forEach(sub => {
-                    childParentMap[sub] = c.name;
-                });
+        const spending = {}; // { ParentName: { total: 0, subs: {} } }
+
+        monthlyExpenses.forEach(t => {
+            const rawCat = t.category || 'General';
+            const parentCat = getParentCategoryName(rawCat);
+            const amount = Math.abs(parseFloat(t.amount));
+
+            // 1. Track aggregated spending for Parent
+            if (!spending[parentCat]) {
+                spending[parentCat] = { total: 0, subs: {} };
             }
-        });
+            spending[parentCat].total += amount;
 
-        transactions.forEach(t => {
-            if (t.type === 'expense') {
-                // Handle Firestore Timestamp or JS Date or string
-                let tDate;
-                if (t.date?.seconds) {
-                    tDate = new Date(t.date.seconds * 1000);
-                } else {
-                    tDate = new Date(t.date);
-                }
-
-                if (tDate >= startOfMonth && tDate <= endOfMonth) {
-                    const amount = Math.abs(parseFloat(t.amount));
-                    let catName = t.category;
-
-                    // Handle "Parent > Child" string for initial parsing if map fails or format is explicit
-                    let explicitParent = null;
-                    let explicitSub = null;
-                    if (catName.includes('>')) {
-                        const parts = catName.split('>');
-                        explicitParent = parts[0].trim();
-                        explicitSub = parts[1].trim();
-                        catName = explicitSub; // Normalize to child name if possible
-                    }
-
-                    // 1. Accumulate to the Specific Category Key (e.g. "Internet Bill")
-                    // This ensures budgets set directly on "Internet Bill" find their data.
-                    const key = explicitSub || catName; // Use child name
-                    if (!spending[key]) spending[key] = { total: 0, subs: {} };
-                    spending[key].total += amount;
-
-                    // 2. Accumulate to the Parent Category Key (e.g. "Bills & Utilities")
-                    // This ensures budgets set on "Bills & Utilities" include "Internet Bill".
-                    let parent = childParentMap[key] || explicitParent;
-
-                    if (parent && parent !== key) {
-                        if (!spending[parent]) spending[parent] = { total: 0, subs: {} };
-                        spending[parent].total += amount;
-                        spending[parent].subs[key] = (spending[parent].subs[key] || 0) + amount;
-                    } else if (explicitParent) {
-                        // Fallback if map didn't have it but string did
-                        if (!spending[explicitParent]) spending[explicitParent] = { total: 0, subs: {} };
-                        spending[explicitParent].total += amount;
-                        spending[explicitParent].subs[explicitSub] = (spending[explicitParent].subs[explicitSub] || 0) + amount;
-                    }
-
-                    // Special case: If the transaction IS the parent (e.g. "Bills & Utilities"), 
-                    // we already added to spending[key] above. 
-                    // If it has children defined in logical map but transaction is generic, 
-                    // it stays in generic total but not in a specific sub bucket.
-                }
+            // Track subcategory breakdown for the Parent
+            // If the transaction is for a subcategory (e.g. Internet Bill), add to subs['Internet Bill']
+            // If the transaction is for the Parent itself (e.g. Bills), add to subs['_main']
+            if (rawCat !== parentCat) {
+                spending[parentCat].subs[rawCat] = (spending[parentCat].subs[rawCat] || 0) + amount;
+            } else {
+                spending[parentCat].subs['_main'] = (spending[parentCat].subs['_main'] || 0) + amount;
             }
         });
         return spending;
     }, [transactions, categories]);
 
-    // Group Budgets by Parent
+    // Group budgets by Parent Category
     const groupedBudgets = useMemo(() => {
-        const groups = {};
+        const groups = {}; // { ParentName: { main: BudgetDoc, subs: [BudgetDocs] } }
 
         budgets.forEach(b => {
-            let parent = b.category;
-            let isSub = false;
+            const parent = getParentCategoryName(b.category);
+            if (!groups[parent]) groups[parent] = { main: null, subs: [] };
 
-            if (b.category.includes('>')) {
-                parent = b.category.split('>')[0].trim();
-                isSub = true;
-            }
-
-            if (!groups[parent]) groups[parent] = { parentName: parent, mainBudget: null, subBudgets: [], limit: 0 };
-
-            if (isSub) {
-                groups[parent].subBudgets.push(b);
+            if (b.category === parent) {
+                groups[parent].main = b;
             } else {
-                groups[parent].mainBudget = b;
+                groups[parent].subs.push(b);
             }
         });
 
-        // Determine effective Main Limit for visual display
-        return Object.values(groups).map(g => {
-            let effectiveLimit = 0;
-            if (g.mainBudget) {
-                effectiveLimit = parseFloat(g.mainBudget.limit);
+        // Convert to array for rendering
+        return Object.entries(groups).map(([parentName, data]) => {
+            let totalLimit = 0;
+            // Strategy: If Main exists, that is the Ceiling.
+            // If only sub budgets exist, the Ceiling is the sum of them.
+            if (data.main) {
+                totalLimit = parseFloat(data.main.limit);
             } else {
-                // If no main budget, sum sub budgets? Or just show 0? 
-                // Let's sum sub budgets to show a "Combined" card
-                effectiveLimit = g.subBudgets.reduce((sum, sb) => sum + parseFloat(sb.limit), 0);
+                totalLimit = data.subs.reduce((sum, s) => sum + parseFloat(s.limit), 0);
             }
-            return { ...g, limit: effectiveLimit };
+
+            return {
+                parentName,
+                mainBudget: data.main,
+                subBudgets: data.subs,
+                limit: totalLimit
+            };
         });
-    }, [budgets]);
+    }, [budgets, categories]);
 
     const handleSaveBudget = (e) => {
         e.preventDefault();
