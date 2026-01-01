@@ -211,7 +211,7 @@ const SubscriptionsPage = () => {
                     const isDueSoon = daysLeft >= 0 && daysLeft <= 3;
                     const isOverdue = daysLeft < 0;
 
-                    const isLocked = !isPro(user) && index >= 3;
+                    const isLocked = !isPro(user) && index >= 1;
 
                     return (
                         <Card key={sub.id} className={`relative overflow-hidden ${isDueSoon ? 'border-orange-300 dark:border-orange-500/50' : ''} ${isLocked ? 'ring-1 ring-slate-200 dark:ring-slate-700' : ''}`}>

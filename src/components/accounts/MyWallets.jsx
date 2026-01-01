@@ -241,9 +241,30 @@ const MyWallets = () => {
     };
 
     const lockedAccountIds = React.useMemo(() => {
-        if (isPro && isPro(user)) return new Set(); // Check both prop and function if needed, usually isPro(user) inside component
-        // Limit is 2 for Free Plan
-        return new Set(accounts.slice(2).map(a => a.id));
+        if (isPro && isPro(user)) return new Set();
+
+        const locked = new Set();
+        let allowedCount = 0;
+
+        accounts.forEach(acc => {
+            // "only allow cash and bank sector"
+            // Ensure type matching is case-insensitive or exact based on data. usually 'Cash', 'Bank', 'Credit Card', etc.
+            const isAllowedType = ['Cash', 'Bank', 'cash', 'bank'].includes(acc.type);
+
+            if (!isAllowedType) {
+                // Lock non-allowed types immediately
+                locked.add(acc.id);
+            } else {
+                // Count allowed types
+                allowedCount++;
+                if (allowedCount > 2) {
+                    // Lock if allowed type but exceeds limit of 2
+                    locked.add(acc.id);
+                }
+            }
+        });
+
+        return locked;
     }, [accounts, user, isPro]);
 
     const AccountCard = ({ acc }) => {
