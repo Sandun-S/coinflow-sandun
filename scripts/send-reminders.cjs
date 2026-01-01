@@ -52,11 +52,16 @@ async function sendReminders() {
             ]
         });
 
+        const options = {
+            TTL: isCustom ? 2419200 : 86400 // Custom: 4 weeks (28 days), Daily: 24 hours
+        };
+
         const promises = [];
 
         snapshot.forEach(doc => {
             const sub = doc.data().subscription;
-            const p = webpush.sendNotification(sub, payload)
+            // Pass options as 3rd argument
+            const p = webpush.sendNotification(sub, payload, options)
                 .then(() => console.log(`Sent to ${doc.id}`))
                 .catch(err => {
                     if (err.statusCode === 410) {
