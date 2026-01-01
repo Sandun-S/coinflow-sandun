@@ -3,7 +3,8 @@ import Card from '../common/Card';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import { useCategories } from '../../context/CategoryContext';
-import { Plus, Trash2, Tag, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; // Import Auth
+import { Plus, Trash2, Tag, ChevronDown, ChevronRight, Check, Lock } from 'lucide-react'; // Import Lock
 import * as Icons from 'lucide-react';
 
 const COLORS = [
@@ -39,6 +40,8 @@ const ICONS = [
 
 const ManageCategories = () => {
     const { categories, addCategory, deleteCategory, updateCategory, resetDefaults } = useCategories();
+    const { user, isPro } = useAuth(); // Auth Hook
+
     // Section Collapse State
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -52,8 +55,18 @@ const ManageCategories = () => {
     const [expandedCategory, setExpandedCategory] = useState(null);
     const [newSubcatName, setNewSubcatName] = useState('');
 
+    const handleProCheck = () => {
+        if (!isPro(user)) {
+            alert("Custom Categories are a Pro feature. Upgrade to Lifetime Access to customize deeper!");
+            return false;
+        }
+        return true;
+    };
+
     const handleAddCategory = async (e) => {
         e.preventDefault();
+        if (!handleProCheck()) return;
+
         if (!newCatName.trim()) return;
 
         await addCategory({
@@ -70,6 +83,7 @@ const ManageCategories = () => {
     };
 
     const handleAddSubcategory = async (parentId) => {
+        if (!handleProCheck()) return;
         if (!newSubcatName.trim()) return;
 
         const parent = categories.find(c => c.id === parentId);
@@ -81,6 +95,7 @@ const ManageCategories = () => {
     };
 
     const handleDeleteSubcategory = async (parentId, subName) => {
+        if (!handleProCheck()) return;
         if (!window.confirm(`Delete subcategory "${subName}"?`)) return;
         const parent = categories.find(c => c.id === parentId);
         if (!parent) return;
@@ -88,6 +103,11 @@ const ManageCategories = () => {
         const updatedSubs = parent.subcategories.filter(s => s !== subName);
         await updateCategory(parentId, { subcategories: updatedSubs });
     };
+
+    const attemptDeleteCategory = (id) => {
+        if (!handleProCheck()) return;
+        deleteCategory(id);
+    }
 
     const getIcon = (iconName) => {
         const Icon = Icons[iconName] || Icons.HelpCircle;
@@ -105,7 +125,9 @@ const ManageCategories = () => {
                         <Tag size={24} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Manage Categories</h3>
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            Manage Categories {!isPro(user) && <Lock size={16} className="text-slate-400" />}
+                        </h3>
                         <p className="text-sm text-slate-500">Add or remove custom categories.</p>
                     </div>
                 </div>
@@ -125,8 +147,22 @@ const ManageCategories = () => {
 
             {isExpanded && (
                 <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                    {!isPro(user) && (
+                        <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-start gap-3">
+                            <Lock className="text-indigo-500 mt-1 flex-shrink-0" size={20} />
+                            <div>
+                                <h4 className="font-bold text-indigo-700 dark:text-indigo-300">Pro Feature Locked</h4>
+                                <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-1">
+                                    Managing custom categories and subcategories is available exclusively on the Pro plan.
+                                    <br />Existing custom categories will still work for transactions!
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Add New Category Form */}
-                    <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className={`mb-8 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 ${!isPro(user) ? 'opacity-60 pointer-events-none' : ''}`}>
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Add New Category</h4>
                         <div className="flex flex-col gap-4">
                             <div className="flex gap-3">
@@ -203,7 +239,7 @@ const ManageCategories = () => {
                             </div>
 
                             <Button onClick={handleAddCategory} disabled={!newCatName} className="self-end flex items-center gap-2">
-                                <Plus size={18} /> Create Category
+                                {!isPro(user) ? <Lock size={18} /> : <Plus size={18} />} Create Category
                             </Button>
                         </div>
                     </div>
@@ -230,11 +266,11 @@ const ManageCategories = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => deleteCategory(cat.id)}
-                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title="Delete Category"
+                                                onClick={() => attemptDeleteCategory(cat.id)}
+                                                className={`p-2 text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ${!isPro(user) ? 'hover:text-slate-500 cursor-not-allowed' : 'hover:text-red-500'}`}
+                                                title={!isPro(user) ? "Delete (Pro Only)" : "Delete Category"}
                                             >
-                                                <Trash2 size={16} />
+                                                {!isPro(user) ? <Lock size={16} /> : <Trash2 size={16} />}
                                             </button>
                                             <button
                                                 onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
@@ -252,14 +288,19 @@ const ManageCategories = () => {
                                                 {cat.subcategories && cat.subcategories.map(sub => (
                                                     <span key={sub} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300">
                                                         {sub}
-                                                        <button onClick={() => handleDeleteSubcategory(cat.id, sub)} className="hover:text-red-500 ml-1 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"><Trash2 size={12} /></button>
+                                                        <button
+                                                            onClick={() => handleDeleteSubcategory(cat.id, sub)}
+                                                            className={`ml-1 p-0.5 rounded-full transition-colors ${!isPro(user) ? 'hover:text-slate-500' : 'hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-600'}`}
+                                                        >
+                                                            {!isPro(user) ? <Lock size={10} /> : <Trash2 size={12} />}
+                                                        </button>
                                                     </span>
                                                 ))}
                                                 {(!cat.subcategories || cat.subcategories.length === 0) && (
                                                     <span className="text-sm text-slate-400 italic">No subcategories</span>
                                                 )}
                                             </div>
-                                            <div className="flex gap-2 mt-2">
+                                            <div className={`flex gap-2 mt-2 ${!isPro(user) ? 'opacity-60 pointer-events-none' : ''}`}>
                                                 <Input
                                                     placeholder="Add Subcategory..."
                                                     value={newSubcatName}
