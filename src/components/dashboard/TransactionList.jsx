@@ -38,7 +38,8 @@ const TransactionList = ({ onEdit }) => {
                         {sortedTransactions.map((transaction) => (
                             <li
                                 key={transaction.id}
-                                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600 group"
+                                onClick={() => onEdit && onEdit(transaction)}
+                                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600 group cursor-pointer active:scale-[0.99]"
                             >
                                 <div className="flex flex-col min-w-0 flex-1 mr-4">
                                     <span className="font-medium text-slate-800 dark:text-white truncate">{transaction.text}</span>
@@ -52,14 +53,14 @@ const TransactionList = ({ onEdit }) => {
                                     </span>
                                     <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => onEdit && onEdit(transaction)}
+                                            onClick={(e) => { e.stopPropagation(); onEdit && onEdit(transaction); }}
                                             className="text-slate-400 hover:text-indigo-500 transition-colors p-1"
                                             title="Edit"
                                         >
                                             <Pencil size={16} />
                                         </button>
                                         <button
-                                            onClick={() => deleteTransaction(transaction.id)}
+                                            onClick={(e) => { e.stopPropagation(); deleteTransaction(transaction.id); }}
                                             className="text-slate-400 hover:text-red-500 transition-colors p-1"
                                             title="Delete"
                                         >

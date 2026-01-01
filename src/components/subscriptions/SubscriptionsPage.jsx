@@ -254,8 +254,8 @@ const SubscriptionsPage = () => {
                                     </button>
 
                                     {daysLeft > 20 && !isOverdue ? (
-                                        <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold uppercase tracking-wider">
-                                            <Check size={14} /> Paid
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wide">
+                                            <Check size={12} /> Paid
                                         </div>
                                     ) : (
                                         <button
@@ -287,7 +287,7 @@ const SubscriptionsPage = () => {
                             <div className="flex justify-between items-end">
                                 <div>
                                     <p className="text-xs text-slate-500 uppercase font-semibold">Amount</p>
-                                    <p className={`text-xl font-bold ${sub.type === 'income' ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                    <p className={`text-lg font-bold ${sub.type === 'income' ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
                                         {formatCurrency(sub.amount)}
                                     </p>
                                 </div>
