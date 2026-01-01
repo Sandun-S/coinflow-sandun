@@ -32,10 +32,11 @@ const DailyCheckIn = ({ onAddTransaction }) => {
 
         // 2. Check Time (5 PM - 11:59 PM)
         // For testing, user can adjust logic, but requirement is 17:00
-        if (hour < 17) {
-            setIsVisible(false);
-            return;
-        }
+        // TEMPORARY: Allow anytime for testing
+        // if (hour < 17) {
+        //     setIsVisible(false);
+        //     return;
+        // }
 
         // 3. Check for Existing Transactions TODAY
         const hasTransactionToday = transactions.some(t => {
@@ -108,6 +109,22 @@ const DailyCheckIn = ({ onAddTransaction }) => {
                                 className="text-xs text-indigo-600 underline mt-1 hover:text-indigo-800 dark:text-indigo-400"
                             >
                                 Enable Notifications
+                            </button>
+                        )}
+                        {notificationPermission === 'granted' && (
+                            <button
+                                onClick={() => {
+                                    alert("Waiting 5 seconds... Close/Minimize the app now!");
+                                    setTimeout(() => {
+                                        new Notification("Test Reminder", {
+                                            body: "This is a test to prove it works! 🚀",
+                                            icon: '/pwa-192x192.png'
+                                        });
+                                    }, 5000);
+                                }}
+                                className="text-xs text-emerald-600 underline mt-1 ml-4 hover:text-emerald-800 dark:text-emerald-400"
+                            >
+                                Test Notification (5s)
                             </button>
                         )}
                     </div>
