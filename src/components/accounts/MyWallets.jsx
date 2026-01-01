@@ -11,6 +11,7 @@ import { useCurrencyFormatter } from '../../utils';
 import { Wallet, Banknote, CreditCard, Plus, Trash2, Edit2, X, ArrowRightLeft, TrendingUp, RefreshCw } from 'lucide-react';
 import TransferModal from './TransferModal';
 import Modal from '../common/Modal';
+import MainLayout from '../layout/MainLayout'; // Import MainLayout
 import { useAuth } from '../../context/AuthContext'; // Import usage
 
 const MyWallets = () => {
