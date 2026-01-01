@@ -22,13 +22,108 @@ const BudgetsPage = () => {
     const { user, isPro } = useAuth(); // Auth
     const formatMoney = useCurrencyFormatter();
 
+    // State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [limit, setLimit] = useState('');
+    const [editingId, setEditingId] = useState(null);
 
-    // Pre-select first expense categor (omitted unchanged lines...)
+    // Calculate Category Spending (This Month)
+    const categorySpending = useMemo(() => {
+        const spending = {};
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // ... (keep existing code until button)
+        transactions.forEach(t => {
+            if (t.type === 'expense') {
+                // Handle Firestore Timestamp or JS Date or string
+                let tDate;
+                if (t.date?.seconds) {
+                    tDate = new Date(t.date.seconds * 1000);
+                } else {
+                    tDate = new Date(t.date);
+                }
+
+                if (tDate >= startOfMonth && tDate <= endOfMonth) {
+                    let mainCat = t.category;
+                    let subCat = '_main';
+
+                    // Parse "Parent > Child"
+                    if (t.category && t.category.includes('>')) {
+                        const parts = t.category.split('>');
+                        mainCat = parts[0].trim();
+                        subCat = parts[1].trim();
+                    }
+
+                    if (!spending[mainCat]) spending[mainCat] = { total: 0, subs: {} };
+                    spending[mainCat].total += parseFloat(t.amount); // Parent Total includes sub
+
+                    if (subCat !== '_main') {
+                        spending[mainCat].subs[subCat] = (spending[mainCat].subs[subCat] || 0) + parseFloat(t.amount);
+                    }
+                }
+            }
+        });
+        return spending;
+    }, [transactions]);
+
+    // Group Budgets by Parent
+    const groupedBudgets = useMemo(() => {
+        const groups = {};
+
+        budgets.forEach(b => {
+            let parent = b.category;
+            let isSub = false;
+
+            if (b.category.includes('>')) {
+                parent = b.category.split('>')[0].trim();
+                isSub = true;
+            }
+
+            if (!groups[parent]) groups[parent] = { parentName: parent, mainBudget: null, subBudgets: [], limit: 0 };
+
+            if (isSub) {
+                groups[parent].subBudgets.push(b);
+            } else {
+                groups[parent].mainBudget = b;
+            }
+        });
+
+        // Determine effective Main Limit for visual display
+        return Object.values(groups).map(g => {
+            let effectiveLimit = 0;
+            if (g.mainBudget) {
+                effectiveLimit = parseFloat(g.mainBudget.limit);
+            } else {
+                // If no main budget, sum sub budgets? Or just show 0? 
+                // Let's sum sub budgets to show a "Combined" card
+                effectiveLimit = g.subBudgets.reduce((sum, sb) => sum + parseFloat(sb.limit), 0);
+            }
+            return { ...g, limit: effectiveLimit };
+        });
+    }, [budgets]);
+
+    const handleSaveBudget = (e) => {
+        e.preventDefault();
+        const newBudget = {
+            category: selectedCategory,
+            limit: parseFloat(limit),
+            id: editingId
+        };
+        setBudget(newBudget); // Assuming setBudget handles update if id exists
+        setIsModalOpen(false);
+        setEditingId(null);
+        setSelectedCategory('');
+        setLimit('');
+    };
+
+    const handleEdit = (budget) => {
+        setEditingId(budget.id);
+        setSelectedCategory(budget.category);
+        setLimit(budget.limit);
+        setIsModalOpen(true);
+    };
 
     return (
         <MainLayout>
@@ -55,10 +150,11 @@ const BudgetsPage = () => {
 
             {/* Total Budget Summary */}
             {budgets.length > 0 && (() => {
-                const totalBudget = budgets.reduce((sum, b) => sum + parseFloat(b.limit), 0);
-                const totalSpent = budgets.reduce((sum, b) => {
-                    const bData = categorySpending[b.category];
-                    return sum + (bData ? bData.total : 0);
+                // Use groupedBudgets to calculate totals properly (avoid double counting parents/subs)
+                const totalBudget = groupedBudgets.reduce((sum, g) => sum + g.limit, 0);
+                const totalSpent = groupedBudgets.reduce((sum, g) => {
+                    const data = categorySpending[g.parentName];
+                    return sum + (data ? data.total : 0);
                 }, 0);
                 const totalPercentage = Math.min((totalSpent / totalBudget) * 100, 100);
                 const isTotalOver = totalSpent > totalBudget;
