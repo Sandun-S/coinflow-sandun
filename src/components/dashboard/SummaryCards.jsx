@@ -24,7 +24,9 @@ const SummaryCards = () => {
             if (amount > 0) {
                 if (t.category !== 'Transfer') inc += amount;
             }
-            else exp += Math.abs(amount);
+            else {
+                if (t.category !== 'Transfer') exp += Math.abs(amount);
+            }
         });
         return { income: inc, expense: exp };
     }, [transactions]);

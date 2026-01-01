@@ -24,7 +24,7 @@ const ExpenseChart = () => {
     };
 
     const data = useMemo(() => {
-        const expenses = transactions.filter(t => parseFloat(t.amount) < 0);
+        const expenses = transactions.filter(t => parseFloat(t.amount) < 0 && t.category !== 'Transfer');
         const categoryMap = {};
 
         expenses.forEach(t => {
