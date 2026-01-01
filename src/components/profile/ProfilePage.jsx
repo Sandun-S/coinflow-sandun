@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
-import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings, Zap, Sparkles } from 'lucide-react';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings, Zap, Sparkles, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TourSelectionModal from '../onboarding/TourSelectionModal';
 
 const ProfilePage = () => {
     const { user, logout, isPro: checkIsPro } = useAuth();
     const [isTourOpen, setIsTourOpen] = React.useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Plan Logic
     const hasActivePro = checkIsPro(user);
@@ -26,14 +28,42 @@ const ProfilePage = () => {
                 ? 'Monthly Pro'
                 : 'Free Plan';
 
-    // We access localStorage directly for the "Nuclear" option or better, expose a 'clearData' method in TransactionContext.
-    // However, simplest is to clear the key.
+    const handleDeleteData = async () => {
+        if (!confirm("Are you sure? This will PERMANENTLY delete all your Transactions, Wallets, Budgets, and Subscriptions. This action cannot be undone.")) {
+            return;
+        }
 
-    const handleDeleteData = () => {
-        if (confirm("Are you sure? This will delete ALL your transaction data permanently.")) {
-            localStorage.removeItem(`transactions_${user.id}`);
-            // Force reload to reset state
+        setIsDeleting(true);
+        try {
+            // Collections to purge
+            const collections = ['transactions', 'accounts', 'budgets', 'subscriptions', 'categories'];
+            const batch = writeBatch(db);
+            let operationCount = 0;
+
+            for (const colName of collections) {
+                const q = query(collection(db, colName), where('userId', '==', user.id));
+                const snapshot = await getDocs(q);
+
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                    operationCount++;
+                });
+            }
+
+            if (operationCount > 0) {
+                await batch.commit();
+                alert("All data has been deleted successfully.");
+            } else {
+                alert("No data found to delete.");
+            }
+
+            // Reload to clear local state/cache and reset UI
             window.location.reload();
+
+        } catch (error) {
+            console.error("Error deleting data:", error);
+            alert("Failed to delete data: " + error.message);
+            setIsDeleting(false);
         }
     };
 
@@ -197,13 +227,13 @@ const ProfilePage = () => {
 
                 <Card className="border-red-100 dark:border-red-900/30">
                     <h3 className="text-red-600 font-bold mb-2 flex items-center gap-2">
-                        <Trash2 size={20} /> Danger Zone
+                        <AlertTriangle size={20} /> Danger Zone
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Once you delete your data, there is no going back. Please be certain.
                     </p>
-                    <Button variant="danger" onClick={handleDeleteData}>
-                        Delete All My Data
+                    <Button variant="danger" onClick={handleDeleteData} disabled={isDeleting}>
+                        {isDeleting ? "Deleting..." : "Delete All My Data"}
                     </Button>
                 </Card>
             </div>
