@@ -11,9 +11,10 @@ import { useCurrencyFormatter } from '../../utils';
 import { Wallet, Banknote, CreditCard, Plus, Trash2, Edit2, X, ArrowRightLeft, TrendingUp, RefreshCw } from 'lucide-react';
 import TransferModal from './TransferModal';
 import Modal from '../common/Modal';
-import MainLayout from '../layout/MainLayout';
+import { useAuth } from '../../context/AuthContext'; // Import usage
 
 const MyWallets = () => {
+    const { user, isPro } = useAuth();
     const { accounts, addAccount, updateAccount, deleteAccount, updateBalance } = useAccounts();
     const { addTransaction } = useTransactions();
     const { addSubscription } = useSubscriptions();
@@ -323,7 +324,18 @@ const MyWallets = () => {
                         <Button onClick={() => setIsTransferring(true)} variant="secondary" className="flex items-center gap-2">
                             <ArrowRightLeft size={20} /> Transfer
                         </Button>
-                        <Button onClick={() => { setIsAdding(true); nextStep(); }} className="flex items-center gap-2" data-tour="add-wallet-btn">
+                        <Button
+                            onClick={() => {
+                                if (!isPro(user) && accounts.length >= 2) {
+                                    alert("Free Plan Limit Reached! Upgrade to Unlimited Lifetime Access to add more wallets.");
+                                    return;
+                                }
+                                setIsAdding(true);
+                                nextStep();
+                            }}
+                            className="flex items-center gap-2"
+                            data-tour="add-wallet-btn"
+                        >
                             <Plus size={20} /> Add Wallet
                         </Button>
                     </div>
@@ -422,15 +434,26 @@ const MyWallets = () => {
                                         key={t}
                                         type="button"
                                         onClick={() => {
+                                            const isLocked = !isPro(user) && (t === 'Loan' || t === 'Investment');
+                                            if (isLocked) {
+                                                alert("Loans and Investments are Pro features. Upgrade to Lifetime Access to unlock!");
+                                                return;
+                                            }
                                             setType(t);
                                             // Only auto-advance if the tour is currently pointing at this step
                                             if (currentStepTarget === '[data-tour="wallet-type-selector"]') {
                                                 nextStep();
                                             }
                                         }}
-                                        className={`py-2 px-1 rounded-lg text-[10px] md:text-xs font-bold transition-colors border ${type === t ? 'bg-indigo-50 border-indigo-500 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'}`}
+                                        className={`py-2 px-1 rounded-lg text-[10px] md:text-xs font-bold transition-colors border relative ${type === t
+                                            ? 'bg-indigo-50 border-indigo-500 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'
+                                            } ${!isPro(user) && (t === 'Loan' || t === 'Investment') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {t}
+                                        {!isPro(user) && (t === 'Loan' || t === 'Investment') && (
+                                            <span className="absolute -top-1 -right-1">🔒</span>
+                                        )}
                                     </button>
                                 ))}
                             </div>
@@ -665,7 +688,15 @@ const MyWallets = () => {
                                     Add Wallet
                                 </span>
                                 <button
-                                    onClick={() => { setIsAdding(true); setIsFabOpen(false); nextStep(); }}
+                                    onClick={() => {
+                                        if (!isPro(user) && accounts.length >= 2) {
+                                            alert("Free Plan Limit Reached! Upgrade to Unlimited Lifetime Access.");
+                                            return;
+                                        }
+                                        setIsAdding(true);
+                                        setIsFabOpen(false);
+                                        nextStep();
+                                    }}
                                     className="p-3 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 transition-all"
                                     data-tour="add-wallet-mobile-action"
                                 >

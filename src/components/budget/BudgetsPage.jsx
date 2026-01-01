@@ -12,142 +12,23 @@ import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
 import CategoryPicker from '../categories/CategoryPicker';
 
+import { useAuth } from '../../context/AuthContext'; // Import
+
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
     const { categories } = useCategories(); // Get categories
     const { nextStep } = useTour();
+    const { user, isPro } = useAuth(); // Auth
     const formatMoney = useCurrencyFormatter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [limit, setLimit] = useState('');
 
-    // Pre-select first expense category if available
-    React.useEffect(() => {
-        if (!selectedCategory && categories.length > 0) {
-            const firstExpense = categories.find(c => c.type === 'expense');
-            if (firstExpense) setSelectedCategory(firstExpense.name);
-        }
-    }, [categories, selectedCategory]);
+    // Pre-select first expense categor (omitted unchanged lines...)
 
-    // Helper: Find Parent Name for a given category name (Sub or Parent)
-    // Returns the Parent Name if it's a sub, or the name itself if it's a parent.
-    // If not found, returns the name itself (fallback).
-    const getParentCategoryName = (catName) => {
-        // Check if it's a parent
-        const parent = categories.find(c => c.name === catName);
-        if (parent) return parent.name;
-
-        // Check if it's a sub
-        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
-        if (parentOfSub) return parentOfSub.name;
-
-        return catName;
-    };
-
-    // Calculate spending per PARENT category (Monthly)
-    const categorySpending = useMemo(() => {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const monthlyExpenses = transactions.filter(t => {
-            const tDate = new Date(t.date);
-            return t.amount < 0 && tDate >= startOfMonth;
-        });
-
-        const spending = {}; // { CategoryName: { total: 0, subs: {} } }
-
-        monthlyExpenses.forEach(t => {
-            const rawCat = t.category || 'General';
-            const parentCat = getParentCategoryName(rawCat);
-            const amount = Math.abs(parseFloat(t.amount));
-
-            // 1. Track aggregated spending for Parent
-            if (!spending[parentCat]) {
-                spending[parentCat] = { total: 0, subs: {} };
-            }
-            spending[parentCat].total += amount;
-
-            // Track subcategory breakdown for the Parent
-            if (rawCat !== parentCat) {
-                spending[parentCat].subs[rawCat] = (spending[parentCat].subs[rawCat] || 0) + amount;
-            } else {
-                spending[parentCat].subs['_main'] = (spending[parentCat].subs['_main'] || 0) + amount;
-            }
-
-            // 2. Track individual spending for Subcategory (if budget is set specifically for it)
-            if (rawCat !== parentCat) {
-                if (!spending[rawCat]) {
-                    spending[rawCat] = { total: 0, subs: {} };
-                }
-                spending[rawCat].total += amount;
-                // No 'subs' breakdown needed for a subcategory itself
-            }
-        });
-        return spending;
-    }, [transactions, categories]);
-
-    const handleSaveBudget = async (e) => {
-        e.preventDefault();
-        if (!limit || !selectedCategory) return;
-        await setBudget(selectedCategory, limit);
-        setIsModalOpen(false);
-        setLimit('');
-        nextStep(); // Advance tour
-    };
-
-    const handleEdit = (budget) => {
-        setSelectedCategory(budget.category);
-        setLimit(budget.limit);
-        setIsModalOpen(true);
-    };
-
-    // Group budgets by Parent Category
-    const groupedBudgets = useMemo(() => {
-        const groups = {}; // { ParentName: { main: BudgetDoc, subs: [BudgetDocs] } }
-
-        budgets.forEach(b => {
-            const parent = getParentCategoryName(b.category);
-            if (!groups[parent]) groups[parent] = { main: null, subs: [] };
-
-            if (b.category === parent) {
-                groups[parent].main = b;
-            } else {
-                groups[parent].subs.push(b);
-            }
-        });
-
-        // Convert to array for rendering
-        return Object.entries(groups).map(([parentName, data]) => {
-            let totalLimit = 0;
-            // Strategy: If Main exists, use its limit? Or if Subs exist, sum them?
-            // User requirement: "if i create all subcategories under one main category, show all inside one card"
-            // If main budget exists, that is the Ceiling.
-            // If only sub budgets exist, the Ceiling is the sum of them.
-            // Wait, if Main exists (Limit 50k), and Sub exists (Limit 20k), total budget is 50k? Or 50k + 20k?
-            // Usually Main Budget covers everything. Sub Budget is a "Soft Limit" inside it.
-            // Let's assume:
-            // Top Level Limit = main.limit IF main exists.
-            // ELSE Top Level Limit = Sum(subs.limit).
-
-            if (data.main) {
-                totalLimit = parseFloat(data.main.limit);
-            } else {
-                totalLimit = data.subs.reduce((sum, s) => sum + parseFloat(s.limit), 0);
-            }
-
-            return {
-                parentName,
-                mainBudget: data.main,
-                subBudgets: data.subs,
-                limit: totalLimit
-            };
-        });
-    }, [budgets, categories]);
-
-    // Filter to only show Parent Categories for budgeting (for the form)
-    const expenseCategories = categories.filter(c => c.type === 'expense');
+    // ... (keep existing code until button)
 
     return (
         <MainLayout>
@@ -156,7 +37,18 @@ const BudgetsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
                     <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
-                <Button onClick={() => { setIsModalOpen(true); nextStep(); }} className="hidden md:flex items-center gap-2" data-tour="set-budget-desktop">
+                <Button
+                    onClick={() => {
+                        if (!isPro(user) && budgets.length >= 3) {
+                            alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
+                            return;
+                        }
+                        setIsModalOpen(true);
+                        nextStep();
+                    }}
+                    className="hidden md:flex items-center gap-2"
+                    data-tour="set-budget-desktop"
+                >
                     <Plus size={20} /> Set Budget
                 </Button>
             </div>
@@ -413,7 +305,14 @@ const BudgetsPage = () => {
             </Modal>
             {/* Mobile Floating Action Button */}
             <button
-                onClick={() => { setIsModalOpen(true); nextStep(); }}
+                onClick={() => {
+                    if (!isPro(user) && budgets.length >= 3) {
+                        alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
+                        return;
+                    }
+                    setIsModalOpen(true);
+                    nextStep();
+                }}
                 className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
                 aria-label="Set Budget"
                 data-tour="set-budget-mobile"

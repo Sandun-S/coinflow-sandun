@@ -8,6 +8,7 @@ import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useCategories } from '../../context/CategoryContext';
 import MainLayout from '../layout/MainLayout';
 import { useSettings } from '../../context/SettingsContext';
+import { useAuth } from '../../context/AuthContext'; // Import Auth
 import { Calendar, TrendingUp, AlertCircle, Target, Award, Wallet, Briefcase, CreditCard, PiggyBank } from 'lucide-react';
 
 // Custom Colors
@@ -15,6 +16,7 @@ const COLORS = ['#6366f1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 const PIE_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
 
 const AnalyticsPage = () => {
+    const { user, isPro } = useAuth(); // Auth State
     const { transactions } = useTransactions();
     const { accounts } = useAccounts();
     const { budgets } = useBudgets();
@@ -217,336 +219,369 @@ const AnalyticsPage = () => {
                 </div>
             </div>
 
-            {/* --- Section 1: Overview Cards --- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {/* Daily Average */}
-                <Card className="bg-indigo-50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-300">
-                            <Calendar size={20} />
+            {/* --- LOCKED OVERLAY FOR FREE USERS --- */}
+            {!isPro(user) && (
+                <div className="absolute inset-0 z-50 flex items-start justify-center pt-20">
+                    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-indigo-500/20 max-w-lg text-center mx-4">
+                        <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600 dark:text-indigo-400">
+                            <TrendingUp size={32} />
                         </div>
-                        {timeRange === 'thisMonth' && <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">Avg</span>}
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{timeRange === 'year' ? 'Monthly Average' : 'Daily Spending'}</p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.dailyAverage)}</h4>
-                    </div>
-                </Card>
-
-                {/* Savings Rate (Fixed) */}
-                <Card className="bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-lg text-emerald-600 dark:text-emerald-300">
-                            <PiggyBank size={20} />
-                        </div>
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Rate</span>
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Savings Rate</p>
-                        <h4 className={`text-2xl font-bold ${metrics.savingsRate >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                            {metrics.savingsRate.toFixed(1)}%
-                        </h4>
-                        <p className="text-xs text-slate-400 mt-1">
-                            {metrics.savings >= 0 ? 'Saved ' : 'Deficit '} {formatMoney(Math.abs(metrics.savings))}
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                            Unlock Financial Clarity 💎
+                        </h2>
+                        <p className="text-slate-600 dark:text-slate-300 mb-8 text-lg">
+                            Get full access to Advanced Analytics, Net Worth tracking, Loan Payoff Calculators, and Investment Projections with CoinFlow Pro.
                         </p>
-                    </div>
-                </Card>
 
-                {/* Net Worth */}
-                <Card className="bg-violet-50 dark:bg-violet-900/10 border-violet-100 dark:border-violet-800">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-violet-100 dark:bg-violet-800 rounded-lg text-violet-600 dark:text-violet-300">
-                            <Wallet size={20} />
+                        <div className="space-y-4">
+                            <a
+                                href="/profile"
+                                className="block w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transform hover:scale-[1.02] transition-all"
+                            >
+                                Upgrade to Lifetime Access
+                            </a>
+                            <p className="text-sm text-slate-500">
+                                One-time payment. Forever yours.
+                            </p>
                         </div>
-                        <span className="text-xs font-bold text-violet-600 bg-violet-100 px-2 py-1 rounded-full">Total</span>
                     </div>
-                    <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Estimated Net Worth</p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.netWorth)}</h4>
-                        <p className="text-xs text-slate-400 mt-1">Cash + Invest - Debt</p>
-                    </div>
-                </Card>
+                </div>
+            )}
 
-                {/* Monthly Obligations */}
-                <Card className="bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg text-red-600 dark:text-red-300">
-                            <CreditCard size={20} />
+            {/* --- CONTENT CONTAINER (Blurred if Locked) --- */}
+            <div className={`transition-all duration-500 ${!isPro(user) ? 'filter blur-lg opacity-50 pointer-events-none select-none h-[80vh] overflow-hidden' : ''}`}>
+
+                {/* --- Section 1: Overview Cards --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {/* Daily Average */}
+                    <Card className="bg-indigo-50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-300">
+                                <Calendar size={20} />
+                            </div>
+                            {timeRange === 'thisMonth' && <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">Avg</span>}
                         </div>
-                        <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">Bills</span>
-                    </div>
-                    <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Loan Commitments</p>
-                        <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.monthlyLoanCommitments)}</h4>
-                        <p className="text-xs text-slate-400 mt-1">/ Month</p>
-                    </div>
-                </Card>
-            </div>
-
-            {/* --- Section 2: Loan & Investment Deep Dive --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4 items-start">
-
-                {/* Loan Breakdown (Per Loan) */}
-                {metrics.totalLoanDebt > 0 && (
-                    <Card className="lg:col-span-2 flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                <Target className="text-indigo-500" size={20} /> Loan Payoff Progress
-                            </h3>
-                            <span className="text-sm font-semibold text-slate-500">
-                                {metrics.loanProgress.toFixed(1)}% Total Paid
-                            </span>
-                        </div>
-
-                        {accounts.filter(a => a.type === 'Loan').map(loan => {
-                            const total = loan.loanTotal || 0;
-                            const paid = total - Math.abs(loan.balance); // Approximate if balance is negative debt
-                            const progress = total > 0 ? (paid / total) * 100 : 0;
-                            // Estimate Asset Value: Down Payment + Loan Principal (Account for interest if possible, but Total is usually Full Debt)
-                            const assetValue = (loan.downPayment || 0) + total;
-
-                            return (
-                                <div key={loan.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h4 className="font-bold text-slate-700 dark:text-slate-200">{loan.name}</h4>
-                                        <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
-                                            {progress.toFixed(1)}%
-                                        </span>
-                                    </div>
-
-                                    {/* Progress Bar */}
-                                    <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative mb-3">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
-                                            style={{ width: `${Math.max(5, progress)}%` }}
-                                        />
-                                    </div>
-
-                                    {/* Loan Details Grid */}
-                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                        <div>
-                                            <p className="text-slate-500">Remaining</p>
-                                            <p className="font-bold text-red-500">{formatMoney(Math.abs(loan.balance))}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-slate-500">Monthly</p>
-                                            <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(loan.loanPayment || 0)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-slate-500">Total Value</p>
-                                            <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(assetValue)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100 dark:divide-slate-700 mt-2">
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Debt</p>
-                                <p className="font-bold text-red-600 text-lg mt-1">{formatMoney(metrics.totalLoanDebt)}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Monthly Bill</p>
-                                <p className="font-bold text-slate-700 dark:text-slate-200 text-lg mt-1">{formatMoney(metrics.monthlyLoanCommitments)}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Debt/Income</p>
-                                <p className={`font-bold text-lg mt-1 ${metrics.dtiRatio > 35 ? 'text-red-500' : 'text-green-500'}`}>
-                                    {metrics.dtiRatio.toFixed(1)}%
-                                </p>
-                            </div>
+                        <div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{timeRange === 'year' ? 'Monthly Average' : 'Daily Spending'}</p>
+                            <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.dailyAverage)}</h4>
                         </div>
                     </Card>
-                )}
 
-                {/* Investment Summary & Projection */}
-                <div className={`flex flex-col gap-6 ${metrics.totalLoanDebt === 0 ? 'lg:col-span-3' : ''}`}>
-                    <Card className="relative overflow-hidden flex-1">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Briefcase size={100} />
+                    {/* Savings Rate (Fixed) */}
+                    <Card className="bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-lg text-emerald-600 dark:text-emerald-300">
+                                <PiggyBank size={20} />
+                            </div>
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Rate</span>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Briefcase className="text-emerald-500" size={20} /> Investments
-                        </h3>
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <p className="text-sm text-slate-500">Total Portfolio Value</p>
-                                <h4 className="text-3xl font-bold text-emerald-600">{formatMoney(metrics.totalInvested)}</h4>
+                        <div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Savings Rate</p>
+                            <h4 className={`text-2xl font-bold ${metrics.savingsRate >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                {metrics.savingsRate.toFixed(1)}%
+                            </h4>
+                            <p className="text-xs text-slate-400 mt-1">
+                                {metrics.savings >= 0 ? 'Saved ' : 'Deficit '} {formatMoney(Math.abs(metrics.savings))}
+                            </p>
+                        </div>
+                    </Card>
+
+                    {/* Net Worth */}
+                    <Card className="bg-violet-50 dark:bg-violet-900/10 border-violet-100 dark:border-violet-800">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="p-2 bg-violet-100 dark:bg-violet-800 rounded-lg text-violet-600 dark:text-violet-300">
+                                <Wallet size={20} />
                             </div>
+                            <span className="text-xs font-bold text-violet-600 bg-violet-100 px-2 py-1 rounded-full">Total</span>
+                        </div>
+                        <div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Estimated Net Worth</p>
+                            <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.netWorth)}</h4>
+                            <p className="text-xs text-slate-400 mt-1">Cash + Invest - Debt</p>
+                        </div>
+                    </Card>
 
-                            {/* Smart Projection */}
-                            {metrics.totalInvested >= 0 && (() => {
-                                // 1. Calculate Monthly Contribution from Budget & Subscriptions
-                                // Get valid investment categories
-                                const invCategory = categories.find(c => c.name === 'Investment');
-                                const invSubCats = invCategory ? invCategory.subcategories : []; // ['Stocks', 'Savings', ...]
-                                const invKeywords = ['Investment', ...invSubCats];
-
-                                // Filter Budgets
-                                const invBudgetTotal = budgets
-                                    .filter(b => invKeywords.includes(b.category))
-                                    .reduce((sum, b) => sum + b.limit, 0);
-
-                                // Filter Subscriptions
-                                const invSubsTotal = subscriptions
-                                    .filter(s => {
-                                        // Case 1: Exact match on Category (e.g. "Investment", "Savings")
-                                        if (invKeywords.includes(s.category)) return true;
-                                        // Case 2: Compound strings like "Investment > Savings" (common in some UI inputs)
-                                        if (s.category && typeof s.category === 'string') {
-                                            const parts = s.category.split('>');
-                                            const mainCat = parts[0].trim();
-                                            if (invKeywords.includes(mainCat)) return true;
-                                        }
-                                        return false;
-                                    })
-                                    .reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
-
-                                // Use the greater of the two
-                                const monthlyContribution = Math.max(invBudgetTotal, invSubsTotal);
-
-                                // 2. Calculate Weighted Average Interest Rate
-                                const investments = accounts.filter(a => a.type === 'Investment');
-                                let avgRate = 6.0; // Default 6%
-
-                                if (investments.length > 0 && metrics.totalInvested > 0) {
-                                    const weightedSum = investments.reduce((sum, inv) => {
-                                        const rate = parseFloat(inv.interestRate) || 6.0;
-                                        return sum + (inv.balance * rate);
-                                    }, 0);
-                                    avgRate = weightedSum / metrics.totalInvested;
-                                }
-
-                                // 3. Compound Interest Formula with Monthly Contributions
-                                // FV = P * (1 + r/n)^(nt) + PMT * [ ((1 + r/n)^(nt) - 1) / (r/n) ]
-                                const r = avgRate / 100;
-                                const n = 12; // Monthly
-                                const t = 5;  // Years
-                                const nt = n * t;
-                                const ratePerPeriod = r / n;
-
-                                const fvPrincipal = metrics.totalInvested * Math.pow(1 + ratePerPeriod, nt);
-                                const fvContributions = monthlyContribution * ((Math.pow(1 + ratePerPeriod, nt) - 1) / ratePerPeriod);
-
-                                const projection = fvPrincipal + fvContributions;
-                                const totalContributed = monthlyContribution * nt;
-                                const interestEarned = projection - (metrics.totalInvested + totalContributed);
-
-                                return (
-                                    <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 space-y-4">
-
-                                        <div className="flex justify-between items-center pb-3 border-b border-emerald-100 dark:border-emerald-800/50">
-                                            <div>
-                                                <h5 className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
-                                                    <TrendingUp size={16} /> 5-Year Projection
-                                                </h5>
-                                                <p className="text-xs text-emerald-600/70 dark:text-emerald-400 mt-1">
-                                                    Assuming {avgRate.toFixed(1)}% annual return
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                                                    {formatMoney(projection)}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-xs text-slate-500 uppercase font-semibold">Monthly Investment</p>
-                                                {monthlyContribution > 0 ? (
-                                                    <p className="font-bold text-slate-700 dark:text-slate-200">{formatMoney(monthlyContribution)}</p>
-                                                ) : (
-                                                    <p className="text-xs text-amber-500 mt-1">No monthly plan found</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-slate-500 uppercase font-semibold">Interest Earned</p>
-                                                <p className="font-bold text-emerald-600">+{formatMoney(interestEarned)}</p>
-                                            </div>
-                                        </div>
-
-                                        {monthlyContribution > 0 && (
-                                            <div className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded text-center text-emerald-700 dark:text-emerald-400 font-medium">
-                                                "Compound interest is the eighth wonder of the world!" 🚀
-                                            </div>
-                                        )}
-
-                                        <div className="text-[10px] text-emerald-600/40 text-center">
-                                            *Based on your 'Investment' budget & subscriptions + account rates.
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-
-                            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500">
-                                💡 Tip: Set an "Investment" budget or subscription to see your wealth grow!
+                    {/* Monthly Obligations */}
+                    <Card className="bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg text-red-600 dark:text-red-300">
+                                <CreditCard size={20} />
                             </div>
+                            <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">Bills</span>
+                        </div>
+                        <div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Loan Commitments</p>
+                            <h4 className="text-2xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.monthlyLoanCommitments)}</h4>
+                            <p className="text-xs text-slate-400 mt-1">/ Month</p>
                         </div>
                     </Card>
                 </div>
-            </div>
 
-            {/* --- Section 3: Detailed Charts --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                {/* Income vs Expense Chart */}
-                <Card className="h-96 flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income vs Expense</h3>
-                    <div className="w-full flex-1">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val / 1000}k`} />
-                                <Tooltip
-                                    formatter={(value) => formatMoney(value)}
-                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                                    cursor={{ fill: 'transparent' }}
-                                />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="income" name="Income" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
-                                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
+                {/* --- Section 2: Loan & Investment Deep Dive --- */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4 items-start">
 
-                {/* Category Breakdown (Enhanced) */}
-                <Card className="h-96 flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Category</h3>
-                    <div className="w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        {categoryData.length > 0 ? (
-                            <div className="space-y-4">
-                                {categoryData.map((cat, index) => (
-                                    <div key={cat.name} className="group">
-                                        <div className="flex justify-between items-center mb-1 text-sm">
-                                            <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                                {cat.name}
+                    {/* Loan Breakdown (Per Loan) */}
+                    {metrics.totalLoanDebt > 0 && (
+                        <Card className="lg:col-span-2 flex flex-col gap-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <Target className="text-indigo-500" size={20} /> Loan Payoff Progress
+                                </h3>
+                                <span className="text-sm font-semibold text-slate-500">
+                                    {metrics.loanProgress.toFixed(1)}% Total Paid
+                                </span>
+                            </div>
+
+                            {accounts.filter(a => a.type === 'Loan').map(loan => {
+                                const total = loan.loanTotal || 0;
+                                const paid = total - Math.abs(loan.balance); // Approximate if balance is negative debt
+                                const progress = total > 0 ? (paid / total) * 100 : 0;
+                                // Estimate Asset Value: Down Payment + Loan Principal (Account for interest if possible, but Total is usually Full Debt)
+                                const assetValue = (loan.downPayment || 0) + total;
+
+                                return (
+                                    <div key={loan.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="font-bold text-slate-700 dark:text-slate-200">{loan.name}</h4>
+                                            <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
+                                                {progress.toFixed(1)}%
                                             </span>
-                                            <span className="text-slate-500 font-medium">{((cat.value / metrics.expense) * 100).toFixed(1)}%</span>
                                         </div>
-                                        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+
+                                        {/* Progress Bar */}
+                                        <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative mb-3">
                                             <div
-                                                className="h-full rounded-full transition-all duration-500 relative"
-                                                style={{ width: `${(cat.value / metrics.expense) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }}
-                                            ></div>
+                                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
+                                                style={{ width: `${Math.max(5, progress)}%` }}
+                                            />
                                         </div>
-                                        <div className="text-xs text-slate-400 text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {formatMoney(cat.value)}
+
+                                        {/* Loan Details Grid */}
+                                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                            <div>
+                                                <p className="text-slate-500">Remaining</p>
+                                                <p className="font-bold text-red-500">{formatMoney(Math.abs(loan.balance))}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500">Monthly</p>
+                                                <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(loan.loanPayment || 0)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500">Total Value</p>
+                                                <p className="font-bold text-slate-700 dark:text-slate-300">{formatMoney(assetValue)}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
+                                );
+                            })}
+
+                            <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100 dark:divide-slate-700 mt-2">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider">Total Debt</p>
+                                    <p className="font-bold text-red-600 text-lg mt-1">{formatMoney(metrics.totalLoanDebt)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider">Monthly Bill</p>
+                                    <p className="font-bold text-slate-700 dark:text-slate-200 text-lg mt-1">{formatMoney(metrics.monthlyLoanCommitments)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider">Debt/Income</p>
+                                    <p className={`font-bold text-lg mt-1 ${metrics.dtiRatio > 35 ? 'text-red-500' : 'text-green-500'}`}>
+                                        {metrics.dtiRatio.toFixed(1)}%
+                                    </p>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-slate-400 flex-col gap-2">
-                                <AlertCircle size={32} opacity={0.5} />
-                                <span>No spending data for this period</span>
+                        </Card>
+                    )}
+
+                    {/* Investment Summary & Projection */}
+                    <div className={`flex flex-col gap-6 ${metrics.totalLoanDebt === 0 ? 'lg:col-span-3' : ''}`}>
+                        <Card className="relative overflow-hidden flex-1">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Briefcase size={100} />
                             </div>
-                        )}
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                <Briefcase className="text-emerald-500" size={20} /> Investments
+                            </h3>
+                            <div className="flex flex-col gap-4">
+                                <div>
+                                    <p className="text-sm text-slate-500">Total Portfolio Value</p>
+                                    <h4 className="text-3xl font-bold text-emerald-600">{formatMoney(metrics.totalInvested)}</h4>
+                                </div>
+
+                                {/* Smart Projection */}
+                                {metrics.totalInvested >= 0 && (() => {
+                                    // 1. Calculate Monthly Contribution from Budget & Subscriptions
+                                    // Get valid investment categories
+                                    const invCategory = categories.find(c => c.name === 'Investment');
+                                    const invSubCats = invCategory ? invCategory.subcategories : []; // ['Stocks', 'Savings', ...]
+                                    const invKeywords = ['Investment', ...invSubCats];
+
+                                    // Filter Budgets
+                                    const invBudgetTotal = budgets
+                                        .filter(b => invKeywords.includes(b.category))
+                                        .reduce((sum, b) => sum + b.limit, 0);
+
+                                    // Filter Subscriptions
+                                    const invSubsTotal = subscriptions
+                                        .filter(s => {
+                                            // Case 1: Exact match on Category (e.g. "Investment", "Savings")
+                                            if (invKeywords.includes(s.category)) return true;
+                                            // Case 2: Compound strings like "Investment > Savings" (common in some UI inputs)
+                                            if (s.category && typeof s.category === 'string') {
+                                                const parts = s.category.split('>');
+                                                const mainCat = parts[0].trim();
+                                                if (invKeywords.includes(mainCat)) return true;
+                                            }
+                                            return false;
+                                        })
+                                        .reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+
+                                    // Use the greater of the two
+                                    const monthlyContribution = Math.max(invBudgetTotal, invSubsTotal);
+
+                                    // 2. Calculate Weighted Average Interest Rate
+                                    const investments = accounts.filter(a => a.type === 'Investment');
+                                    let avgRate = 6.0; // Default 6%
+
+                                    if (investments.length > 0 && metrics.totalInvested > 0) {
+                                        const weightedSum = investments.reduce((sum, inv) => {
+                                            const rate = parseFloat(inv.interestRate) || 6.0;
+                                            return sum + (inv.balance * rate);
+                                        }, 0);
+                                        avgRate = weightedSum / metrics.totalInvested;
+                                    }
+
+                                    // 3. Compound Interest Formula with Monthly Contributions
+                                    // FV = P * (1 + r/n)^(nt) + PMT * [ ((1 + r/n)^(nt) - 1) / (r/n) ]
+                                    const r = avgRate / 100;
+                                    const n = 12; // Monthly
+                                    const t = 5;  // Years
+                                    const nt = n * t;
+                                    const ratePerPeriod = r / n;
+
+                                    const fvPrincipal = metrics.totalInvested * Math.pow(1 + ratePerPeriod, nt);
+                                    const fvContributions = monthlyContribution * ((Math.pow(1 + ratePerPeriod, nt) - 1) / ratePerPeriod);
+
+                                    const projection = fvPrincipal + fvContributions;
+                                    const totalContributed = monthlyContribution * nt;
+                                    const interestEarned = projection - (metrics.totalInvested + totalContributed);
+
+                                    return (
+                                        <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 space-y-4">
+
+                                            <div className="flex justify-between items-center pb-3 border-b border-emerald-100 dark:border-emerald-800/50">
+                                                <div>
+                                                    <h5 className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                                        <TrendingUp size={16} /> 5-Year Projection
+                                                    </h5>
+                                                    <p className="text-xs text-emerald-600/70 dark:text-emerald-400 mt-1">
+                                                        Assuming {avgRate.toFixed(1)}% annual return
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                                                        {formatMoney(projection)}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-xs text-slate-500 uppercase font-semibold">Monthly Investment</p>
+                                                    {monthlyContribution > 0 ? (
+                                                        <p className="font-bold text-slate-700 dark:text-slate-200">{formatMoney(monthlyContribution)}</p>
+                                                    ) : (
+                                                        <p className="text-xs text-amber-500 mt-1">No monthly plan found</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-slate-500 uppercase font-semibold">Interest Earned</p>
+                                                    <p className="font-bold text-emerald-600">+{formatMoney(interestEarned)}</p>
+                                                </div>
+                                            </div>
+
+                                            {monthlyContribution > 0 && (
+                                                <div className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded text-center text-emerald-700 dark:text-emerald-400 font-medium">
+                                                    "Compound interest is the eighth wonder of the world!" 🚀
+                                                </div>
+                                            )}
+
+                                            <div className="text-[10px] text-emerald-600/40 text-center">
+                                                *Based on your 'Investment' budget & subscriptions + account rates.
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500">
+                                    💡 Tip: Set an "Investment" budget or subscription to see your wealth grow!
+                                </div>
+                            </div>
+                        </Card>
                     </div>
-                </Card>
+                </div>
+
+                {/* --- Section 3: Detailed Charts --- */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    {/* Income vs Expense Chart */}
+                    <Card className="h-96 flex flex-col">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income vs Expense</h3>
+                        <div className="w-full flex-1">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val / 1000}k`} />
+                                    <Tooltip
+                                        formatter={(value) => formatMoney(value)}
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        cursor={{ fill: 'transparent' }}
+                                    />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Bar dataKey="income" name="Income" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+                                    <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
+
+                    {/* Category Breakdown (Enhanced) */}
+                    <Card className="h-96 flex flex-col">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Category</h3>
+                        <div className="w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            {categoryData.length > 0 ? (
+                                <div className="space-y-4">
+                                    {categoryData.map((cat, index) => (
+                                        <div key={cat.name} className="group">
+                                            <div className="flex justify-between items-center mb-1 text-sm">
+                                                <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                                    {cat.name}
+                                                </span>
+                                                <span className="text-slate-500 font-medium">{((cat.value / metrics.expense) * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-500 relative"
+                                                    style={{ width: `${(cat.value / metrics.expense) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }}
+                                                ></div>
+                                            </div>
+                                            <div className="text-xs text-slate-400 text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {formatMoney(cat.value)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-400 flex-col gap-2">
+                                    <AlertCircle size={32} opacity={0.5} />
+                                    <span>No spending data for this period</span>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </div>
             </div>
 
         </MainLayout>
