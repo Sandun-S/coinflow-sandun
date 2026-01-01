@@ -57,10 +57,10 @@ const BudgetsPage = () => {
                     }
 
                     if (!spending[mainCat]) spending[mainCat] = { total: 0, subs: {} };
-                    spending[mainCat].total += parseFloat(t.amount); // Parent Total includes sub
+                    spending[mainCat].total += Math.abs(parseFloat(t.amount)); // Parent Total includes sub
 
                     if (subCat !== '_main') {
-                        spending[mainCat].subs[subCat] = (spending[mainCat].subs[subCat] || 0) + parseFloat(t.amount);
+                        spending[mainCat].subs[subCat] = (spending[mainCat].subs[subCat] || 0) + Math.abs(parseFloat(t.amount));
                     }
                 }
             }
