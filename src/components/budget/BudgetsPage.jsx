@@ -1,33 +1,30 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import MainLayout from '../layout/MainLayout';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { useBudgets } from '../../context/BudgetContext';
-import { useCategories, DEFAULT_CATEGORIES } from '../../context/CategoryContext'; // Import categories and defaults
+import { useCategories } from '../../context/CategoryContext'; // Import categories
 import { useTour } from '../../context/TourContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
 import CategoryPicker from '../categories/CategoryPicker';
-import { useAuth } from '../../context/AuthContext'; // Managed Gating
 
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
     const { categories } = useCategories(); // Get categories
     const { nextStep } = useTour();
-    const { user, isPro } = useAuth(); // Auth for gating
     const formatMoney = useCurrencyFormatter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [limit, setLimit] = useState('');
-    const [editingId, setEditingId] = useState(null);
 
     // Pre-select first expense category if available
-    useEffect(() => {
+    React.useEffect(() => {
         if (!selectedCategory && categories.length > 0) {
             const firstExpense = categories.find(c => c.type === 'expense');
             if (firstExpense) setSelectedCategory(firstExpense.name);
@@ -35,39 +32,28 @@ const BudgetsPage = () => {
     }, [categories, selectedCategory]);
 
     // Helper: Find Parent Name for a given category name (Sub or Parent)
+    // Returns the Parent Name if it's a sub, or the name itself if it's a parent.
+    // If not found, returns the name itself (fallback).
     const getParentCategoryName = (catName) => {
-        if (!catName) return 'General';
-        const cleanName = catName.trim();
-
-        // 1. Check if it's a known Parent in User Categories
-        const parent = categories.find(c => c.name === cleanName);
+        // Check if it's a parent
+        const parent = categories.find(c => c.name === catName);
         if (parent) return parent.name;
 
-        // 2. Check if it's a Sub in User Categories
-        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(cleanName));
+        // Check if it's a sub
+        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
         if (parentOfSub) return parentOfSub.name;
 
-        // 3. Fallback: Check Default Categories (Crucial for initial/missing data)
-        const defaultParentOfSub = DEFAULT_CATEGORIES.find(c => c.subcategories && c.subcategories.includes(cleanName));
-        if (defaultParentOfSub) {
-            // console.log(`Found parent for ${cleanName} in Defaults: ${defaultParentOfSub.name}`);
-            return defaultParentOfSub.name;
-        }
-
-        // console.log(`No parent found for ${cleanName}, returning self.`);
-        return cleanName;
+        return catName;
     };
 
     // Calculate spending per PARENT category (Monthly)
     const categorySpending = useMemo(() => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
         const monthlyExpenses = transactions.filter(t => {
-            if (t.type !== 'expense') return false;
-            const tDate = t.date?.seconds ? new Date(t.date.seconds * 1000) : new Date(t.date);
-            return tDate >= startOfMonth && tDate <= endOfMonth;
+            const tDate = new Date(t.date);
+            return t.amount < 0 && tDate >= startOfMonth;
         });
 
         const spending = {}; // { CategoryName: { total: 0, subs: {} } }
@@ -102,22 +88,16 @@ const BudgetsPage = () => {
         return spending;
     }, [transactions, categories]);
 
-    const handleSaveBudget = (e) => {
+    const handleSaveBudget = async (e) => {
         e.preventDefault();
-        const newBudget = {
-            category: selectedCategory,
-            limit: parseFloat(limit),
-            id: editingId
-        };
-        setBudget(newBudget);
+        if (!limit || !selectedCategory) return;
+        await setBudget(selectedCategory, limit);
         setIsModalOpen(false);
-        setEditingId(null);
         setLimit('');
-        nextStep();
+        nextStep(); // Advance tour
     };
 
     const handleEdit = (budget) => {
-        setEditingId(budget.id);
         setSelectedCategory(budget.category);
         setLimit(budget.limit);
         setIsModalOpen(true);
@@ -166,6 +146,9 @@ const BudgetsPage = () => {
         });
     }, [budgets, categories]);
 
+    // Filter to only show Parent Categories for budgeting (for the form)
+    const expenseCategories = categories.filter(c => c.type === 'expense');
+
     return (
         <MainLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -173,28 +156,17 @@ const BudgetsPage = () => {
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Budgets</h2>
                     <p className="text-slate-500 dark:text-slate-400">Set monthly limits for your main categories.</p>
                 </div>
-                <Button
-                    onClick={() => {
-                        if (!isPro(user) && budgets.length >= 3) {
-                            alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
-                            return;
-                        }
-                        setIsModalOpen(true);
-                        nextStep();
-                    }}
-                    className="hidden md:flex items-center gap-2"
-                    data-tour="set-budget-desktop"
-                >
+                <Button onClick={() => { setIsModalOpen(true); nextStep(); }} className="hidden md:flex items-center gap-2" data-tour="set-budget-desktop">
                     <Plus size={20} /> Set Budget
                 </Button>
             </div>
 
             {/* Total Budget Summary */}
             {budgets.length > 0 && (() => {
-                const totalBudget = groupedBudgets.reduce((sum, g) => sum + g.limit, 0);
-                const totalSpent = groupedBudgets.reduce((sum, g) => {
-                    const data = categorySpending[g.parentName];
-                    return sum + (data ? data.total : 0);
+                const totalBudget = budgets.reduce((sum, b) => sum + parseFloat(b.limit), 0);
+                const totalSpent = budgets.reduce((sum, b) => {
+                    const bData = categorySpending[b.category];
+                    return sum + (bData ? bData.total : 0);
                 }, 0);
                 const totalPercentage = Math.min((totalSpent / totalBudget) * 100, 100);
                 const isTotalOver = totalSpent > totalBudget;
@@ -236,11 +208,20 @@ const BudgetsPage = () => {
                     const percentage = Math.min((totalSpent / limit) * 100, 100);
                     const isOver = totalSpent > limit;
 
+                    // Determine what to show in Breakdown
+                    // We want to show:
+                    // 1. Explicit Sub-Budgets (Limit vs Spent)
+                    // 2. Spent on categories that have NO budget? (Maybe just catch-all or standard list)
+                    // User said: "show them like this too". The previous version showed all spending contributors.
+                    // Let's merge "Spending Contributors" with "Budget Targets".
+
                     // We need a list of ALL subcategories that have either Spending OR a Budget.
                     const relevantSubs = new Set([
                         ...Object.keys(spentData.subs).filter(k => k !== '_main'),
                         ...subBudgets.map(b => b.category)
                     ]);
+
+                    // ... logic remains ...
 
                     const breakdown = Array.from(relevantSubs).map(subName => {
                         const subSpent = spentData.subs[subName] || 0;
@@ -267,6 +248,10 @@ const BudgetsPage = () => {
                                         </p>
                                     </div>
                                     <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                                        {/* Action buttons - tricky. If we have multiple budgets, which one to edit?
+                                        Maybe separate Edit buttons for Main vs Sub?
+                                        For now, if Main exists, Edit Main. If not... maybe prompt to add Main?
+                                    */}
                                         {mainBudget && (
                                             <>
                                                 <button
@@ -308,7 +293,12 @@ const BudgetsPage = () => {
                                     <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
                                         {breakdown.map((item) => {
-                                            const itemLimit = item.limit > 0 ? item.limit : limit;
+                                            // Calculate sub-bar width.
+                                            // If it has its own limit, % of that limit.
+                                            // If NO limit, % of Main Limit? Or just visual of Contribution?
+                                            // User: "show them like this too". Let's show specific sub-budget progress if defined.
+
+                                            const itemLimit = item.limit > 0 ? item.limit : limit; // Fallback to main limit for relative visual
                                             const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
                                             const isSubOver = item.limit > 0 && item.spent > item.limit;
 
@@ -334,6 +324,7 @@ const BudgetsPage = () => {
                                                                 <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={() => {
+                                                                            // Find the budget doc again? Or cleaner way?
                                                                             const b = subBudgets.find(sb => sb.category === item.name);
                                                                             if (b) handleEdit(b);
                                                                         }}
@@ -422,14 +413,7 @@ const BudgetsPage = () => {
             </Modal>
             {/* Mobile Floating Action Button */}
             <button
-                onClick={() => {
-                    if (!isPro(user) && budgets.length >= 3) {
-                        alert("Free Plan Limit Reached! Upgrade to set unlimited budgets.");
-                        return;
-                    }
-                    setIsModalOpen(true);
-                    nextStep();
-                }}
+                onClick={() => { setIsModalOpen(true); nextStep(); }}
                 className="md:hidden fixed bottom-24 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 z-40 hover:bg-indigo-700 active:scale-95 transition-all"
                 aria-label="Set Budget"
                 data-tour="set-budget-mobile"
