@@ -8,7 +8,7 @@ import { subscribeToPush } from '../../utils/push';
 
 const DailyCheckIn = ({ onAddTransaction }) => {
     const { transactions } = useTransactions();
-    const { currentUser } = useAuth();
+    const { user: currentUser } = useAuth();
     const [isVisible, setIsVisible] = useState(false);
     const [status, setStatus] = useState('pending'); // pending, reviewed
     const [notificationPermission, setNotificationPermission] = useState('default');
@@ -18,19 +18,11 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         // Check permission status
         if ('Notification' in window) {
             const currentPermission = Notification.permission;
-            console.log('DailyCheckIn: Permission status:', currentPermission);
-            console.log('DailyCheckIn: Current User:', currentUser ? currentUser.uid : 'No User');
             setNotificationPermission(currentPermission);
 
             // AUTO-SUBSCRIBE: If already granted, ensure they are subscribed on the server
-            // This fixes the issue where existing users never hit the "Enable" button.
             if (currentPermission === 'granted' && currentUser) {
-                console.log('DailyCheckIn: Attempting auto-subscribe...');
-                subscribeToPush(currentUser.uid)
-                    .then(sub => console.log('DailyCheckIn: Auto-subscribe result:', sub))
-                    .catch(err => console.error("Auto-sub failed", err));
-            } else {
-                console.log('DailyCheckIn: Skipping auto-subscribe (Permission or User missing)');
+                subscribeToPush(currentUser.uid).catch(err => console.error("Auto-sub failed", err));
             }
         }
     }, [transactions, currentUser]);
