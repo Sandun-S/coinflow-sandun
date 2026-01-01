@@ -22,7 +22,7 @@ const DailyCheckIn = ({ onAddTransaction }) => {
 
             // AUTO-SUBSCRIBE: If already granted, ensure they are subscribed on the server
             if (currentPermission === 'granted' && currentUser) {
-                subscribeToPush(currentUser.uid).catch(err => console.error("Auto-sub failed", err));
+                subscribeToPush(currentUser.id).catch(err => console.error("Auto-sub failed", err));
             }
         }
     }, [transactions, currentUser]);
@@ -60,7 +60,7 @@ const DailyCheckIn = ({ onAddTransaction }) => {
             try {
                 // Subscribe to Server Push
                 if (currentUser) {
-                    await subscribeToPush(currentUser.uid);
+                    await subscribeToPush(currentUser.id);
                     new Notification("Notifications Enabled", { body: "You will now receive daily reminders!" });
                 } else {
                     new Notification("Notifications Enabled", { body: "Please log in to sync reminders." });
