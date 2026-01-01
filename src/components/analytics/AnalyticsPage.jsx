@@ -549,36 +549,67 @@ const AnalyticsPage = () => {
                     {/* Category Breakdown (Enhanced) */}
                     <Card className="h-96 flex flex-col">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Category</h3>
-                        <div className="w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            {categoryData.length > 0 ? (
-                                <div className="space-y-4">
-                                    {categoryData.map((cat, index) => (
-                                        <div key={cat.name} className="group">
-                                            <div className="flex justify-between items-center mb-1 text-sm">
-                                                <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                                    {cat.name}
-                                                </span>
-                                                <span className="text-slate-500 font-medium">{((cat.value / metrics.expense) * 100).toFixed(1)}%</span>
-                                            </div>
-                                            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full transition-all duration-500 relative"
-                                                    style={{ width: `${(cat.value / metrics.expense) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }}
-                                                ></div>
-                                            </div>
-                                            <div className="text-xs text-slate-400 text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {formatMoney(cat.value)}
-                                            </div>
-                                        </div>
-                                    ))}
+                        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            {/* Chart Side */}
+                            <div className="h-full w-full min-h-[200px] relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={categoryData}
+                                            innerRadius="60%"
+                                            outerRadius="80%"
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {categoryData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(value) => formatMoney(value)}
+                                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                {/* Center Total */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-sm text-slate-400">Total</span>
+                                    <span className="text-xl font-bold text-slate-800 dark:text-white">{formatMoney(metrics.expense)}</span>
                                 </div>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-400 flex-col gap-2">
-                                    <AlertCircle size={32} opacity={0.5} />
-                                    <span>No spending data for this period</span>
-                                </div>
-                            )}
+                            </div>
+
+                            {/* List Side */}
+                            <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+                                {categoryData.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {categoryData.map((cat, index) => (
+                                            <div key={cat.name} className="group">
+                                                <div className="flex justify-between items-center mb-1 text-sm">
+                                                    <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                                        {cat.name}
+                                                    </span>
+                                                    <span className="text-slate-500 font-bold">{((cat.value / metrics.expense) * 100).toFixed(1)}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-500 relative"
+                                                        style={{ width: `${(cat.value / metrics.expense) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }}
+                                                    ></div>
+                                                </div>
+                                                <div className="text-xs text-slate-400 text-right mt-1">
+                                                    {formatMoney(cat.value)}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-slate-400 flex-col gap-2">
+                                        <AlertCircle size={32} opacity={0.5} />
+                                        <span>No spending data</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </Card>
                 </div>
