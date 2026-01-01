@@ -112,22 +112,19 @@ const AdminDashboard = () => {
             </div>
 
             <Card className="mb-8">
-                <form onSubmit={handleSearch} className="flex gap-4 items-end">
+                <div className="flex gap-4 items-end">
                     <div className="flex-1">
                         <Input
-                            label="Search User by Email"
-                            placeholder="user@example.com"
+                            label="Filter Users"
+                            placeholder="Filter by name or email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button type="submit" disabled={loading}>
-                        {loading ? 'Searching...' : <><Search size={18} className="mr-2" /> Search</>}
-                    </Button>
-                </form>
-                {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
-                {successMsg && <p className="text-green-500 mt-2 text-sm font-bold flex items-center gap-1"><CheckCircle size={16} /> {successMsg}</p>}
+                </div>
             </Card>
+            {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+            {successMsg && <p className="text-green-500 mt-2 text-sm font-bold flex items-center gap-1"><CheckCircle size={16} /> {successMsg}</p>}
 
             {/* Dashboard Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
