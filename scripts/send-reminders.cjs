@@ -14,7 +14,7 @@ const db = admin.firestore();
 // Initialize Web Push
 // Set VAPID_SUBJECT (mailto:your-email), VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY
 webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:admin@coinflow.com',
+    process.env.VAPID_SUBJECT || 'mailto:hakssiwantha@gmail.com',
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
 );
@@ -32,15 +32,21 @@ async function sendReminders() {
 
         console.log(`Found ${snapshot.size} subscriptions.`);
 
+        // Use Custom Message if provided (from send-message.yml), otherwise default Daily Reminder
+        const title = process.env.CUSTOM_TITLE || 'Daily Check-In';
+        const body = process.env.CUSTOM_BODY || "Have you spent anything today? Record it now.";
+        const isCustom = !!process.env.CUSTOM_TITLE;
+
         const payload = JSON.stringify({
-            title: 'Daily Check-In',
-            body: "Have you spent anything today? Record it now.",
+            title: title,
+            body: body,
             icon: '/pwa-192x192.png',
             badge: '/pwa-192x192.png',
             data: {
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                type: isCustom ? 'announcement' : 'daily-reminder'
             },
-            actions: [
+            actions: isCustom ? [] : [
                 { action: 'nothing-spent', title: 'Nothing Spent' },
                 { action: 'add-transaction', title: 'Add Transaction' }
             ]

@@ -32,8 +32,29 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         const hour = now.getHours();
         const dateKey = now.toLocaleDateString();
 
-        // TEMPORARY: FORCE VISIBILITY FOR USER TESTING
-        // We are bypassing all checks (Time, Existing Tx, Review Status) so the card is ALWAYS visible.
+        // 1. Check Local Storage Status (If already reviewed today)
+        const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
+        if (dailyStatus === 'reviewed') {
+            setIsVisible(false);
+            return;
+        }
+
+        // 2. Check Time (5 PM - 11:59 PM)
+        if (hour < 17) {
+            setIsVisible(false); // Hide before 5 PM
+            return;
+        }
+
+        // 3. Check for Existing Transactions TODAY
+        const hasTransactionToday = transactions.some(t => {
+            const tDate = new Date(t.date);
+            return tDate.toLocaleDateString() === dateKey;
+        });
+
+        if (hasTransactionToday) {
+            setIsVisible(false); // Hide if user already added something
+            return;
+        }
 
         // If all checks pass, show it
         setIsVisible(true);
