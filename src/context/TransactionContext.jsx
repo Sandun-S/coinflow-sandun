@@ -54,8 +54,18 @@ export const TransactionProvider = ({ children }) => {
                 id: doc.id,
                 ...doc.data()
             }));
-            // Sort by date desc (optional, or do in query)
-            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Sort by date desc, then by createdAt desc for same-day items
+            transactions.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (dateB.getTime() !== dateA.getTime()) {
+                    return dateB - dateA;
+                }
+                // Tie-breaker: Created At
+                const createdA = new Date(a.createdAt || 0);
+                const createdB = new Date(b.createdAt || 0);
+                return createdB - createdA;
+            });
 
             dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
         });

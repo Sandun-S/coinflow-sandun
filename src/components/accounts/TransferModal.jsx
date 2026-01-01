@@ -90,7 +90,15 @@ const TransferModal = ({ isOpen, onClose }) => {
                 category: sourceCategory,
                 type: 'expense',
                 accountId: fromAccount,
-                date: new Date(date).toISOString()
+                date: (() => {
+                    const selected = new Date(date);
+                    const now = new Date();
+                    // If selected "Today", preserve current time for sorting
+                    if (selected.toDateString() === now.toDateString()) {
+                        return now.toISOString();
+                    }
+                    return selected.toISOString();
+                })()
             });
 
             // 2. Record Transaction (Dest Income) - Context updates balance
@@ -100,7 +108,14 @@ const TransferModal = ({ isOpen, onClose }) => {
                 category: destCategory,
                 type: 'income',
                 accountId: toAccount,
-                date: new Date(date).toISOString()
+                date: (() => {
+                    const selected = new Date(date);
+                    const now = new Date();
+                    if (selected.toDateString() === now.toDateString()) {
+                        return now.toISOString();
+                    }
+                    return selected.toISOString();
+                })()
             });
 
             onClose();
