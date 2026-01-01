@@ -4,6 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import Modal from '../common/Modal';
+import Dropdown from '../common/Dropdown'; // Import Dropdown
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
@@ -244,43 +245,41 @@ const SubscriptionsPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 flex-shrink-0 ml-1">
-                                    <button
-                                        onClick={() => handleHistory(sub)}
-                                        className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
-                                        title="View History & Analytics"
-                                    >
-                                        <Calendar size={18} />
-                                    </button>
-
+                                <div className="flex items-center gap-2 flex-shrink-0 ml-1">
                                     {daysLeft > 20 && !isOverdue ? (
-                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wide">
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wide mr-2">
                                             <Check size={12} /> Paid
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => handlePayment(sub)}
-                                            className={`p-2 rounded-lg transition-all ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}`}
-                                            title="Mark as Paid"
-                                            disabled={sub.autoPay || isSubmitting}
-                                        >
-                                            <Check size={18} className={sub.autoPay ? "opacity-50" : ""} />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => handleEdit(sub)}
-                                        className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
-                                        title="Edit Subscription"
-                                    >
-                                        <Pencil size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => deleteSubscription(sub.id)}
-                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                                        title="Delete Subscription"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    ) : null}
+
+                                    <Dropdown
+                                        items={[
+                                            ...(daysLeft <= 20 || isOverdue ? [{
+                                                label: isSubmitting ? 'Processing...' : 'Mark as Paid',
+                                                icon: <Check size={16} />,
+                                                onClick: () => handlePayment(sub),
+                                                variant: 'success',
+                                                disabled: sub.autoPay || isSubmitting
+                                            }] : []),
+                                            {
+                                                label: 'History & Analytics',
+                                                icon: <Calendar size={16} />,
+                                                onClick: () => handleHistory(sub)
+                                            },
+                                            {
+                                                label: 'Edit Subscription',
+                                                icon: <Pencil size={16} />,
+                                                onClick: () => handleEdit(sub)
+                                            },
+                                            { type: 'divider' },
+                                            {
+                                                label: 'Delete',
+                                                icon: <Trash2 size={16} />,
+                                                onClick: () => deleteSubscription(sub.id),
+                                                variant: 'danger'
+                                            }
+                                        ]}
+                                    />
                                 </div>
                             </div>
 
@@ -318,12 +317,14 @@ const SubscriptionsPage = () => {
                 })}
             </div>
 
-            {subscriptions.length === 0 && !loading && (
-                <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                    <RefreshCw className="mx-auto text-slate-300 mb-4" size={48} />
-                    <p className="text-slate-500 font-medium">No subscriptions yet.</p>
-                </div>
-            )}
+            {
+                subscriptions.length === 0 && !loading && (
+                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                        <RefreshCw className="mx-auto text-slate-300 mb-4" size={48} />
+                        <p className="text-slate-500 font-medium">No subscriptions yet.</p>
+                    </div>
+                )
+            }
 
             {/* Add/Edit Modal */}
             <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? "Edit Subscription" : "Add Subscription"}>
@@ -446,7 +447,7 @@ const SubscriptionsPage = () => {
             >
                 <Plus size={24} />
             </button>
-        </MainLayout>
+        </MainLayout >
     );
 };
 

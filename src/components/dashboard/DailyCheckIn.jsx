@@ -24,21 +24,34 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         const dateKey = now.toLocaleDateString();
 
         // 1. Check Local Storage Status
-        // const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
-        // if (dailyStatus === 'reviewed') {
-        //     setIsVisible(false);
-        //     return;
-        // }
+        const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
+        if (dailyStatus === 'reviewed') {
+            setIsVisible(false);
+            return;
+        }
 
         // 2. Check Time (5 PM - 11:59 PM)
-        // TEMPORARY: Allow anytime for testing
-        // if (hour < 17) { ... }
+        // Check if user has manually enabled test mode via some hidden toggle? 
+        // For now, let's strictly restore the 5 PM rule.
+        if (hour < 17) {
+            setIsVisible(false);
+            return;
+        }
 
         // 3. Check for Existing Transactions TODAY
-        // const hasTransactionToday = transactions.some(t => ...);
-        // if (hasTransactionToday) { ... }
 
-        // FORCE SHOW FOR DEBUGGING
+        // 3. Check for Existing Transactions TODAY
+        const hasTransactionToday = transactions.some(t => {
+            const tDate = new Date(t.date);
+            return tDate.toLocaleDateString() === dateKey;
+        });
+
+        if (hasTransactionToday) {
+            setIsVisible(false);
+            return;
+        }
+
+        // If all checks pass, show it
         setIsVisible(true);
         setStatus('pending');
 
@@ -83,22 +96,40 @@ const DailyCheckIn = ({ onAddTransaction }) => {
                             It's evening! Did you spend any money today?
                         </p>
                         {notificationPermission === 'default' && (
-                            <button
-                                onClick={enableNotifications}
-                                className="text-xs text-indigo-600 underline mt-1 hover:text-indigo-800 dark:text-indigo-400"
-                            >
-                                Enable Notifications
-                            </button>
+                            <div>
+                                {!window.isSecureContext && window.location.hostname !== 'localhost' ? (
+                                    <p className="text-xs text-red-500 font-medium mt-1">
+                                        ⚠️ Notifications require HTTPS. (Not working on IP)
+                                    </p>
+                                ) : (
+                                    <button
+                                        onClick={enableNotifications}
+                                        className="text-xs text-indigo-600 underline mt-1 hover:text-indigo-800 dark:text-indigo-400"
+                                    >
+                                        Enable Notifications
+                                    </button>
+                                )}
+                            </div>
                         )}
                         {notificationPermission === 'granted' && (
                             <button
                                 onClick={() => {
                                     alert("Waiting 5 seconds... Close/Minimize the app now!");
-                                    setTimeout(() => {
-                                        new Notification("Test Reminder", {
-                                            body: "This is a test to prove it works! 🚀",
-                                            icon: '/pwa-192x192.png'
-                                        });
+                                    setTimeout(async () => {
+                                        if ('serviceWorker' in navigator) {
+                                            const reg = await navigator.serviceWorker.ready;
+                                            reg.showNotification("Test Reminder", {
+                                                body: "This is a test from the Service Worker! 🚀",
+                                                icon: '/pwa-192x192.png',
+                                                tag: 'test-notification',
+                                                vibrate: [200, 100, 200]
+                                            });
+                                        } else {
+                                            new Notification("Test Reminder", {
+                                                body: "This is a test (Main Thread)! 🚀",
+                                                icon: '/pwa-192x192.png'
+                                            });
+                                        }
                                     }, 5000);
                                 }}
                                 className="text-xs text-emerald-600 underline mt-1 ml-4 hover:text-emerald-800 dark:text-emerald-400"
