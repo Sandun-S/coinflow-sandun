@@ -45,7 +45,13 @@ export const AuthProvider = ({ children }) => {
                 unsubscribeFirestore = onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
-                        setUser({ id: docSnap.id, ...userData });
+                        setUser({
+                            id: docSnap.id,
+                            email: currentUser.email,
+                            name: currentUser.displayName,
+                            photoURL: currentUser.photoURL,
+                            ...userData
+                        });
                     } else {
                         // Migration or Missing Doc: Create it
                         // For simplicity in this fix, we will just set basic user data 

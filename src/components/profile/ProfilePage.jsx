@@ -4,13 +4,17 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions'; // Using context directly to trigger resets if needed
-import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings, Zap } from 'lucide-react';
+import { User, Trash2, Mail, Calendar, MessageCircle, LogOut, Settings, Zap, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TourSelectionModal from '../onboarding/TourSelectionModal';
 
 const ProfilePage = () => {
     const { user, logout } = useAuth();
     const [isTourOpen, setIsTourOpen] = React.useState(false);
+
+    // Plan Logic
+    const isLifetime = user?.plan === 'lifetime';
+    const isPro = user?.plan === 'pro';
 
     // We access localStorage directly for the "Nuclear" option or better, expose a 'clearData' method in TransactionContext.
     // However, simplest is to clear the key.
@@ -59,23 +63,43 @@ const ProfilePage = () => {
                 <div className="md:col-span-2 space-y-6 mb-6">
                     {/* Plan Status Card */}
                     {/* Plan Status Card */}
-                    <Card className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-0 relative overflow-hidden shadow-xl">
-                        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-indigo-200 font-medium mb-1 uppercase text-xs tracking-wider">Current Plan</h3>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200">
-                                        Lifetime Pro 💎
-                                    </span>
-                                </div>
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <div className="relative z-10">
+                            <div className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Current Plan</div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-3xl font-bold">
+                                    {isLifetime ? 'Lifetime Pro' : isPro ? 'Monthly Pro' : 'Free Plan'}
+                                </h2>
+                                {isLifetime && <Sparkles className="text-yellow-400" size={24} />}
                             </div>
+
+                            {!isLifetime && (
+                                <div className="mt-6 pt-6 border-t border-white/10">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="font-medium text-white">Upgrade to Lifetime 💎</div>
+                                            <div className="text-sm text-slate-400">One-time payment for specific features.</div>
+                                        </div>
+                                        <a
+                                            href="https://shop.sandunsiwantha.com/products/coinflow-pro-plan"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-white text-slate-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-100 transition-colors"
+                                        >
+                                            Buy Now
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isPro && !isLifetime && user?.subscriptionExpiry && (
+                                <div className="mt-2 text-xs text-slate-500">
+                                    Trial ends on {user.subscriptionExpiry.toDate().toLocaleDateString()}
+                                </div>
+                            )}
                         </div>
-
-                        {/* Decorative Background */}
-                        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-                        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
-                    </Card>
-
+                    </div>
                     {/* App Tour & Guide Trigger */}
                     <Card
                         className="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 text-white border-none relative overflow-hidden shadow-xl group hover:shadow-2xl transition-all duration-300"
