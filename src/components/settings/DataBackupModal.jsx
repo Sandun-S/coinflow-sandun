@@ -32,7 +32,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
     const fileInputRef = useRef(null);
 
     // Context Hooks
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, isPro } = useAuth();
     const { transactions, addTransaction } = useTransactions();
     const { accounts, addAccount } = useAccounts();
     const { categories, addCategory } = useCategories();
@@ -108,7 +108,7 @@ const DataBackupModal = ({ isOpen, onClose }) => {
             email: user?.email,
             plan: user?.plan || 'Free',
             trialEndsAt: user?.trialEndsAt || null,
-            isPro: !!user?.isPro // Snapshot current status
+            isPro: !!isPro(user) // Snapshot current status
         };
 
         const exportPayload = {
@@ -200,18 +200,37 @@ const DataBackupModal = ({ isOpen, onClose }) => {
 
             // 1. Security Check & Trial Sync
             if (root.signature && securityStatus === 'valid' && userMeta) {
-                // Sync Plan
-                if (userMeta.plan && user?.id) {
-                    await updateUser(user.id, {
-                        plan: userMeta.plan,
-                        trialEndsAt: userMeta.trialEndsAt,
-                        isPro: userMeta.isPro
-                    });
-                    // Force refresh or just log it
-                    log.push(`ℹ️ Account synced to ${userMeta.plan} Plan`);
+                const currentUserIsPro = isPro(user); // Check if receiver is already Pro
+
+                if (currentUserIsPro) {
+                    log.push(`ℹ️ Current plan is Pro. Kept existing plan.`);
+                } else {
+                    // Receiver is Free/Trial
+                    if (userMeta.plan === 'Pro' || userMeta.plan === 'lifetime') {
+                        // Backup is Pro -> Do NOT grant Pro to a free account via import
+                        log.push(`ℹ️ Imported data from Pro backup. Plan remains ${user.plan || 'Free'}.`);
+                    } else if (userMeta.plan === 'Free') {
+                        // Backup is Free -> Downgrade receiver to Free (Remove Trial for abuse prevention)
+                        await updateUser(user.id, {
+                            plan: 'Free',
+                            trialEndsAt: null,
+                            isPro: false
+                        });
+                        log.push(`ℹ️ Account synced to Free Plan (Trial Removed).`);
+                    } else {
+                        // Backup is likely on Trial (Free plan + trialEndsAt date)
+                        // Sync the Trial Timer exactly to prevent trial hopping
+                        if (userMeta.trialEndsAt) {
+                            await updateUser(user.id, {
+                                plan: 'Free',
+                                trialEndsAt: userMeta.trialEndsAt
+                            });
+                            log.push(`ℹ️ Trial period synced with backup.`);
+                        }
+                    }
                 }
             } else if (root.signature && securityStatus === 'invalid') {
-                log.push(`⚠️ Security Warning: Backup signature mismatch. Skipped plan sync.`);
+                log.push(`⚠️ Security Warning: Backup signature mismatch. Plan updates skipped.`);
             }
 
             // 2. Import Data with ID Mapping
