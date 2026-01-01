@@ -115,7 +115,7 @@ export const AccountProvider = ({ children }) => {
             // Firestore increment is safer for concurrent updates
             const docRef = doc(db, 'accounts', accountId);
             await updateDoc(docRef, {
-                balance: increment(amount)
+                balance: increment(Number(amount))
             });
         } catch (error) {
             console.error("Error updating balance:", error);

@@ -16,8 +16,10 @@ const TransferModal = ({ isOpen, onClose }) => {
     const [fromAccount, setFromAccount] = useState('');
     const [toAccount, setToAccount] = useState('');
     const [amount, setAmount] = useState('');
+    const [serviceCharge, setServiceCharge] = useState('');
     const [description, setDescription] = useState('Transfer');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Helper to get account objects
     const sourceAcc = accounts.find(a => a.id === fromAccount);
@@ -40,6 +42,8 @@ const TransferModal = ({ isOpen, onClose }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const transferAmount = parseFloat(amount);
+        const chargeAmount = parseFloat(serviceCharge) || 0;
+        const totalDeduction = transferAmount + chargeAmount;
 
         if (!fromAccount || !toAccount || !transferAmount) {
             alert('Please fill in all fields');
@@ -52,9 +56,9 @@ const TransferModal = ({ isOpen, onClose }) => {
         }
 
         // VALIDATION 1: Insufficient Funds (Source)
-        if (sourceAcc && sourceAcc.type !== 'Credit Card') { // Credit cards can go negative technically, but usually source is Bank/Cash
-            if (sourceAcc.balance < transferAmount) {
-                alert(`Insufficient funds in ${sourceAcc.name}. Available: ${formatMoney(sourceAcc.balance)}`);
+        if (sourceAcc && sourceAcc.type !== 'Credit Card') {
+            if (sourceAcc.balance < totalDeduction) {
+                alert(`Insufficient funds in ${sourceAcc.name}. Needed: ${formatMoney(totalDeduction)} (Transfer + Fee). Available: ${formatMoney(sourceAcc.balance)}`);
                 return;
             }
         }
@@ -73,6 +77,7 @@ const TransferModal = ({ isOpen, onClose }) => {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             // Determine Categories
             let sourceCategory = 'Transfer';
@@ -83,39 +88,46 @@ const TransferModal = ({ isOpen, onClose }) => {
                 destCategory = 'Investment Return';
             }
 
-            // 1. Record Transaction (Source Expense) - Context updates balance
+            // ISO Date Helper
+            const getIsoDate = () => {
+                const selected = new Date(date);
+                const now = new Date();
+                if (selected.toDateString() === now.toDateString()) {
+                    return now.toISOString();
+                }
+                return selected.toISOString();
+            };
+
+            // 1. Record Transaction (Source Expense)
             await addTransaction({
                 text: `${description} (to ${destAcc?.name || 'Destination'})`,
                 amount: -transferAmount,
                 category: sourceCategory,
                 type: 'expense',
                 accountId: fromAccount,
-                date: (() => {
-                    const selected = new Date(date);
-                    const now = new Date();
-                    // If selected "Today", preserve current time for sorting
-                    if (selected.toDateString() === now.toDateString()) {
-                        return now.toISOString();
-                    }
-                    return selected.toISOString();
-                })()
+                date: getIsoDate()
             });
 
-            // 2. Record Transaction (Dest Income) - Context updates balance
+            // 2. Record Service Charge (If Applicable)
+            if (chargeAmount > 0) {
+                await addTransaction({
+                    text: `Service Charge (Transfer to ${destAcc?.name})`,
+                    amount: -chargeAmount,
+                    category: 'Fees & Charges',
+                    type: 'expense',
+                    accountId: fromAccount,
+                    date: getIsoDate() // Same time as transfer
+                });
+            }
+
+            // 3. Record Transaction (Dest Income)
             await addTransaction({
                 text: `${description} (from ${sourceAcc?.name || 'Source'})`,
                 amount: transferAmount,
                 category: destCategory,
                 type: 'income',
                 accountId: toAccount,
-                date: (() => {
-                    const selected = new Date(date);
-                    const now = new Date();
-                    if (selected.toDateString() === now.toDateString()) {
-                        return now.toISOString();
-                    }
-                    return selected.toISOString();
-                })()
+                date: getIsoDate()
             });
 
             onClose();
@@ -123,6 +135,8 @@ const TransferModal = ({ isOpen, onClose }) => {
         } catch (error) {
             console.error("Transfer failed", error);
             alert("Transfer failed");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -130,6 +144,7 @@ const TransferModal = ({ isOpen, onClose }) => {
         setFromAccount('');
         setToAccount('');
         setAmount('');
+        setServiceCharge('');
         setDescription('Transfer');
     };
 
@@ -182,6 +197,17 @@ const TransferModal = ({ isOpen, onClose }) => {
                 />
 
                 <Input
+                    label="Service Charge (Optional)"
+                    type="number"
+                    placeholder="0.00"
+                    value={serviceCharge}
+                    onChange={(e) => setServiceCharge(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    helperText="Fee deducted from Source account (e.g. ATM fee)"
+                />
+
+                <Input
                     label="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -195,8 +221,8 @@ const TransferModal = ({ isOpen, onClose }) => {
                     onChange={(e) => setDate(e.target.value)}
                 />
 
-                <Button type="submit" className="w-full mt-2">
-                    Confirm Transfer
+                <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
+                    {isSubmitting ? 'Processing...' : 'Confirm Transfer'}
                 </Button>
             </form>
         </Modal>

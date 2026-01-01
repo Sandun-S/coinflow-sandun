@@ -86,7 +86,7 @@ export const TransactionProvider = ({ children }) => {
                 // 2. Revert Balance (Opposite operation)
                 // If it was an expense (-500), we add 500. If income (+500), we subtract 500.
                 // updateBalance adds the value passed. So we pass -amount.
-                await updateBalance(transaction.accountId, -transaction.amount);
+                await updateBalance(transaction.accountId, -Number(transaction.amount));
             }
 
             // 3. Delete Doc

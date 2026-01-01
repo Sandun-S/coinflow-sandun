@@ -38,6 +38,7 @@ const SubscriptionsPage = () => {
     // Auto Pay State
     const [autoPay, setAutoPay] = useState(false);
     const [walletId, setWalletId] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -47,25 +48,33 @@ const SubscriptionsPage = () => {
             return;
         }
 
-        const subData = {
-            name,
-            amount: parseFloat(amount),
-            billingCycle,
-            nextBillingDate: new Date(nextBillingDate).toISOString(),
-            category,
-            type,
-            autoPay,
-            walletId
-        };
+        setIsSubmitting(true);
+        try {
+            const subData = {
+                name,
+                amount: parseFloat(amount),
+                billingCycle,
+                nextBillingDate: new Date(nextBillingDate).toISOString(),
+                category,
+                type,
+                autoPay,
+                walletId
+            };
 
-        if (editingId) {
-            await updateSubscription(editingId, subData);
-        } else {
-            await addSubscription(subData);
+            if (editingId) {
+                await updateSubscription(editingId, subData);
+            } else {
+                await addSubscription(subData);
+            }
+
+            handleClose();
+            nextStep();
+        } catch (error) {
+            console.error("Subscription Error:", error);
+            alert("Failed to save subscription.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        handleClose();
-        nextStep();
     };
 
     const handleEdit = (sub) => {
@@ -100,32 +109,41 @@ const SubscriptionsPage = () => {
     };
 
     const handlePayment = async (sub) => {
+        if (isSubmitting) return;
+
         if (!window.confirm(`Mark ${sub.name} as paid? This will add a transaction and update the due date.`)) return;
 
-        // 1. Add Transaction
-        const transactionResult = await addTransaction({
-            type: sub.type || 'expense',
-            amount: (sub.type === 'income' ? 1 : -1) * Math.abs(parseFloat(sub.amount)),
-            category: sub.category || 'Bills & Utilities',
-            text: sub.name,
-            date: new Date().toISOString()
-        });
-
-        if (transactionResult.success) {
-            // 2. Calculate New Next Date
-            const currentNextDate = new Date(sub.nextBillingDate);
-            let newNextDate = new Date(currentNextDate);
-
-            if (sub.billingCycle === 'Monthly') {
-                newNextDate.setMonth(newNextDate.getMonth() + 1);
-            } else {
-                newNextDate.setFullYear(newNextDate.getFullYear() + 1);
-            }
-
-            // 3. Update Subscription
-            await updateSubscription(sub.id, {
-                nextBillingDate: newNextDate.toISOString()
+        setIsSubmitting(true);
+        try {
+            // 1. Add Transaction
+            const transactionResult = await addTransaction({
+                type: sub.type || 'expense',
+                amount: (sub.type === 'income' ? 1 : -1) * Math.abs(parseFloat(sub.amount)),
+                category: sub.category || 'Bills & Utilities',
+                text: sub.name,
+                date: new Date().toISOString()
             });
+
+            if (transactionResult.success) {
+                // 2. Calculate New Next Date
+                const currentNextDate = new Date(sub.nextBillingDate);
+                let newNextDate = new Date(currentNextDate);
+
+                if (sub.billingCycle === 'Monthly') {
+                    newNextDate.setMonth(newNextDate.getMonth() + 1);
+                } else {
+                    newNextDate.setFullYear(newNextDate.getFullYear() + 1);
+                }
+
+                // 3. Update Subscription
+                await updateSubscription(sub.id, {
+                    nextBillingDate: newNextDate.toISOString()
+                });
+            }
+        } catch (error) {
+            console.error("Payment Error:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -242,9 +260,9 @@ const SubscriptionsPage = () => {
                                     ) : (
                                         <button
                                             onClick={() => handlePayment(sub)}
-                                            className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all"
+                                            className={`p-2 rounded-lg transition-all ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}`}
                                             title="Mark as Paid"
-                                            disabled={sub.autoPay} // Disable manual pay if auto-pay is on
+                                            disabled={sub.autoPay || isSubmitting}
                                         >
                                             <Check size={18} className={sub.autoPay ? "opacity-50" : ""} />
                                         </button>
@@ -407,8 +425,8 @@ const SubscriptionsPage = () => {
                         )}
                     </div>
 
-                    <Button type="submit" variant="primary" className="w-full" data-tour="sub-submit-btn">
-                        {editingId ? "Update Subscription" : "Add Subscription"}
+                    <Button type="submit" variant="primary" className="w-full" disabled={isSubmitting} data-tour="sub-submit-btn">
+                        {isSubmitting ? 'Saving...' : (editingId ? "Update Subscription" : "Add Subscription")}
                     </Button>
                 </form>
             </Modal>

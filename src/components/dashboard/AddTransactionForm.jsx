@@ -18,6 +18,7 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
     const [category, setCategory] = useState('');
     const [accountId, setAccountId] = useState('');
     const [type, setType] = useState('expense');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Split Mode State
     const [isSplit, setIsSplit] = useState(false);
@@ -72,67 +73,78 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
             return;
         }
 
-        if (isSplit) {
-            // Validate Splits
-            if (splits.some(s => !s.category || !s.amount)) {
-                alert("Please fill in all split categories and amounts.");
-                return;
-            }
-            if (text === '') {
-                alert("Please enter a main title for these transactions.");
-                return;
-            }
+        setIsSubmitting(true);
+        try {
+            if (isSplit) {
+                // Validate Splits
+                if (splits.some(s => !s.category || !s.amount)) {
+                    alert("Please fill in all split categories and amounts.");
+                    setIsSubmitting(false); // Early return needs manual reset
+                    return;
+                }
+                if (text === '') {
+                    alert("Please enter a main title for these transactions.");
+                    setIsSubmitting(false);
+                    return;
+                }
 
-            // Create Multiple Transactions
-            for (const split of splits) {
-                const splitAmount = parseFloat(split.amount);
-                const finalAmount = type === 'expense' ? -Math.abs(splitAmount) : Math.abs(splitAmount);
+                // Create Multiple Transactions
+                for (const split of splits) {
+                    const splitAmount = parseFloat(split.amount);
+                    const finalAmount = type === 'expense' ? -Math.abs(splitAmount) : Math.abs(splitAmount); // Fixed: Removed redeclaration const finalAmount
+
+                    const transactionData = {
+                        text: `${text} (${split.category})`,
+                        amount: finalAmount,
+                        category: split.category,
+                        accountId,
+                        date: new Date().toISOString()
+                    };
+
+                    await addTransaction(transactionData);
+                }
+            } else {
+                // Standard Single Transaction
+                if (!text || !amount || !category) {
+                    alert("Please fill in all fields");
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                const finalAmount = type === 'expense' ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
 
                 const transactionData = {
-                    text: `${text} (${split.category})`, // Unique title per split
+                    text,
                     amount: finalAmount,
-                    category: split.category,
+                    category,
                     accountId,
-                    date: new Date().toISOString()
+                    date: initialData ? initialData.date : new Date().toISOString()
                 };
 
-                await addTransaction(transactionData);
-            }
-        } else {
-            // Standard Single Transaction
-            if (!text || !amount || !category) {
-                alert("Please fill in all fields");
-                return;
+                if (initialData) {
+                    updateTransaction(initialData.id, transactionData);
+                } else {
+                    await addTransaction(transactionData);
+                }
             }
 
-            const finalAmount = type === 'expense' ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
+            // Reset Form
+            setText('');
+            setAmount('');
+            setCategory('');
+            setIsSplit(false);
+            setSplits([{ category: '', amount: '' }, { category: '', amount: '' }]);
 
-            const transactionData = {
-                text,
-                amount: finalAmount,
-                category,
-                accountId,
-                date: initialData ? initialData.date : new Date().toISOString()
-            };
-
-            if (initialData) {
-                updateTransaction(initialData.id, transactionData);
-            } else {
-                await addTransaction(transactionData);
+            if (onSuccess) {
+                onSuccess();
             }
+            nextStep();
+        } catch (error) {
+            console.error("Transaction Error:", error);
+            alert("Failed to save transaction.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        // Reset Form
-        setText('');
-        setAmount('');
-        setCategory('');
-        setIsSplit(false);
-        setSplits([{ category: '', amount: '' }, { category: '', amount: '' }]);
-
-        if (onSuccess) {
-            onSuccess();
-        }
-        nextStep(); // Advance tour
     };
 
     return (
@@ -262,8 +274,8 @@ const AddTransactionForm = ({ onSuccess, initialData = null }) => {
                 </div>
             )}
 
-            <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5" data-tour="tx-submit-btn">
-                <PlusCircle size={18} /> {initialData ? 'Update Transaction' : (type === 'expense' || isSplit ? 'Add Transaction(s)' : 'Add Income')}
+            <Button variant={type === 'expense' ? 'danger' : 'primary'} type="submit" className="mt-2 flex items-center justify-center gap-2 py-2.5" disabled={isSubmitting} data-tour="tx-submit-btn">
+                {isSubmitting ? 'Saving...' : (initialData ? 'Update Transaction' : (type === 'expense' || isSplit ? 'Add Transaction(s)' : 'Add Income'))}
             </Button>
         </form>
     );
