@@ -1,8 +1,8 @@
 import { db } from '../lib/firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 
-// ⚠️ REPLACE THIS WITH YOUR GENERATED KEY ⚠️
-const VAPID_PUBLIC_KEY = 'REPLACE_WITH_YOUR_PUBLIC_KEY';
+// Key provided via Vite Environment Variable (locally in .env, remotely via GitHub Secrets)
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
