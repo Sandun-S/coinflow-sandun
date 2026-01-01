@@ -52,9 +52,9 @@ const ExpenseChart = () => {
     }
 
     return (
-        <Card className="h-96 flex flex-col">
+        <Card className="min-h-[24rem] h-auto flex flex-col">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Expenses by Category</h3>
-            <div className="flex-1 w-full relative min-h-[300px]">
+            <div className="flex-1 w-full min-h-[300px]">
                 <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                         <Pie
@@ -74,7 +74,12 @@ const ExpenseChart = () => {
                             formatter={(value) => formatMoney(value)}
                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         />
-                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                        <Legend
+                            verticalAlign="bottom"
+                            layout="horizontal"
+                            align="center"
+                            wrapperStyle={{ paddingTop: '20px' }}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </div>

@@ -221,7 +221,7 @@ const SubscriptionsPage = () => {
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white leading-tight break-words" title={sub.name}>{sub.name}</h3>
+                                        <h3 className="font-bold text-base md:text-lg text-slate-800 dark:text-white leading-snug break-words" title={sub.name}>{sub.name}</h3>
                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-1">
                                             <p className="flex-shrink-0">{sub.billingCycle}</p>
                                             <span className="flex-shrink-0 hidden xs:inline opacity-50">•</span>

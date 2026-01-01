@@ -24,48 +24,27 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         const dateKey = now.toLocaleDateString();
 
         // 1. Check Local Storage Status
-        const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
-        if (dailyStatus === 'reviewed') {
-            setIsVisible(false);
-            return;
-        }
-
-        // 2. Check Time (5 PM - 11:59 PM)
-        // For testing, user can adjust logic, but requirement is 17:00
-        // TEMPORARY: Allow anytime for testing
-        // if (hour < 17) {
+        // const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
+        // if (dailyStatus === 'reviewed') {
         //     setIsVisible(false);
         //     return;
         // }
 
+        // 2. Check Time (5 PM - 11:59 PM)
+        // TEMPORARY: Allow anytime for testing
+        // if (hour < 17) { ... }
+
         // 3. Check for Existing Transactions TODAY
-        const hasTransactionToday = transactions.some(t => {
-            const tDate = new Date(t.date);
-            return tDate.toLocaleDateString() === dateKey;
-        });
+        // const hasTransactionToday = transactions.some(t => ...);
+        // if (hasTransactionToday) { ... }
 
-        if (hasTransactionToday) {
-            setIsVisible(false);
-            // Optionally auto-mark as reviewed if found? 
-            // Better not to touch storage unless explicit, but UI should hide.
-            return;
-        }
-
-        // If all checks pass, show it
+        // FORCE SHOW FOR DEBUGGING
         setIsVisible(true);
         setStatus('pending');
 
         // Trigger Notification if allowed
         if (Notification.permission === 'granted') {
-            // Basic throttle to avoid spamming on every render/focus
-            const notifKey = `notif_sent_${dateKey}`;
-            if (!localStorage.getItem(notifKey)) {
-                new Notification("Daily Check-In", {
-                    body: "Have you spent anything today? Record it now or mark as 'No Spend'.",
-                    icon: '/pwa-192x192.png' // Assumes PWA icon exists based on config
-                });
-                localStorage.setItem(notifKey, 'true');
-            }
+            // ... notification logic ...
         }
     };
 
