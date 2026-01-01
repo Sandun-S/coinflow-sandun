@@ -35,22 +35,27 @@ const BudgetsPage = () => {
     }, [categories, selectedCategory]);
 
     // Helper: Find Parent Name for a given category name (Sub or Parent)
-    // Returns the Parent Name if it's a sub, or the name itself if it's a parent.
-    // If not found, returns the name itself (fallback).
     const getParentCategoryName = (catName) => {
-        // Check if it's a parent
-        const parent = categories.find(c => c.name === catName);
+        if (!catName) return 'General';
+        const cleanName = catName.trim();
+
+        // 1. Check if it's a known Parent in User Categories
+        const parent = categories.find(c => c.name === cleanName);
         if (parent) return parent.name;
 
-        // Check if it's a sub
-        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
+        // 2. Check if it's a Sub in User Categories
+        const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(cleanName));
         if (parentOfSub) return parentOfSub.name;
 
-        // Fallback: Check Default Categories (Fix for missing initial data)
-        const defaultParentOfSub = DEFAULT_CATEGORIES.find(c => c.subcategories && c.subcategories.includes(catName));
-        if (defaultParentOfSub) return defaultParentOfSub.name;
+        // 3. Fallback: Check Default Categories (Crucial for initial/missing data)
+        const defaultParentOfSub = DEFAULT_CATEGORIES.find(c => c.subcategories && c.subcategories.includes(cleanName));
+        if (defaultParentOfSub) {
+            // console.log(`Found parent for ${cleanName} in Defaults: ${defaultParentOfSub.name}`);
+            return defaultParentOfSub.name;
+        }
 
-        return catName;
+        // console.log(`No parent found for ${cleanName}, returning self.`);
+        return cleanName;
     };
 
     // Calculate spending per PARENT category (Monthly)
