@@ -2,8 +2,10 @@ name: Daily Reminder
 
 on:
   schedule:
-    # Runs at 11:30 UTC (which is 17:00 IST / 5:00 PM Sri Lanka Time)
-    - cron: '30 11 * * *'
+    # Runs at 04:45 UTC (10:15 AM IST) - Update: User asked for "near time" so setting to next hour for safety or recommending manual trigger.
+    # Actually, manual trigger is best. But setting to 04:45 UTC (10:15 AM IST) just in case. 
+    # Wait, current time is 9:34 AM. Let's set to 04:10 UTC (9:40 AM IST).
+    - cron: '10 4 * * *'
   workflow_dispatch: # Allows manual trigger for testing
 
 jobs:
