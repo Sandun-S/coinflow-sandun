@@ -11,18 +11,16 @@ import { useCurrencyFormatter } from '../../utils';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
 import CategoryPicker from '../categories/CategoryPicker';
-
-import { useAuth } from '../../context/AuthContext'; // Import
+import { useAuth } from '../../context/AuthContext'; // Managed Gating
 
 const BudgetsPage = () => {
     const { budgets, setBudget, deleteBudget } = useBudgets();
     const { transactions } = useTransactions();
     const { categories } = useCategories(); // Get categories
     const { nextStep } = useTour();
-    const { user, isPro } = useAuth(); // Auth
+    const { user, isPro } = useAuth(); // Auth for gating
     const formatMoney = useCurrencyFormatter();
 
-    // State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [limit, setLimit] = useState('');
@@ -37,6 +35,8 @@ const BudgetsPage = () => {
     }, [categories, selectedCategory]);
 
     // Helper: Find Parent Name for a given category name (Sub or Parent)
+    // Returns the Parent Name if it's a sub, or the name itself if it's a parent.
+    // If not found, returns the name itself (fallback).
     const getParentCategoryName = (catName) => {
         // Check if it's a parent
         const parent = categories.find(c => c.name === catName);
@@ -46,9 +46,7 @@ const BudgetsPage = () => {
         const parentOfSub = categories.find(c => c.subcategories && c.subcategories.includes(catName));
         if (parentOfSub) return parentOfSub.name;
 
-        // Fallback: Check Default Categories if user categories not fully loaded?
-        // Or just rely on what we have. User provided logic relies on 'categories'.
-        // I will add the default fallback here too for robustness as per previous fix.
+        // Fallback: Check Default Categories (Fix for missing initial data)
         const defaultParentOfSub = DEFAULT_CATEGORIES.find(c => c.subcategories && c.subcategories.includes(catName));
         if (defaultParentOfSub) return defaultParentOfSub.name;
 
@@ -59,21 +57,15 @@ const BudgetsPage = () => {
     const categorySpending = useMemo(() => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Ensure full month coverage
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
         const monthlyExpenses = transactions.filter(t => {
             if (t.type !== 'expense') return false;
-            // Date parsing
-            let tDate;
-            if (t.date?.seconds) {
-                tDate = new Date(t.date.seconds * 1000);
-            } else {
-                tDate = new Date(t.date);
-            }
+            const tDate = t.date?.seconds ? new Date(t.date.seconds * 1000) : new Date(t.date);
             return tDate >= startOfMonth && tDate <= endOfMonth;
         });
 
-        const spending = {}; // { ParentName: { total: 0, subs: {} } }
+        const spending = {}; // { CategoryName: { total: 0, subs: {} } }
 
         monthlyExpenses.forEach(t => {
             const rawCat = t.category || 'General';
@@ -87,16 +79,44 @@ const BudgetsPage = () => {
             spending[parentCat].total += amount;
 
             // Track subcategory breakdown for the Parent
-            // If the transaction is for a subcategory (e.g. Internet Bill), add to subs['Internet Bill']
-            // If the transaction is for the Parent itself (e.g. Bills), add to subs['_main']
             if (rawCat !== parentCat) {
                 spending[parentCat].subs[rawCat] = (spending[parentCat].subs[rawCat] || 0) + amount;
             } else {
                 spending[parentCat].subs['_main'] = (spending[parentCat].subs['_main'] || 0) + amount;
             }
+
+            // 2. Track individual spending for Subcategory (if budget is set specifically for it)
+            if (rawCat !== parentCat) {
+                if (!spending[rawCat]) {
+                    spending[rawCat] = { total: 0, subs: {} };
+                }
+                spending[rawCat].total += amount;
+                // No 'subs' breakdown needed for a subcategory itself
+            }
         });
         return spending;
     }, [transactions, categories]);
+
+    const handleSaveBudget = (e) => {
+        e.preventDefault();
+        const newBudget = {
+            category: selectedCategory,
+            limit: parseFloat(limit),
+            id: editingId
+        };
+        setBudget(newBudget);
+        setIsModalOpen(false);
+        setEditingId(null);
+        setLimit('');
+        nextStep();
+    };
+
+    const handleEdit = (budget) => {
+        setEditingId(budget.id);
+        setSelectedCategory(budget.category);
+        setLimit(budget.limit);
+        setIsModalOpen(true);
+    };
 
     // Group budgets by Parent Category
     const groupedBudgets = useMemo(() => {
@@ -116,8 +136,16 @@ const BudgetsPage = () => {
         // Convert to array for rendering
         return Object.entries(groups).map(([parentName, data]) => {
             let totalLimit = 0;
-            // Strategy: If Main exists, that is the Ceiling.
+            // Strategy: If Main exists, use its limit? Or if Subs exist, sum them?
+            // User requirement: "if i create all subcategories under one main category, show all inside one card"
+            // If main budget exists, that is the Ceiling.
             // If only sub budgets exist, the Ceiling is the sum of them.
+            // Wait, if Main exists (Limit 50k), and Sub exists (Limit 20k), total budget is 50k? Or 50k + 20k?
+            // Usually Main Budget covers everything. Sub Budget is a "Soft Limit" inside it.
+            // Let's assume:
+            // Top Level Limit = main.limit IF main exists.
+            // ELSE Top Level Limit = Sum(subs.limit).
+
             if (data.main) {
                 totalLimit = parseFloat(data.main.limit);
             } else {
@@ -132,27 +160,6 @@ const BudgetsPage = () => {
             };
         });
     }, [budgets, categories]);
-
-    const handleSaveBudget = (e) => {
-        e.preventDefault();
-        const newBudget = {
-            category: selectedCategory,
-            limit: parseFloat(limit),
-            id: editingId
-        };
-        setBudget(newBudget); // Assuming setBudget handles update if id exists
-        setIsModalOpen(false);
-        setEditingId(null);
-        setSelectedCategory('');
-        setLimit('');
-    };
-
-    const handleEdit = (budget) => {
-        setEditingId(budget.id);
-        setSelectedCategory(budget.category);
-        setLimit(budget.limit);
-        setIsModalOpen(true);
-    };
 
     return (
         <MainLayout>
@@ -179,7 +186,6 @@ const BudgetsPage = () => {
 
             {/* Total Budget Summary */}
             {budgets.length > 0 && (() => {
-                // Use groupedBudgets to calculate totals properly (avoid double counting parents/subs)
                 const totalBudget = groupedBudgets.reduce((sum, g) => sum + g.limit, 0);
                 const totalSpent = groupedBudgets.reduce((sum, g) => {
                     const data = categorySpending[g.parentName];
@@ -225,20 +231,11 @@ const BudgetsPage = () => {
                     const percentage = Math.min((totalSpent / limit) * 100, 100);
                     const isOver = totalSpent > limit;
 
-                    // Determine what to show in Breakdown
-                    // We want to show:
-                    // 1. Explicit Sub-Budgets (Limit vs Spent)
-                    // 2. Spent on categories that have NO budget? (Maybe just catch-all or standard list)
-                    // User said: "show them like this too". The previous version showed all spending contributors.
-                    // Let's merge "Spending Contributors" with "Budget Targets".
-
                     // We need a list of ALL subcategories that have either Spending OR a Budget.
                     const relevantSubs = new Set([
                         ...Object.keys(spentData.subs).filter(k => k !== '_main'),
                         ...subBudgets.map(b => b.category)
                     ]);
-
-                    // ... logic remains ...
 
                     const breakdown = Array.from(relevantSubs).map(subName => {
                         const subSpent = spentData.subs[subName] || 0;
@@ -265,10 +262,6 @@ const BudgetsPage = () => {
                                         </p>
                                     </div>
                                     <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                                        {/* Action buttons - tricky. If we have multiple budgets, which one to edit?
-                                        Maybe separate Edit buttons for Main vs Sub?
-                                        For now, if Main exists, Edit Main. If not... maybe prompt to add Main?
-                                    */}
                                         {mainBudget && (
                                             <>
                                                 <button
@@ -310,12 +303,7 @@ const BudgetsPage = () => {
                                     <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
                                         {breakdown.map((item) => {
-                                            // Calculate sub-bar width.
-                                            // If it has its own limit, % of that limit.
-                                            // If NO limit, % of Main Limit? Or just visual of Contribution?
-                                            // User: "show them like this too". Let's show specific sub-budget progress if defined.
-
-                                            const itemLimit = item.limit > 0 ? item.limit : limit; // Fallback to main limit for relative visual
+                                            const itemLimit = item.limit > 0 ? item.limit : limit;
                                             const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
                                             const isSubOver = item.limit > 0 && item.spent > item.limit;
 
@@ -341,7 +329,6 @@ const BudgetsPage = () => {
                                                                 <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={() => {
-                                                                            // Find the budget doc again? Or cleaner way?
                                                                             const b = subBudgets.find(sb => sb.category === item.name);
                                                                             if (b) handleEdit(b);
                                                                         }}
