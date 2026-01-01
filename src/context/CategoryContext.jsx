@@ -12,7 +12,24 @@ export const DEFAULT_CATEGORIES = [
         type: 'expense',
         icon: 'Lightbulb',
         color: 'bg-yellow-100 text-yellow-600',
-        subcategories: ['Internet Bill', 'Phone Bill', 'Television Bill', 'Electricity', 'Water']
+        subcategories: ['Internet Bill', 'Phone Bill', 'Television Bill', 'Electricity', 'Water', 'Gas']
+    },
+    {
+        name: 'Housing',
+        type: 'expense',
+        icon: 'Home',
+        color: 'bg-stone-100 text-stone-600', // Using valid tailwind color if configured, or sticky to standard ones
+        // Actually stone might not be in the PALETTE list in ManageCategories.
+        // Let's use 'bg-slate-100 text-slate-600' which is widely supported.
+        color: 'bg-slate-100 text-slate-600',
+        subcategories: ['Rent', 'Boarding Fee', 'Mortgage', 'Property Tax']
+    },
+    {
+        name: 'House',
+        type: 'expense',
+        icon: 'Hammer', // Standard Lucide
+        color: 'bg-orange-100 text-orange-600',
+        subcategories: ['Repair', 'House Items', 'Furniture', 'Maintenance']
     },
     {
         name: 'Food & Beverage',

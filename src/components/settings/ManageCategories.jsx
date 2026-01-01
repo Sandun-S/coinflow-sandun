@@ -32,7 +32,7 @@ const ICONS = [
     'Tag', 'ShoppingBag', 'CreditCard', 'Banknote', 'Wallet', 'DollarSign',
     'Home', 'Briefcase', 'GraduationCap', 'Book', 'Gamepad', 'Music',
     'Tv', 'Wifi', 'Smartphone', 'Cpu', 'Zap', 'Lightbulb',
-    'Tool', 'Truck', 'Car', 'Plane', 'Map', 'Globe',
+    'Tool', 'Hammer', 'Truck', 'Car', 'Plane', 'Map', 'Globe',
     'Coffee', 'Utensils', 'Pizza', 'GlassWater', 'Beer', 'Heart',
     'Activity', 'Stethoscope', 'Pill', 'Smile', 'Star', 'Gift',
     'Shield', 'Lock', 'Key', 'Umbrella', 'Cloud', 'Sun'

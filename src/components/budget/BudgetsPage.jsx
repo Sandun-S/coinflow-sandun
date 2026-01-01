@@ -33,7 +33,17 @@ const BudgetsPage = () => {
         const spending = {};
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Fix: Include last second of month
+
+        // Build Child -> Parent map for robust aggregation
+        const childParentMap = {};
+        categories.forEach(c => {
+            if (c.subcategories) {
+                c.subcategories.forEach(sub => {
+                    childParentMap[sub] = c.name;
+                });
+            }
+        });
 
         transactions.forEach(t => {
             if (t.type === 'expense') {
@@ -46,27 +56,49 @@ const BudgetsPage = () => {
                 }
 
                 if (tDate >= startOfMonth && tDate <= endOfMonth) {
-                    let mainCat = t.category;
-                    let subCat = '_main';
+                    const amount = Math.abs(parseFloat(t.amount));
+                    let catName = t.category;
 
-                    // Parse "Parent > Child"
-                    if (t.category && t.category.includes('>')) {
-                        const parts = t.category.split('>');
-                        mainCat = parts[0].trim();
-                        subCat = parts[1].trim();
+                    // Handle "Parent > Child" string for initial parsing if map fails or format is explicit
+                    let explicitParent = null;
+                    let explicitSub = null;
+                    if (catName.includes('>')) {
+                        const parts = catName.split('>');
+                        explicitParent = parts[0].trim();
+                        explicitSub = parts[1].trim();
+                        catName = explicitSub; // Normalize to child name if possible
                     }
 
-                    if (!spending[mainCat]) spending[mainCat] = { total: 0, subs: {} };
-                    spending[mainCat].total += Math.abs(parseFloat(t.amount)); // Parent Total includes sub
+                    // 1. Accumulate to the Specific Category Key (e.g. "Internet Bill")
+                    // This ensures budgets set directly on "Internet Bill" find their data.
+                    const key = explicitSub || catName; // Use child name
+                    if (!spending[key]) spending[key] = { total: 0, subs: {} };
+                    spending[key].total += amount;
 
-                    if (subCat !== '_main') {
-                        spending[mainCat].subs[subCat] = (spending[mainCat].subs[subCat] || 0) + Math.abs(parseFloat(t.amount));
+                    // 2. Accumulate to the Parent Category Key (e.g. "Bills & Utilities")
+                    // This ensures budgets set on "Bills & Utilities" include "Internet Bill".
+                    let parent = childParentMap[key] || explicitParent;
+
+                    if (parent && parent !== key) {
+                        if (!spending[parent]) spending[parent] = { total: 0, subs: {} };
+                        spending[parent].total += amount;
+                        spending[parent].subs[key] = (spending[parent].subs[key] || 0) + amount;
+                    } else if (explicitParent) {
+                        // Fallback if map didn't have it but string did
+                        if (!spending[explicitParent]) spending[explicitParent] = { total: 0, subs: {} };
+                        spending[explicitParent].total += amount;
+                        spending[explicitParent].subs[explicitSub] = (spending[explicitParent].subs[explicitSub] || 0) + amount;
                     }
+
+                    // Special case: If the transaction IS the parent (e.g. "Bills & Utilities"), 
+                    // we already added to spending[key] above. 
+                    // If it has children defined in logical map but transaction is generic, 
+                    // it stays in generic total but not in a specific sub bucket.
                 }
             }
         });
         return spending;
-    }, [transactions]);
+    }, [transactions, categories]);
 
     // Group Budgets by Parent
     const groupedBudgets = useMemo(() => {
