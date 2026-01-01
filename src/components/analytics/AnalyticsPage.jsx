@@ -176,7 +176,7 @@ const AnalyticsPage = () => {
     }, [filteredTransactions, timeRange]);
 
     const categoryData = useMemo(() => {
-        const expenses = filteredTransactions.filter(t => t.amount < 0);
+        const expenses = filteredTransactions.filter(t => t.amount < 0 && t.category !== 'Transfer');
         const map = {};
         expenses.forEach(t => {
             const cat = t.category || 'Uncategorized';
