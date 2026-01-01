@@ -93,6 +93,7 @@ export const TransactionProvider = ({ children }) => {
             const { id, ...data } = transaction; // Exclude local ID if present
 
             // 1. Add Doc
+            // data includes text, amount, category, accountId, date, and optionally subscriptionId
             await addDoc(collection(db, 'transactions'), {
                 ...data,
                 userId: user.id,

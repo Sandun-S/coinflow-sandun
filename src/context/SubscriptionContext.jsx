@@ -11,6 +11,7 @@ import {
     updateDoc
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { useTransactions } from './TransactionContext';
 
 const SubscriptionContext = createContext();
 
@@ -45,6 +46,73 @@ export const SubscriptionProvider = ({ children }) => {
 
         return () => unsubscribe();
     }, [user]);
+
+    const [processingAutoPay, setProcessingAutoPay] = useState(false);
+    const { addTransaction } = useTransactions();
+
+    // Check for Auto-Pay on Load and Updates
+    useEffect(() => {
+        if (!user || loading || subscriptions.length === 0 || processingAutoPay) return;
+
+        const checkAutoPay = async () => {
+            // Filter for candidates first to avoid unnecessary processing
+            const candidates = subscriptions.filter(sub => sub.autoPay && sub.walletId);
+            if (candidates.length === 0) return;
+
+            setProcessingAutoPay(true);
+            let updatesMade = false;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (const sub of candidates) {
+                let nextDate = new Date(sub.nextBillingDate);
+                nextDate.setHours(0, 0, 0, 0);
+
+                // Catch-Up Logic: Loop while date is in past or today
+                // Safety: Limit loop to 12 iterations (1 year) to prevent infinite loops if dates are broken
+                let iterations = 0;
+                let modified = false;
+
+                while (nextDate <= today && iterations < 12) {
+                    console.log(`Auto-paying ${sub.name} for ${nextDate.toLocaleDateString()}`);
+
+                    // 1. Pay
+                    const amount = parseFloat(sub.amount);
+                    await addTransaction({
+                        text: `Auto-Pay: ${sub.name}`,
+                        amount: (sub.type === 'income' ? 1 : -1) * Math.abs(amount),
+                        category: sub.category || 'Bills & Utilities',
+                        accountId: sub.walletId,
+                        date: new Date().toISOString(), // Transaction happens NOW
+                        subscriptionId: sub.id
+                    });
+
+                    // 2. Advance Date
+                    if (sub.billingCycle === 'Monthly') {
+                        nextDate.setMonth(nextDate.getMonth() + 1);
+                    } else {
+                        nextDate.setFullYear(nextDate.getFullYear() + 1);
+                    }
+
+                    modified = true;
+                    iterations++;
+                }
+
+                if (modified) {
+                    // Update Subscription with new future date
+                    await updateSubscription(sub.id, {
+                        nextBillingDate: nextDate.toISOString()
+                    });
+                    updatesMade = true;
+                }
+            }
+
+            setProcessingAutoPay(false);
+        };
+
+        checkAutoPay();
+    }, [user, loading, subscriptions]);
 
     const addSubscription = async (subscriptionData) => {
         if (!user) return;
