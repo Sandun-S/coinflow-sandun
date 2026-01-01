@@ -99,7 +99,62 @@ const SubscriptionsPage = () => {
         setEditingId(null);
     };
 
-    // ... existing handlePayment and helpers ...
+    const handlePayment = async (sub) => {
+        if (!window.confirm(`Mark ${sub.name} as paid? This will add a transaction and update the due date.`)) return;
+
+        // 1. Add Transaction
+        const transactionResult = await addTransaction({
+            type: sub.type || 'expense',
+            amount: (sub.type === 'income' ? 1 : -1) * Math.abs(parseFloat(sub.amount)),
+            category: sub.category || 'Bills & Utilities',
+            text: sub.name,
+            date: new Date().toISOString()
+        });
+
+        if (transactionResult.success) {
+            // 2. Calculate New Next Date
+            const currentNextDate = new Date(sub.nextBillingDate);
+            let newNextDate = new Date(currentNextDate);
+
+            if (sub.billingCycle === 'Monthly') {
+                newNextDate.setMonth(newNextDate.getMonth() + 1);
+            } else {
+                newNextDate.setFullYear(newNextDate.getFullYear() + 1);
+            }
+
+            // 3. Update Subscription
+            await updateSubscription(sub.id, {
+                nextBillingDate: newNextDate.toISOString()
+            });
+        }
+    };
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-LK', {
+            style: 'currency',
+            currency: currency
+        }).format(value);
+    };
+
+    // Calculate Total Monthly Cost
+    const totalMonthlyCost = subscriptions.reduce((total, sub) => {
+        if (sub.billingCycle === 'Monthly' || sub.billingCycle === 'monthly') {
+            return total + sub.amount;
+        } else {
+            return total + (sub.amount / 12); // Amortize yearly
+        }
+    }, 0);
+
+    const getDaysUntilDue = (dateString) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today
+        const due = new Date(dateString);
+        due.setHours(0, 0, 0, 0); // Normalize due date
+
+        const diffTime = due - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    };
 
     const handleHistory = (sub) => {
         setSelectedSubscription(sub);
