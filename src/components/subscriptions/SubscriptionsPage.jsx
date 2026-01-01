@@ -7,8 +7,12 @@ import Modal from '../common/Modal';
 import { useSubscriptions } from '../../context/SubscriptionContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useTransactions } from '../../context/TransactionContext';
+import { useCategories } from '../../context/CategoryContext';
+import { useTour } from '../../context/TourContext';
+import CategoryPicker from '../categories/CategoryPicker';
 import AccountPicker from '../accounts/AccountPicker';
-import SubscriptionDetailsModal from './SubscriptionDetailsModal'; // New Import
+import SubscriptionDetailsModal from './SubscriptionDetailsModal';
+import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
 
 const SubscriptionsPage = () => {
     const { subscriptions, addSubscription, deleteSubscription, updateSubscription, loading } = useSubscriptions();
