@@ -12,10 +12,12 @@ import { useCategories } from '../../context/CategoryContext';
 import { useTour } from '../../context/TourContext';
 import CategoryPicker from '../categories/CategoryPicker';
 import AccountPicker from '../accounts/AccountPicker';
-import SubscriptionDetailsModal from './SubscriptionDetailsModal';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import { Plus, Trash2, Calendar, RefreshCw, Check, Pencil } from 'lucide-react';
+import SubscriptionDetailsModal from './SubscriptionDetailsModal'; // Ensure this is imported too
 
 const SubscriptionsPage = () => {
+    const { user, isPro } = useAuth(); // Destructure
     const { subscriptions, addSubscription, deleteSubscription, updateSubscription, loading } = useSubscriptions();
     const { currency } = useSettings();
     const { addTransaction } = useTransactions();
@@ -182,7 +184,7 @@ const SubscriptionsPage = () => {
 
     return (
         <MainLayout>
-            {/* ... existing header ... */}
+            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Subscriptions</h2>
@@ -204,114 +206,134 @@ const SubscriptionsPage = () => {
 
             {/* List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {subscriptions.map(sub => {
+                {subscriptions.map((sub, index) => {
                     const daysLeft = getDaysUntilDue(sub.nextBillingDate);
                     const isDueSoon = daysLeft >= 0 && daysLeft <= 3;
-                    // Overdue logic: if daysLeft < 0 (meaning strict past)
                     const isOverdue = daysLeft < 0;
 
+                    const isLocked = !isPro(user) && index >= 3;
+
                     return (
-                        <Card key={sub.id} className={`relative ${isDueSoon ? 'border-orange-300 dark:border-orange-500/50' : ''}`}>
-                            {/* ... existing card content simplified for regex replacement if needed, but I'll try to target specific blocks or rewrite the map */}
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 flex-shrink-0 relative">
-                                        <RefreshCw size={24} />
+                        <Card key={sub.id} className={`relative overflow-hidden ${isDueSoon ? 'border-orange-300 dark:border-orange-500/50' : ''} ${isLocked ? 'ring-1 ring-slate-200 dark:ring-slate-700' : ''}`}>
+                            <div className={isLocked ? 'filter blur-[3px] pointer-events-none opacity-50 select-none' : ''}>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 flex-shrink-0 relative">
+                                            <RefreshCw size={24} />
+                                            {sub.autoPay && (
+                                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800" title="Auto Pay Enabled"></div>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <h3 className="font-bold text-base md:text-lg text-slate-800 dark:text-white leading-snug break-words" title={sub.name}>{sub.name}</h3>
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                <p className="flex-shrink-0">{sub.billingCycle}</p>
+                                                <span className="flex-shrink-0 hidden xs:inline opacity-50">•</span>
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1 break-all">
+                                                    {(() => {
+                                                        const hierarchy = getCategoryHierarchy ? getCategoryHierarchy(sub.category || 'General') : { type: 'unknown', sub: sub.category };
+                                                        if (hierarchy.type === 'sub') {
+                                                            return (
+                                                                <span>
+                                                                    <span className="opacity-75">{hierarchy.parent?.name}</span>
+                                                                    <span className="mx-1">&rsaquo;</span>
+                                                                    <span>{hierarchy.sub}</span>
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return <span>{hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General')}</span>;
+                                                    })()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-shrink-0 ml-1">
+                                        {daysLeft > 20 && !isOverdue ? (
+                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wide mr-2">
+                                                <Check size={12} /> Paid
+                                            </div>
+                                        ) : null}
+
+                                        <Dropdown
+                                            items={[
+                                                ...(daysLeft <= 20 || isOverdue ? [{
+                                                    label: isSubmitting ? 'Processing...' : 'Mark as Paid',
+                                                    icon: <Check size={16} />,
+                                                    onClick: () => handlePayment(sub),
+                                                    variant: 'success',
+                                                    disabled: sub.autoPay || isSubmitting
+                                                }] : []),
+                                                {
+                                                    label: 'History & Analytics',
+                                                    icon: <Calendar size={16} />,
+                                                    onClick: () => handleHistory(sub)
+                                                },
+                                                {
+                                                    label: 'Edit Subscription',
+                                                    icon: <Pencil size={16} />,
+                                                    onClick: () => handleEdit(sub)
+                                                },
+                                                { type: 'divider' },
+                                                {
+                                                    label: 'Delete',
+                                                    icon: <Trash2 size={16} />,
+                                                    onClick: () => deleteSubscription(sub.id),
+                                                    variant: 'danger'
+                                                }
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-semibold">Amount</p>
+                                        <p className={`text-lg font-bold ${sub.type === 'income' ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                            {formatCurrency(sub.amount)}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-500 uppercase font-semibold">Next Bill</p>
+                                        <p className={`font-medium ${isDueSoon || isOverdue ? 'text-orange-600 dark:text-orange-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            {new Date(sub.nextBillingDate).toLocaleDateString()}
+                                        </p>
+                                        {isDueSoon && !isOverdue && (
+                                            <span className="text-xs font-bold text-orange-500">
+                                                {daysLeft === 0 ? "Due Today!" : `Due in ${daysLeft} days!`}
+                                            </span>
+                                        )}
+                                        {isOverdue && (
+                                            <span className="text-xs font-bold text-red-500">
+                                                Overdue ({Math.abs(daysLeft)} days)
+                                            </span>
+                                        )}
                                         {sub.autoPay && (
-                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800" title="Auto Pay Enabled"></div>
+                                            <span className="block text-[10px] uppercase font-bold text-emerald-500 mt-0.5">
+                                                Auto-Pay On
+                                            </span>
                                         )}
                                     </div>
-                                    <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="font-bold text-base md:text-lg text-slate-800 dark:text-white leading-snug break-words" title={sub.name}>{sub.name}</h3>
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                            <p className="flex-shrink-0">{sub.billingCycle}</p>
-                                            <span className="flex-shrink-0 hidden xs:inline opacity-50">•</span>
-                                            {/* ... category pill ... */}
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1 break-all">
-                                                {(() => {
-                                                    const hierarchy = getCategoryHierarchy ? getCategoryHierarchy(sub.category || 'General') : { type: 'unknown', sub: sub.category };
-                                                    if (hierarchy.type === 'sub') {
-                                                        return (
-                                                            <span>
-                                                                <span className="opacity-75">{hierarchy.parent?.name}</span>
-                                                                <span className="mx-1">&rsaquo;</span>
-                                                                <span>{hierarchy.sub}</span>
-                                                            </span>
-                                                        );
-                                                    }
-                                                    return <span>{hierarchy.type === 'parent' ? hierarchy.parent?.name : (sub.category || 'General')}</span>;
-                                                })()}
-                                            </span>
+                                </div>
+                            </div>
+
+                            {isLocked && (
+                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-center">
+                                    <div className="bg-slate-900/50 dark:bg-black/50 backdrop-blur-[1px] absolute inset-0"></div>
+                                    <div className="relative z-20 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 transform scale-100 hover:scale-105 transition-transform cursor-default">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white mb-2 mx-auto shadow-lg shadow-indigo-500/20">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                                         </div>
+                                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Lifetime Access</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 max-w-[140px] mx-auto">This subscription is locked on the Free Plan.</p>
+                                        <button
+                                            onClick={() => window.location.href = '/settings'}
+                                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                        >
+                                            Upgrade to Unlock
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0 ml-1">
-                                    {daysLeft > 20 && !isOverdue ? (
-                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wide mr-2">
-                                            <Check size={12} /> Paid
-                                        </div>
-                                    ) : null}
-
-                                    <Dropdown
-                                        items={[
-                                            ...(daysLeft <= 20 || isOverdue ? [{
-                                                label: isSubmitting ? 'Processing...' : 'Mark as Paid',
-                                                icon: <Check size={16} />,
-                                                onClick: () => handlePayment(sub),
-                                                variant: 'success',
-                                                disabled: sub.autoPay || isSubmitting
-                                            }] : []),
-                                            {
-                                                label: 'History & Analytics',
-                                                icon: <Calendar size={16} />,
-                                                onClick: () => handleHistory(sub)
-                                            },
-                                            {
-                                                label: 'Edit Subscription',
-                                                icon: <Pencil size={16} />,
-                                                onClick: () => handleEdit(sub)
-                                            },
-                                            { type: 'divider' },
-                                            {
-                                                label: 'Delete',
-                                                icon: <Trash2 size={16} />,
-                                                onClick: () => deleteSubscription(sub.id),
-                                                variant: 'danger'
-                                            }
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <p className="text-xs text-slate-500 uppercase font-semibold">Amount</p>
-                                    <p className={`text-lg font-bold ${sub.type === 'income' ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
-                                        {formatCurrency(sub.amount)}
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-slate-500 uppercase font-semibold">Next Bill</p>
-                                    <p className={`font-medium ${isDueSoon || isOverdue ? 'text-orange-600 dark:text-orange-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                                        {new Date(sub.nextBillingDate).toLocaleDateString()}
-                                    </p>
-                                    {isDueSoon && !isOverdue && (
-                                        <span className="text-xs font-bold text-orange-500">
-                                            {daysLeft === 0 ? "Due Today!" : `Due in ${daysLeft} days!`}
-                                        </span>
-                                    )}
-                                    {isOverdue && (
-                                        <span className="text-xs font-bold text-red-500">
-                                            Overdue ({Math.abs(daysLeft)} days)
-                                        </span>
-                                    )}
-                                    {sub.autoPay && (
-                                        <span className="block text-[10px] uppercase font-bold text-emerald-500 mt-0.5">
-                                            Auto-Pay On
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                            )}
                         </Card>
                     );
                 })}

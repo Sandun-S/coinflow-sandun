@@ -240,78 +240,110 @@ const MyWallets = () => {
         }
     };
 
-    const AccountCard = ({ acc }) => (
-        <Card key={acc.id} className="relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-2xl ${acc.color || 'bg-slate-100 text-slate-600'}`}>
-                        {getIcon(acc.type)}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{acc.name}</h3>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={() => handleEdit(acc)}
-                        className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
-                        title="Edit Wallet"
-                    >
-                        <Edit2 size={18} />
-                    </button>
-                    <button
-                        onClick={() => handleDelete(acc.id)}
-                        className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                        title="Delete Wallet"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
-            </div>
+    const lockedAccountIds = React.useMemo(() => {
+        if (isPro && isPro(user)) return new Set(); // Check both prop and function if needed, usually isPro(user) inside component
+        // Limit is 2 for Free Plan
+        return new Set(accounts.slice(2).map(a => a.id));
+    }, [accounts, user, isPro]);
 
-            <div className="mt-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {acc.type === 'Credit Card' ? 'Available Credit' : 'Current Balance'}
-                </span>
-                <div className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mt-1 break-words">
-                    {formatMoney(acc.balance)}
-                </div>
+    const AccountCard = ({ acc }) => {
+        // Double check lock status
+        const isLocked = lockedAccountIds.has(acc.id);
 
-                {acc.type === 'Credit Card' && acc.creditLimit && (
-                    <>
-                        <div className="mt-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                            <div
-                                className="bg-purple-500 h-full rounded-full"
-                                style={{ width: `${(acc.balance / acc.creditLimit) * 100}%` }}
-                            />
+        return (
+            <Card key={acc.id} className={`relative overflow-hidden group hover:shadow-md transition-shadow ${isLocked ? 'ring-1 ring-slate-200 dark:ring-slate-700' : ''}`}>
+                <div className={isLocked ? 'filter blur-[3px] pointer-events-none opacity-50 select-none' : ''}>
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                            <div className={`p-3 rounded-2xl ${acc.color || 'bg-slate-100 text-slate-600'}`}>
+                                {getIcon(acc.type)}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-white">{acc.name}</h3>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">{acc.type}</span>
+                            </div>
                         </div>
-                        <div className="flex justify-between mt-1 text-xs text-slate-400">
-                            <span>Used: {formatMoney(acc.creditLimit - acc.balance)}</span>
-                            <span>Limit: {formatMoney(acc.creditLimit)}</span>
+                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={() => handleEdit(acc)}
+                                className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
+                                title="Edit Wallet"
+                            >
+                                <Edit2 size={18} />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(acc.id)}
+                                className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                                title="Delete Wallet"
+                            >
+                                <Trash2 size={18} />
+                            </button>
                         </div>
-                    </>
-                )}
+                    </div>
 
-                {acc.type === 'Investment' && (
-                    <div className="mt-3 flex items-center justify-between">
-                        {acc.interestRate ? (
-                            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-                                {acc.interestRate}% Return
-                            </span>
-                        ) : <span></span>}
+                    <div className="mt-2">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                            {acc.type === 'Credit Card' ? 'Available Credit' : 'Current Balance'}
+                        </span>
+                        <div className="text-lg md:text-2xl font-bold text-slate-800 dark:text-white mt-1 break-words">
+                            {formatMoney(acc.balance)}
+                        </div>
 
-                        <button
-                            onClick={() => openAdjustment(acc)}
-                            className="text-xs flex items-center gap-1 text-indigo-500 hover:underline font-medium"
-                        >
-                            <RefreshCw size={12} /> Update Balance
-                        </button>
+                        {acc.type === 'Credit Card' && acc.creditLimit && (
+                            <>
+                                <div className="mt-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        className="bg-purple-500 h-full rounded-full"
+                                        style={{ width: `${(acc.balance / acc.creditLimit) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-1 text-xs text-slate-400">
+                                    <span>Used: {formatMoney(acc.creditLimit - acc.balance)}</span>
+                                    <span>Limit: {formatMoney(acc.creditLimit)}</span>
+                                </div>
+                            </>
+                        )}
+
+                        {acc.type === 'Investment' && (
+                            <div className="mt-3 flex items-center justify-between">
+                                {acc.interestRate ? (
+                                    <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                                        {acc.interestRate}% Return
+                                    </span>
+                                ) : <span></span>}
+
+                                <button
+                                    onClick={() => openAdjustment(acc)}
+                                    className="text-xs flex items-center gap-1 text-indigo-500 hover:underline font-medium"
+                                >
+                                    <RefreshCw size={12} /> Update Balance
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {isLocked && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-center">
+                        <div className="bg-slate-900/50 dark:bg-black/50 backdrop-blur-[1px] absolute inset-0"></div>
+                        <div className="relative z-20 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 transform scale-100 hover:scale-105 transition-transform cursor-default">
+                            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white mb-2 mx-auto shadow-lg shadow-indigo-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </div>
+                            <h4 className="font-bold text-slate-900 dark:text-white mb-1">Lifetime Access</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 max-w-[140px] mx-auto">This wallet is locked on the Free Plan.</p>
+                            <button
+                                onClick={() => window.location.href = '/settings'}
+                                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                Upgrade to Unlock
+                            </button>
+                        </div>
                     </div>
                 )}
-            </div>
-        </Card>
-    );
+            </Card>
+        );
+    };
 
     return (
         <MainLayout>

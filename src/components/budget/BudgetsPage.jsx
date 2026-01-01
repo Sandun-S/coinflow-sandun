@@ -216,8 +216,9 @@ const BudgetsPage = () => {
 
             {/* Masonry Layout for Variable Heights */}
             <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-                {groupedBudgets.map(group => {
+                {groupedBudgets.map((group, index) => {
                     const { parentName, mainBudget, subBudgets, limit } = group;
+                    const isLocked = !isPro(user) && index >= 3;
 
                     // Get aggregations from categorySpending (already sums up parents + subs)
                     const spentData = categorySpending[parentName] || { total: 0, subs: {} };
@@ -257,141 +258,162 @@ const BudgetsPage = () => {
                     }).sort((a, b) => b.spent - a.spent); // Sort by spending
 
                     return (
-                        <div key={parentName} className="break-inside-avoid">
-                            <Card className="relative overflow-hidden h-full">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">{parentName}</h3>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                                            {mainBudget ? 'Total Limit' : 'Combined Limit'}
-                                        </p>
-                                    </div>
-                                    <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                                        {/* Action buttons - tricky. If we have multiple budgets, which one to edit?
+                        <div key={parentName} className="break-inside-avoid relative">
+                            <Card className={`relative overflow-hidden h-full transition-all ${isLocked ? 'ring-1 ring-slate-200 dark:ring-slate-700' : ''}`}>
+                                <div className={isLocked ? 'filter blur-[3px] pointer-events-none opacity-50 select-none' : ''}>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">{parentName}</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                                {mainBudget ? 'Total Limit' : 'Combined Limit'}
+                                            </p>
+                                        </div>
+                                        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                                            {/* Action buttons - tricky. If we have multiple budgets, which one to edit?
                                         Maybe separate Edit buttons for Main vs Sub?
                                         For now, if Main exists, Edit Main. If not... maybe prompt to add Main?
                                     */}
-                                        {mainBudget && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleEdit(mainBudget)}
-                                                    className="text-slate-400 hover:text-indigo-500 transition-colors p-1.5"
-                                                    title="Edit Main Budget"
-                                                >
-                                                    <Pencil size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteBudget(mainBudget.id)}
-                                                    className="text-slate-400 hover:text-red-500 transition-colors p-1.5"
-                                                    title="Delete Main Budget"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </>
-                                        )}
+                                            {mainBudget && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleEdit(mainBudget)}
+                                                        className="text-slate-400 hover:text-indigo-500 transition-colors p-1.5"
+                                                        title="Edit Main Budget"
+                                                    >
+                                                        <Pencil size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteBudget(mainBudget.id)}
+                                                        className="text-slate-400 hover:text-red-500 transition-colors p-1.5"
+                                                        title="Delete Main Budget"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="mb-2 flex items-baseline gap-1">
-                                    <span className={`text-2xl font-bold ${isOver ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
-                                        {formatMoney(totalSpent)}
-                                    </span>
-                                    <span className="text-slate-400">/ {formatMoney(limit)}</span>
-                                </div>
+                                    <div className="mb-2 flex items-baseline gap-1">
+                                        <span className={`text-2xl font-bold ${isOver ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
+                                            {formatMoney(totalSpent)}
+                                        </span>
+                                        <span className="text-slate-400">/ {formatMoney(limit)}</span>
+                                    </div>
 
-                                {/* Main Progress Bar */}
-                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 mb-4 overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-500 ${isOver ? 'bg-red-500' : 'bg-indigo-500'}`}
-                                        style={{ width: `${percentage}%` }}
-                                    />
-                                </div>
+                                    {/* Main Progress Bar */}
+                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 mb-4 overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${isOver ? 'bg-red-500' : 'bg-indigo-500'}`}
+                                            style={{ width: `${percentage}%` }}
+                                        />
+                                    </div>
 
-                                {/* Subcategory Breakdown */}
-                                {breakdown.length > 0 && (
-                                    <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
-                                        {breakdown.map((item) => {
-                                            // Calculate sub-bar width.
-                                            // If it has its own limit, % of that limit.
-                                            // If NO limit, % of Main Limit? Or just visual of Contribution?
-                                            // User: "show them like this too". Let's show specific sub-budget progress if defined.
+                                    {/* Subcategory Breakdown */}
+                                    {breakdown.length > 0 && (
+                                        <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Breakdown</p>
+                                            {breakdown.map((item) => {
+                                                // Calculate sub-bar width.
+                                                // If it has its own limit, % of that limit.
+                                                // If NO limit, % of Main Limit? Or just visual of Contribution?
+                                                // User: "show them like this too". Let's show specific sub-budget progress if defined.
 
-                                            const itemLimit = item.limit > 0 ? item.limit : limit; // Fallback to main limit for relative visual
-                                            const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
-                                            const isSubOver = item.limit > 0 && item.spent > item.limit;
+                                                const itemLimit = item.limit > 0 ? item.limit : limit; // Fallback to main limit for relative visual
+                                                const itemPercent = Math.min((item.spent / itemLimit) * 100, 100);
+                                                const isSubOver = item.limit > 0 && item.spent > item.limit;
 
-                                            // UI Tweak: Differentiate Budgeted vs. Unbudgeted bars
-                                            const barColor = item.hasBudget
-                                                ? (isSubOver ? 'bg-red-400' : 'bg-indigo-400/70')
-                                                : 'bg-slate-300 dark:bg-slate-600'; // Neutral
+                                                // UI Tweak: Differentiate Budgeted vs. Unbudgeted bars
+                                                const barColor = item.hasBudget
+                                                    ? (isSubOver ? 'bg-red-400' : 'bg-indigo-400/70')
+                                                    : 'bg-slate-300 dark:bg-slate-600'; // Neutral
 
-                                            return (
-                                                <div key={item.name} className="text-sm group">
-                                                    <div className="flex justify-between mb-1 items-center">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
-                                                            {item.hasBudget && (
-                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 border border-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300">
-                                                                    {formatMoney(item.limit)}
+                                                return (
+                                                    <div key={item.name} className="text-sm group">
+                                                        <div className="flex justify-between mb-1 items-center">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
+                                                                {item.hasBudget && (
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 border border-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-300">
+                                                                        {formatMoney(item.limit)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`font-medium ${isSubOver ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                                    {formatMoney(item.spent)}
                                                                 </span>
-                                                            )}
+
+                                                                {/* Sub Actions - Edit/Delete specific sub budgets */}
+                                                                {item.hasBudget && (
+                                                                    <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                // Find the budget doc again? Or cleaner way?
+                                                                                const b = subBudgets.find(sb => sb.category === item.name);
+                                                                                if (b) handleEdit(b);
+                                                                            }}
+                                                                            className="p-1 text-slate-300 hover:text-indigo-500"
+                                                                        >
+                                                                            <Pencil size={12} />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const b = subBudgets.find(sb => sb.category === item.name);
+                                                                                if (b) deleteBudget(b.id);
+                                                                            }}
+                                                                            className="p-1 text-slate-300 hover:text-red-500"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`font-medium ${isSubOver ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'}`}>
-                                                                {formatMoney(item.spent)}
-                                                            </span>
-
-                                                            {/* Sub Actions - Edit/Delete specific sub budgets */}
-                                                            {item.hasBudget && (
-                                                                <div className="flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            // Find the budget doc again? Or cleaner way?
-                                                                            const b = subBudgets.find(sb => sb.category === item.name);
-                                                                            if (b) handleEdit(b);
-                                                                        }}
-                                                                        className="p-1 text-slate-300 hover:text-indigo-500"
-                                                                    >
-                                                                        <Pencil size={12} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const b = subBudgets.find(sb => sb.category === item.name);
-                                                                            if (b) deleteBudget(b.id);
-                                                                        }}
-                                                                        className="p-1 text-slate-300 hover:text-red-500"
-                                                                    >
-                                                                        <Trash2 size={12} />
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                        {/* Sub Progress Bar */}
+                                                        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full ${barColor}`}
+                                                                style={{ width: `${itemPercent}%` }}
+                                                            />
                                                         </div>
                                                     </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
 
-                                                    {/* Sub Progress Bar */}
-                                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                                        <div
-                                                            className={`h-full rounded-full ${barColor}`}
-                                                            style={{ width: `${itemPercent}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                    {isOver && (
+                                        <div className="flex items-center gap-2 text-red-500 text-sm font-medium animate-pulse mt-4">
+                                            <AlertCircle size={16} />
+                                            <span>Over Budget!</span>
+                                        </div>
+                                    )}
+
+                                    {!isOver && percentage > 80 && (
+                                        <p className="text-amber-500 text-sm font-medium mt-4">Careful, you're close to the limit.</p>
+                                    )}
+                                </div>
+
+                                {isLocked && (
+                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-center">
+                                        <div className="bg-slate-900/50 dark:bg-black/50 backdrop-blur-[1px] absolute inset-0"></div>
+                                        <div className="relative z-20 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 transform scale-100 hover:scale-105 transition-transform cursor-default">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white mb-2 mx-auto shadow-lg shadow-indigo-500/20">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                            </div>
+                                            <h4 className="font-bold text-slate-900 dark:text-white mb-1">Lifetime Access</h4>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 max-w-[140px] mx-auto">This budget is locked on the Free Plan.</p>
+                                            <button
+                                                onClick={() => window.location.href = '/settings'}
+                                                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                            >
+                                                Upgrade to Unlock
+                                            </button>
+                                        </div>
                                     </div>
-                                )}
-
-                                {isOver && (
-                                    <div className="flex items-center gap-2 text-red-500 text-sm font-medium animate-pulse mt-4">
-                                        <AlertCircle size={16} />
-                                        <span>Over Budget!</span>
-                                    </div>
-                                )}
-
-                                {!isOver && percentage > 80 && (
-                                    <p className="text-amber-500 text-sm font-medium mt-4">Careful, you're close to the limit.</p>
                                 )}
                             </Card>
                         </div>
