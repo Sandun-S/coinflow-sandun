@@ -284,7 +284,7 @@ const AnalyticsPage = () => {
             </div>
 
             {/* --- Section 2: Loan & Investment Deep Dive --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4 items-start">
 
                 {/* Loan Breakdown (Per Loan) */}
                 {metrics.totalLoanDebt > 0 && (
