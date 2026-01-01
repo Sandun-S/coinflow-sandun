@@ -3,9 +3,12 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { Bell, CheckCircle, Plus } from 'lucide-react';
 import { useTransactions } from '../../context/TransactionContext';
+import { useAuth } from '../../context/AuthContext';
+import { subscribeToPush } from '../../utils/push';
 
 const DailyCheckIn = ({ onAddTransaction }) => {
     const { transactions } = useTransactions();
+    const { currentUser } = useAuth();
     const [isVisible, setIsVisible] = useState(false);
     const [status, setStatus] = useState('pending'); // pending, reviewed
     const [notificationPermission, setNotificationPermission] = useState('default');
@@ -26,38 +29,9 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         // TEMPORARY: FORCE VISIBILITY FOR USER TESTING
         // We are bypassing all checks (Time, Existing Tx, Review Status) so the card is ALWAYS visible.
 
-        // 1. Check Local Storage Status
-        // const dailyStatus = localStorage.getItem(`daily_status_${dateKey}`);
-        // if (dailyStatus === 'reviewed') {
-        //     setIsVisible(false);
-        //     return;
-        // }
-
-        // 2. Check Time (5 PM - 11:59 PM)
-        // if (hour < 17) {
-        //     setIsVisible(false);
-        //     return;
-        // }
-
-        // 3. Check for Existing Transactions TODAY
-        // const hasTransactionToday = transactions.some(t => {
-        //     const tDate = new Date(t.date);
-        //     return tDate.toLocaleDateString() === dateKey;
-        // });
-
-        // if (hasTransactionToday) {
-        //     setIsVisible(false);
-        //     return;
-        // }
-
         // If all checks pass, show it
         setIsVisible(true);
         setStatus('pending');
-
-        // Trigger Notification if allowed
-        if (Notification.permission === 'granted') {
-            // ... notification logic ...
-        }
     };
 
     const handleNothingSpent = () => {
@@ -65,7 +39,6 @@ const DailyCheckIn = ({ onAddTransaction }) => {
         const dateKey = now.toLocaleDateString();
         localStorage.setItem(`daily_status_${dateKey}`, 'reviewed');
         setIsVisible(false);
-        // Maybe show confetti or toast? For now just hide.
     };
 
     const enableNotifications = async () => {
@@ -73,10 +46,23 @@ const DailyCheckIn = ({ onAddTransaction }) => {
             alert("This browser does not support desktop notifications");
             return;
         }
+
         const permission = await Notification.requestPermission();
         setNotificationPermission(permission);
+
         if (permission === 'granted') {
-            new Notification("Notifications Enabled", { body: "We'll remind you at 5 PM if you haven't logged expenses." });
+            try {
+                // Subscribe to Server Push
+                if (currentUser) {
+                    await subscribeToPush(currentUser.uid);
+                    new Notification("Notifications Enabled", { body: "You will now receive daily reminders!" });
+                } else {
+                    new Notification("Notifications Enabled", { body: "Please log in to sync reminders." });
+                }
+            } catch (error) {
+                console.error("Push subscription failed:", error);
+                alert("Failed to subscribe to push server. Check console.");
+            }
         }
     };
 

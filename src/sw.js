@@ -7,21 +7,52 @@ precacheAndRoute(self.__WB_MANIFEST);
 self.skipWaiting();
 clientsClaim();
 
+// Handle Push Notifications (from Server)
+self.addEventListener('push', (event) => {
+    let data = {};
+    if (event.data) {
+        data = event.data.json();
+    }
+
+    const title = data.title || "Daily Check-In";
+    const options = {
+        body: data.body || "Did you spend anything today?",
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png',
+        tag: 'daily-reminder',
+        vibrate: [100, 50, 100],
+        data: data.data || {},
+        actions: [
+            { action: 'nothing-spent', title: 'Nothing Spent' },
+            { action: 'add-transaction', title: 'Add Transaction' }
+        ]
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+
 // Handle Notification Clicks
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
+    const action = event.action; // 'nothing-spent' | 'add-transaction' | undefined (click on body)
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // 1. If app is already open, focus it
+            // If app is already open, focus it
             for (const client of clientList) {
-                if ('focus' in client) {
+                if (client.url && 'focus' in client) {
+                    // Optionally direct to specific route based on action?
+                    // client.navigate('/add-transaction'); // If we had routing
                     return client.focus();
                 }
             }
-            // 2. If app is closed, open it
+            // If app is closed, open it
             if (clients.openWindow) {
-                return clients.openWindow('/');
+                // You could append ?action=add-transaction to URL to handle it on load
+                const url = '/';
+                return clients.openWindow(url);
             }
         })
     );
@@ -30,20 +61,9 @@ self.addEventListener('notificationclick', (event) => {
 // Listener for custom 'SCHEDULE_REMINDER' message from the app
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SCHEDULE_REMINDER') {
-        // Note: True background scheduling without a backend push server is 
-        // strictly limited by browser support (Notification Triggers API).
-        // This is a best-effort implementation for supported browsers (Android/Chrome flags).
-
+        // ... previous logic kept if needed ...
         if ('showTrigger' in Notification.prototype) {
-            const title = 'Daily Check-In';
-            const options = {
-                body: "Have you spent anything today? Record it now.",
-                icon: '/pwa-192x192.png',
-                badge: '/pwa-192x192.png',
-                tag: 'daily-reminder',
-                showTrigger: new TimestampTrigger(event.data.timestamp) // API Feature
-            };
-            self.registration.showNotification(title, options);
+            // ...
         }
     }
 });

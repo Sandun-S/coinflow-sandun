@@ -1,0 +1,31 @@
+name: Daily Reminder
+
+on:
+  schedule:
+    # Runs at 11:30 UTC (which is 17:00 IST / 5:00 PM Sri Lanka Time)
+    - cron: '30 11 * * *'
+  workflow_dispatch: # Allows manual trigger for testing
+
+jobs:
+  send-notifications:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install web-push firebase-admin
+
+      - name: Send Reminders
+        run: node scripts/send-reminders.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COINFLOW_SANDUN }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: 'mailto:sandun@example.com'
