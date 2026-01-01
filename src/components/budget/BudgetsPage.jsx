@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { useBudgets } from '../../context/BudgetContext';
-import { useCategories } from '../../context/CategoryContext'; // Import categories
+import { useCategories, DEFAULT_CATEGORIES } from '../../context/CategoryContext'; // Import categories and defaults
 import { useTour } from '../../context/TourContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useCurrencyFormatter } from '../../utils';
@@ -37,6 +37,17 @@ const BudgetsPage = () => {
 
         // Build Child -> Parent map for robust aggregation
         const childParentMap = {};
+
+        // 1. Seed with Default Categories (Robust fallback)
+        DEFAULT_CATEGORIES.forEach(c => {
+            if (c.subcategories) {
+                c.subcategories.forEach(sub => {
+                    childParentMap[sub] = c.name;
+                });
+            }
+        });
+
+        // 2. Override with User Categories (Custom definitions)
         categories.forEach(c => {
             if (c.subcategories) {
                 c.subcategories.forEach(sub => {
