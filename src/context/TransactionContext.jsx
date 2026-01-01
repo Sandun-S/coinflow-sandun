@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
 import { useAccounts } from './AccountContext';
 
 // Initial state
@@ -74,24 +74,39 @@ export const TransactionProvider = ({ children }) => {
     }, [user]);
 
     // Delete Transaction
+    // Delete Transaction
     async function deleteTransaction(id) {
         try {
             // 1. Get the transaction to know what to revert
             const transactionRef = doc(db, 'transactions', id);
             const transactionSnap = await getDoc(transactionRef);
 
-            if (transactionSnap.exists()) {
-                const transaction = transactionSnap.data();
+            if (!transactionSnap.exists()) return;
 
-                // 2. Revert Balance (Opposite operation)
-                // If it was an expense (-500), we add 500. If income (+500), we subtract 500.
-                // updateBalance adds the value passed. So we pass -amount.
+            const transaction = transactionSnap.data();
+
+            // Check for Linked Group (Cascading Delete)
+            if (transaction.transferGroupId) {
+                const groupQuery = query(collection(db, 'transactions'), where('transferGroupId', '==', transaction.transferGroupId));
+                const groupSnap = await getDocs(groupQuery);
+
+                const deletePromises = groupSnap.docs.map(async (docSnapshot) => {
+                    const t = docSnapshot.data();
+                    // Revert Balance
+                    await updateBalance(t.accountId, -Number(t.amount));
+                    // Delete Doc
+                    await deleteDoc(docSnapshot.ref);
+                });
+
+                await Promise.all(deletePromises);
+            } else {
+                // Standard Single Delete
+                // Revert Balance (Opposite operation)
                 await updateBalance(transaction.accountId, -Number(transaction.amount));
-            }
 
-            // 3. Delete Doc
-            await deleteDoc(transactionRef);
-            // Dispatch is handled by onSnapshot
+                // Delete Doc
+                await deleteDoc(transactionRef);
+            }
         } catch (error) {
             console.error("Error deleting transaction:", error);
         }

@@ -98,6 +98,9 @@ const TransferModal = ({ isOpen, onClose }) => {
                 return selected.toISOString();
             };
 
+            // Generate Group ID for linking
+            const transferGroupId = `trf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
             // 1. Record Transaction (Source Expense)
             await addTransaction({
                 text: `${description} (to ${destAcc?.name || 'Destination'})`,
@@ -105,7 +108,8 @@ const TransferModal = ({ isOpen, onClose }) => {
                 category: sourceCategory,
                 type: 'expense',
                 accountId: fromAccount,
-                date: getIsoDate()
+                date: getIsoDate(),
+                transferGroupId
             });
 
             // 2. Record Service Charge (If Applicable)
@@ -116,7 +120,8 @@ const TransferModal = ({ isOpen, onClose }) => {
                     category: 'Fees & Charges',
                     type: 'expense',
                     accountId: fromAccount,
-                    date: getIsoDate() // Same time as transfer
+                    date: getIsoDate(), // Same time as transfer
+                    transferGroupId
                 });
             }
 
@@ -127,7 +132,8 @@ const TransferModal = ({ isOpen, onClose }) => {
                 category: destCategory,
                 type: 'income',
                 accountId: toAccount,
-                date: getIsoDate()
+                date: getIsoDate(),
+                transferGroupId
             });
 
             onClose();
